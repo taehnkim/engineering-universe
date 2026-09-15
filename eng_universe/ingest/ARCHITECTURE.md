@@ -140,6 +140,13 @@ Redirect handlers must call the checker again before each redirected request.
 - The fetch lease must outlive the HTTP timeout before the runtime can start.
 - CPU parsing stays in downstream parser workers, outside the fetch event loop.
 
+## Durability
+
+Redis AOF is enabled with `appendfsync everysec`, and the Redis `/data` directory uses a named Docker volume so restarts keep queue state.
+
+Succeeded run hashes receive a TTL (`STAGE_SUCCEEDED_RUN_TTL_S`, default 7 days). Failed, dead, and blocked runs keep no TTL so operators can inspect them.
+
+
 ## Boundaries
 
 The contract module has no Redis, HTTP, R2, database, or model client.

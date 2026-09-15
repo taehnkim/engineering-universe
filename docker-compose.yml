@@ -9,10 +9,14 @@ services:
         "--save",
         "",
         "--appendonly",
-        "no",
+        "yes",
+        "--appendfsync",
+        "everysec",
         "--requirepass",
         "devpass",
       ]
+    volumes:
+      - redis-data:/data
 
   crawler:
     build: .
@@ -65,4 +69,5 @@ services:
       - redis
     profiles: ["seed"]
 
-volumes: {}
+volumes:
+  redis-data:

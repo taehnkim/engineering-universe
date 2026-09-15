@@ -419,5 +419,40 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(counts.ready, total)
 
 
+    async def test_complete_sets_ttl_on_succeeded_runs_only(self) -> None:
+        from unittest.mock import patch
+        from eng_universe.config import Settings
+
+        with patch.object(Settings, "stage_succeeded_run_ttl_s", 3600):
+            enqueued = await self.queue.enqueue(request_for("ttl-ok"))
+            lease = await self.queue.claim(
+                enqueued.run.stage_name,
+                worker_id="worker-1",
+            )
+            self.assertIsNotNone(lease)
+            assert lease is not None
+            await self.queue.complete(lease, output={"ok": True})
+            ttl = await self.redis.ttl(self.queue.keys.run(enqueued.run.run_id))
+            self.assertGreater(ttl, 0)
+            self.assertLessEqual(ttl, 3600)
+
+        failed = await self.queue.enqueue(request_for("ttl-fail"), max_attempts=1)
+        fail_lease = await self.queue.claim(
+            failed.run.stage_name,
+            worker_id="worker-2",
+        )
+        self.assertIsNotNone(fail_lease)
+        assert fail_lease is not None
+        await self.queue.fail(
+            fail_lease,
+            kind=FailureKind.PERMANENT,
+            error_code="boom",
+            error_message="permanent",
+        )
+        fail_ttl = await self.redis.ttl(self.queue.keys.run(failed.run.run_id))
+        self.assertEqual(fail_ttl, -1)
+
+
+
 if __name__ == "__main__":
     unittest.main()

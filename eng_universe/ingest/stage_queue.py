@@ -9,6 +9,7 @@ from typing import Any
 import redis.asyncio as redis
 from redis.exceptions import NoScriptError
 
+from eng_universe.config import Settings
 from eng_universe.ingest.contracts import (
     JsonValue,
     StageInput,
@@ -442,6 +443,7 @@ class StageQueue:
                 lease.token,
                 canonical_json(output),
                 origin_id,
+                Settings.stage_succeeded_run_ttl_s,
             ],
         )
         if _first_integer(response) != 1:

@@ -279,6 +279,10 @@ redis.call(
     "error_message"
 )
 release_origin(now)
+local ttl_s = tonumber(ARGV[6]) or 0
+if ttl_s > 0 then
+    redis.call("EXPIRE", KEYS[2], ttl_s)
+end
 return {1, now}
 """
 
