@@ -106,6 +106,10 @@ class StageQueueKeys:
         return f"{self.namespace}:q:origins:{FETCH_RAW_STAGE}"
 
     @property
+    def fetch_global_state(self) -> str:
+        return f"{self.namespace}:fetch:global"
+
+    @property
     def unused(self) -> str:
         return f"{self.namespace}:unused"
 

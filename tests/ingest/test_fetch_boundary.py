@@ -83,7 +83,9 @@ class FetchBoundaryTests(unittest.IsolatedAsyncioTestCase):
             request_rate_s=0,
             allowed=True,
             fetched_at=123,
-            text="User-agent: *\nDisallow: /private\n",
+            text=(
+                "User-agent: *\nAllow: /\nDisallow: /private\nAllow: /private/public\n"
+            ),
         )
         session = object()
         checker = FetchPathChecker(
@@ -97,12 +99,35 @@ class FetchBoundaryTests(unittest.IsolatedAsyncioTestCase):
             new=AsyncMock(return_value=rules),
         ) as fetch_rules:
             denied = await checker.check("https://example.com/private/article")
-            allowed = await checker.check("https://example.com/public/article")
+            allowed = await checker.check("https://example.com/private/public/article")
 
         self.assertFalse(denied.allowed)
         self.assertTrue(allowed.allowed)
         self.assertEqual(allowed.request_interval_ms, 2_000)
-        fetch_rules.assert_awaited_with(self.redis, session, "example.com")
+        fetch_rules.assert_awaited_with(self.redis, session, "example.com", "https")
+
+    async def test_checker_keeps_http_and_https_robots_origins_separate(self) -> None:
+        rules = RobotsRules(
+            domain="example.com",
+            crawl_delay_s=1,
+            request_rate_s=0,
+            allowed=True,
+            fetched_at=123,
+            text="User-agent: *\nAllow: /\n",
+        )
+        session = object()
+        checker = FetchPathChecker(
+            self.redis,  # type: ignore[arg-type]
+            session,  # type: ignore[arg-type]
+        )
+
+        with patch(
+            "eng_universe.ingest.fetch_boundary.get_or_fetch_robots",
+            new=AsyncMock(return_value=rules),
+        ) as fetch_rules:
+            await checker.check("http://example.com/article")
+
+        fetch_rules.assert_awaited_once_with(self.redis, session, "example.com", "http")
 
     async def test_denied_path_is_blocked_and_releases_origin_slot(self) -> None:
         url = "https://example.com/private/article"

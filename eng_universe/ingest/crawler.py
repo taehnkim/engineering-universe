@@ -21,12 +21,12 @@ from eng_universe.ingest.queue import (
     requeue_delayed_items,
 )
 from eng_universe.ingest.robots import (
+    can_fetch_path,
     get_or_fetch_robots,
     parse_domain,
     reserve_next_allowed,
 )
 import eng_universe.storage.r2 as r2
-from urllib.robotparser import RobotFileParser
 
 
 @dataclass
@@ -229,9 +229,7 @@ async def check_robots_txt(
 ) -> str | None:
     domain = parse_domain(item.url)
     rules = await get_or_fetch_robots(redis_client, session, domain)
-    parser = RobotFileParser()
-    parser.parse(rules.text.splitlines())
-    if not parser.can_fetch(Settings.user_agent, item.url):
+    if not can_fetch_path(rules.text, Settings.user_agent, item.url):
         log_event("deny", url=item.url, reason="robots")
         return None
     min_delay_s = max(rules.crawl_delay_s, rules.request_rate_s)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Protocol
-from urllib.robotparser import RobotFileParser
+from urllib.parse import urlsplit
 
 import aiohttp
 import redis.asyncio as redis
@@ -10,7 +10,7 @@ import redis.asyncio as redis
 from eng_universe.config import Settings
 from eng_universe.ingest.contracts import JsonValue
 from eng_universe.ingest.queue_models import FETCH_RAW_STAGE, Origin, StageLease
-from eng_universe.ingest.robots import get_or_fetch_robots, parse_domain
+from eng_universe.ingest.robots import can_fetch_path, get_or_fetch_robots, parse_domain
 from eng_universe.ingest.stage_queue import StageQueue
 from eng_universe.ingest.worker import BlockedStageError
 
@@ -42,10 +42,9 @@ class FetchPathChecker:
             self.redis,
             self.session,
             parse_domain(url),
+            urlsplit(url).scheme.lower(),
         )
-        parser = RobotFileParser()
-        parser.parse(rules.text.splitlines())
-        allowed = parser.can_fetch(self.user_agent, url)
+        allowed = can_fetch_path(rules.text, self.user_agent, url)
         request_interval_ms = 1000 * max(
             rules.crawl_delay_s,
             rules.request_rate_s,

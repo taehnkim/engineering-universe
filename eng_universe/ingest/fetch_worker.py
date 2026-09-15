@@ -201,12 +201,19 @@ class FetchWorkerRuntime:
         return FetchPathChecker(redis_client, session)
 
     async def run(self, stop_event: asyncio.Event) -> None:
+        if Settings.stage_lease_ms <= Settings.request_timeout_s * 1000:
+            raise ValueError(
+                "fetch stage lease must be longer than the HTTP request timeout"
+            )
         process_lease = FetchProcessLease(
             self.queue.redis,
             self.process_lock_key,
             lease_ms=self.config.process_lease_ms,
         )
         await process_lease.acquire()
+        await self.queue.configure_fetch_global_limit(
+            self.config.global_connection_limit
+        )
         heartbeat_stop = asyncio.Event()
         connector = aiohttp.TCPConnector(
             limit=self.config.global_connection_limit,

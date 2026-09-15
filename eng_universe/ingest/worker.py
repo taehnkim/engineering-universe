@@ -265,7 +265,12 @@ class StageWorkerPool:
             await asyncio.sleep(self.heartbeat_interval_ms / 1000)
             if execution.done():
                 return
-            owned = await self.queue.heartbeat(lease, lease_ms=self.lease_ms)
+            try:
+                owned = await self.queue.heartbeat(lease, lease_ms=self.lease_ms)
+            except Exception:  # noqa: BLE001
+                lease_lost.set()
+                execution.cancel()
+                return
             if not owned:
                 lease_lost.set()
                 execution.cancel()

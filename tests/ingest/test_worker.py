@@ -2,6 +2,7 @@ import asyncio
 import unittest
 from collections.abc import Mapping
 from dataclasses import dataclass
+from unittest.mock import AsyncMock
 
 import fakeredis.aioredis as fakeredis
 
@@ -231,6 +232,33 @@ class StageWorkerPoolTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertTrue(await asyncio.wait_for(work, timeout=1))
+        await asyncio.sleep(0.05)
+        self.assertEqual(
+            await self.queue.reclaim_expired(
+                "normalize_article",
+                retry_delay_ms=0,
+            ),
+            1,
+        )
+
+    async def test_heartbeat_error_cancels_current_execution(self) -> None:
+        await self.queue.enqueue(worker_request("redis-error"), max_attempts=2)
+        handler = BlockingHandler()
+        pool = StageWorkerPool(
+            self.queue,
+            {"normalize_article": handler},
+            concurrency=1,
+            lease_ms=40,
+            heartbeat_interval_ms=10,
+        )
+        self.queue.heartbeat = AsyncMock(side_effect=ConnectionError("redis down"))
+
+        self.assertTrue(
+            await asyncio.wait_for(
+                pool.run_one(worker_id="worker-1"),
+                timeout=1,
+            )
+        )
         await asyncio.sleep(0.05)
         self.assertEqual(
             await self.queue.reclaim_expired(

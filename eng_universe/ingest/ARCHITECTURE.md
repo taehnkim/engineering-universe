@@ -87,11 +87,13 @@ Redirect handlers must call the checker again before each redirected request.
 - One process holds a token-safe Redis process lease.
 - The process starts 100 configurable asyncio fetch workers.
 - All workers share one `aiohttp` session and one 100-connection connector.
+- Redis also caps global leased fetch runs at 100 across queue clients.
 - Redis origin queues still enforce per-origin in-flight and spacing limits.
 - Blocking R2 SDK calls use bounded background threads behind a separate semaphore.
 - HTTP fetch concurrency uses asyncio coroutines, not thread or process workers.
 - The runtime rejects a configured process count other than one.
 - A second process also fails the Redis lease, so it cannot multiply the global limit.
+- The fetch lease must outlive the HTTP timeout before the runtime can start.
 - CPU parsing stays in downstream parser workers, outside the fetch event loop.
 
 ## Boundaries

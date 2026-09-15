@@ -53,6 +53,9 @@ if ARGV[12] ~= "" then
     redis.call("HSETNX", KEYS[6], "request_interval_ms", ARGV[15])
     redis.call("HSETNX", KEYS[6], "next_allowed_ms", 0)
     redis.call("HSETNX", KEYS[6], "backoff_until_ms", 0)
+    redis.call("HSETNX", KEYS[7], "schema_version", ARGV[1])
+    redis.call("HSETNX", KEYS[7], "max_inflight", ARGV[18])
+    redis.call("HSETNX", KEYS[7], "inflight", 0)
     redis.call("ZADD", KEYS[5], due_at, ARGV[2])
 
     local next_allowed = tonumber(redis.call("HGET", KEYS[6], "next_allowed_ms") or "0")
@@ -169,9 +172,13 @@ end
 
 local inflight = tonumber(redis.call("HGET", KEYS[7], "inflight") or "0")
 local max_inflight = tonumber(redis.call("HGET", KEYS[7], "max_inflight") or "1")
+local global_inflight = tonumber(redis.call("HGET", KEYS[8], "inflight") or "0")
+local global_max_inflight = tonumber(
+    redis.call("HGET", KEYS[8], "max_inflight") or "100"
+)
 local next_allowed = tonumber(redis.call("HGET", KEYS[7], "next_allowed_ms") or "0")
 local backoff_until = tonumber(redis.call("HGET", KEYS[7], "backoff_until_ms") or "0")
-if inflight >= max_inflight then
+if inflight >= max_inflight or global_inflight >= global_max_inflight then
     schedule_origin(now + tonumber(ARGV[8]))
     return {0}
 end
@@ -219,6 +226,7 @@ redis.call(
     "next_allowed_ms", now + request_interval,
     "last_claimed_at_ms", now
 )
+redis.call("HSET", KEYS[8], "inflight", global_inflight + 1)
 local fairness_not_before = now
 if redis.call("ZCARD", KEYS[1]) > 1 then
     fairness_not_before = now + 1
@@ -258,6 +266,10 @@ local function release_origin(now)
         inflight = inflight - 1
     end
     redis.call("HSET", KEYS[6], "inflight", inflight, "last_released_at_ms", now)
+    local global_inflight = tonumber(redis.call("HGET", KEYS[7], "inflight") or "0")
+    if global_inflight > 0 then
+        redis.call("HSET", KEYS[7], "inflight", global_inflight - 1)
+    end
     local next_item = redis.call("ZRANGE", KEYS[5], 0, 0, "WITHSCORES")
     if #next_item == 0 then
         redis.call("ZREM", KEYS[4], ARGV[5])
@@ -314,6 +326,10 @@ local function schedule_origin(now)
     local inflight = tonumber(redis.call("HGET", KEYS[9], "inflight") or "0")
     if inflight > 0 then
         inflight = inflight - 1
+    end
+    local global_inflight = tonumber(redis.call("HGET", KEYS[10], "inflight") or "0")
+    if global_inflight > 0 then
+        redis.call("HSET", KEYS[10], "inflight", global_inflight - 1)
     end
     local backoff_until = tonumber(redis.call("HGET", KEYS[9], "backoff_until_ms") or "0")
     if tonumber(ARGV[11]) > 0 then
@@ -419,12 +435,21 @@ local function schedule_origin(now)
     if inflight > 0 then
         inflight = inflight - 1
     end
+    local global_inflight = tonumber(redis.call("HGET", KEYS[10], "inflight") or "0")
+    if global_inflight > 0 then
+        redis.call("HSET", KEYS[10], "inflight", global_inflight - 1)
+    end
     redis.call("HSET", KEYS[9], "inflight", inflight, "last_released_at_ms", now)
 end
 
 local state = redis.call("HGET", KEYS[2], "state")
 if state ~= "leased" and state ~= "running" then
     redis.call("ZREM", KEYS[1], ARGV[1])
+    return {0}
+end
+if redis.call("HGET", KEYS[2], "lease_owner") ~= ARGV[2]
+    or redis.call("HGET", KEYS[2], "lease_token") ~= ARGV[3]
+    or redis.call("HGET", KEYS[2], "attempt_id") ~= ARGV[6] then
     return {0}
 end
 

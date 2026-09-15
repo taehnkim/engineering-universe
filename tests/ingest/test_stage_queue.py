@@ -76,6 +76,17 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(Origin.from_url("http://[::1]:80/path").value, "http://[::1]")
 
+    async def test_fetch_rejects_origin_that_does_not_match_url(self) -> None:
+        with self.assertRaisesRegex(ValueError, "does not match"):
+            await self.queue.enqueue(
+                request_for(
+                    "mismatch",
+                    stage_name=FETCH_RAW_STAGE,
+                    url="https://actual.example/article",
+                ),
+                origin=Origin.from_url("https://other.example/article"),
+            )
+
     async def test_duplicate_suppression_is_atomic_under_concurrency(self) -> None:
         request = request_for("same")
         results = await asyncio.gather(
@@ -174,6 +185,30 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
             await self.queue.complete(stale)
         completed = await self.queue.complete(recovered)
         self.assertEqual(completed.state, StageStatus.SUCCEEDED)
+
+    async def test_concurrent_reclaimers_expire_one_attempt_once(self) -> None:
+        await self.queue.enqueue(request_for("doc-1"), max_attempts=3)
+        lease = await self.queue.claim(
+            "parse_article",
+            worker_id="crashed-worker",
+            lease_ms=10,
+        )
+        self.assertIsNotNone(lease)
+        await asyncio.sleep(0.02)
+
+        reclaimed = await asyncio.gather(
+            self.queue.reclaim_expired("parse_article", retry_delay_ms=0),
+            self.queue.reclaim_expired("parse_article", retry_delay_ms=0),
+        )
+
+        self.assertEqual(sum(reclaimed), 1)
+        recovered = await self.queue.claim(
+            "parse_article",
+            worker_id="recovery-worker",
+        )
+        self.assertIsNotNone(recovered)
+        assert recovered is not None
+        self.assertEqual(recovered.run.attempt_count, 2)
 
     async def test_permanent_and_blocked_failures_use_terminal_queues(self) -> None:
         await self.queue.enqueue(request_for("permanent"))
@@ -293,6 +328,49 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         claimed = [lease for lease in leases if lease is not None]
         self.assertEqual(len(claimed), total)
         self.assertEqual(len({lease.run.run_id for lease in claimed}), total)
+
+    async def test_fetch_global_limit_is_shared_across_queue_clients(self) -> None:
+        limit = 10
+        first_queue = StageQueue(
+            self.redis,  # type: ignore[arg-type]
+            keys=self.queue.keys,
+            fetch_global_limit=limit,
+        )
+        second_queue = StageQueue(
+            self.redis,  # type: ignore[arg-type]
+            keys=self.queue.keys,
+            fetch_global_limit=limit,
+        )
+        await asyncio.gather(
+            *(
+                first_queue.enqueue(
+                    request_for(
+                        str(index),
+                        stage_name=FETCH_RAW_STAGE,
+                        url=f"https://origin-{index}.example/article",
+                    )
+                )
+                for index in range(limit * 2)
+            )
+        )
+
+        leases = await asyncio.gather(
+            *(
+                (first_queue if index % 2 else second_queue).claim(
+                    FETCH_RAW_STAGE,
+                    worker_id=f"worker-{index}",
+                )
+                for index in range(limit * 2)
+            )
+        )
+
+        claimed = [lease for lease in leases if lease is not None]
+        self.assertEqual(len(claimed), limit)
+        global_state = await first_queue.fetch_global_state()
+        self.assertEqual(int(global_state["inflight"]), limit)
+        await asyncio.gather(*(first_queue.complete(lease) for lease in claimed))
+        global_state = await first_queue.fetch_global_state()
+        self.assertEqual(int(global_state["inflight"]), 0)
 
     async def test_origin_backoff_does_not_block_other_origins(self) -> None:
         await self.queue.enqueue(

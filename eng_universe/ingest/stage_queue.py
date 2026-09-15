@@ -106,6 +106,7 @@ class StageQueue:
         claim_contention_retries: int = 4,
         origin_scan_limit: int = 64,
         origin_busy_delay_ms: int = 50,
+        fetch_global_limit: int = 100,
         retry_base_ms: int = 1_000,
         retry_max_ms: int = 300_000,
     ) -> None:
@@ -117,6 +118,8 @@ class StageQueue:
             raise ValueError("claim_contention_retries must be positive")
         if origin_busy_delay_ms < 1:
             raise ValueError("origin_busy_delay_ms must be positive")
+        if fetch_global_limit < 1:
+            raise ValueError("fetch_global_limit must be positive")
         if retry_base_ms < 0 or retry_max_ms < retry_base_ms:
             raise ValueError("retry delay bounds are invalid")
         self.redis = redis_client
@@ -126,6 +129,7 @@ class StageQueue:
         self.claim_contention_retries = claim_contention_retries
         self.origin_scan_limit = origin_scan_limit
         self.origin_busy_delay_ms = origin_busy_delay_ms
+        self.fetch_global_limit = fetch_global_limit
         self.retry_base_ms = retry_base_ms
         self.retry_max_ms = retry_max_ms
 
@@ -179,6 +183,7 @@ class StageQueue:
                 self.keys.fetch_origins,
                 origin_queue,
                 origin_state,
+                self.keys.fetch_global_state if selected_origin else self.keys.unused,
             ],
             args=[
                 QUEUE_SCHEMA_VERSION,
@@ -198,6 +203,7 @@ class StageQueue:
                 origin_interval_ms,
                 int(execution_policy.force),
                 execution_policy.rerun_nonce or "",
+                self.fetch_global_limit,
             ],
         )
         created = _first_integer(response) == 1
@@ -217,12 +223,13 @@ class StageQueue:
             if origin is not None:
                 raise ValueError("only fetch_raw runs can use origin scheduling")
             return None
-        if origin is not None:
-            return origin
         url = payload.get("url")
         if not isinstance(url, str):
             raise TypeError("fetch_raw stage input must contain a string URL")
-        return Origin.from_url(url)
+        derived = Origin.from_url(url)
+        if origin is not None and origin != derived:
+            raise ValueError("explicit fetch origin does not match input URL")
+        return origin or derived
 
     async def get_run(self, run_id: str) -> StageRunRecord | None:
         values = await self.redis.hgetall(self.keys.run(run_id))
@@ -345,7 +352,6 @@ class StageQueue:
                     num=self.claim_scan_limit,
                 )
                 if not run_ids:
-                    await self.redis.zrem(self.keys.fetch_origins, origin_id)
                     continue
                 for raw_run_id in self._rotated(run_ids):
                     run_id = _decoded(raw_run_id)
@@ -361,6 +367,7 @@ class StageQueue:
                             self.keys.run(run_id),
                             self.keys.attempt(attempt_id),
                             self.keys.origin_state(origin_id),
+                            self.keys.fetch_global_state,
                         ],
                         args=[
                             origin_id,
@@ -435,6 +442,7 @@ class StageQueue:
                 self.keys.fetch_origins if origin_id else self.keys.unused,
                 self.keys.origin_ready(origin_id) if origin_id else self.keys.unused,
                 self.keys.origin_state(origin_id) if origin_id else self.keys.unused,
+                self.keys.fetch_global_state if origin_id else self.keys.unused,
             ],
             args=[
                 lease.run.run_id,
@@ -483,6 +491,7 @@ class StageQueue:
                 self.keys.fetch_origins if origin_id else self.keys.unused,
                 self.keys.origin_ready(origin_id) if origin_id else self.keys.unused,
                 self.keys.origin_state(origin_id) if origin_id else self.keys.unused,
+                self.keys.fetch_global_state if origin_id else self.keys.unused,
             ],
             args=[
                 lease.run.run_id,
@@ -555,6 +564,7 @@ class StageQueue:
                     self.keys.origin_state(origin_id)
                     if origin_id
                     else self.keys.unused,
+                    self.keys.fetch_global_state if origin_id else self.keys.unused,
                 ],
                 args=[
                     run_id,
@@ -605,6 +615,22 @@ class StageQueue:
 
     async def origin_state(self, origin: Origin) -> dict[str, str]:
         values = await self.redis.hgetall(self.keys.origin_state(origin.origin_id))
+        return decode_hash(values)
+
+    async def configure_fetch_global_limit(self, limit: int) -> None:
+        if limit < 1:
+            raise ValueError("fetch global limit must be positive")
+        await self.redis.hset(
+            self.keys.fetch_global_state,
+            mapping={
+                "schema_version": QUEUE_SCHEMA_VERSION,
+                "max_inflight": limit,
+            },
+        )
+        await self.redis.hsetnx(self.keys.fetch_global_state, "inflight", 0)
+
+    async def fetch_global_state(self) -> dict[str, str]:
+        values = await self.redis.hgetall(self.keys.fetch_global_state)
         return decode_hash(values)
 
     async def counts(self, stage_name: str) -> QueueCounts:
