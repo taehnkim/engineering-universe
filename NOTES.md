@@ -6,18 +6,17 @@
                               SEED PHASE
                                   │
     ┌─────────────────────────────▼─────────────────────────────┐
-    │  scripts/seed_urls.py                                     │
+    │  main.py seed / scripts/seed_urls.py                      │
     │  ┌─────────────────────────────────────────────────────┐  │
-    │  │ Settings.seed_start_urls (config.py:68-70)          │  │
-    │  │ • engineering.fb.com                                │  │
-    │  │ • builders.ramp.com                                 │  │
-    │  │ • anthropic.com/engineering                         │  │
-    │  │ • developers.openai.com/blog                        │  │
+    │  │ Curated catalog: eng_universe/ingest/sources.py     │  │
+    │  │ • listing roots (stripe.dev/blog, …)                │  │
+    │  │ • article path regexes per host                     │  │
+    │  │ • optional SEED_START_URLS override                 │  │
     │  └──────────────────────┬──────────────────────────────┘  │
-    │                         │ seed_queue() (crawler.py:399)   │
+    │                         │ seed_queue() / seed_catalog()   │
     │                         ▼                                 │
     │  ┌─────────────────────────────────────────────────────┐  │
-    │  │ Also fetches sitemap.xml → enqueues sitemap URLs    │  │
+    │  │ Listing seeds also enqueue configured sitemaps      │  │
     │  └──────────────────────┬──────────────────────────────┘  │
     └─────────────────────────┼─────────────────────────────────┘
                               │
@@ -143,9 +142,11 @@
 ## Data Flow Q&A
 
 ### 1. Which URLs get seeded?
-- Defined in `Settings.seed_start_urls` (config.py:68-70)
-- Default: `engineering.fb.com`, `builders.ramp.com`, `anthropic.com/engineering`, `developers.openai.com/blog`
-- Also auto-discovers sitemap.xml URLs for each seed domain
+- Curated listing roots in `eng_universe/ingest/sources.py` (`SOURCES`)
+- Default CLI: `python main.py seed` seeds the full catalog
+- Override: `SEED_START_URLS` or `python main.py seed --url <listing-or-article>`
+- Listing seeds also enqueue configured sitemap.xml URLs for that host
+- See `docs/seeding.md` for listing vs article vs reject rules
 
 ### 2. How does it get added to queue?
 - `seed_queue()` (crawler.py:399) normalizes URL and calls `enqueue()`
@@ -187,7 +188,7 @@ In production, you could run them in parallel as separate processes.
 
 | Command | What it does |
 |---------|--------------|
-| `seed` | Populate crawl:queue with seed URLs |
+| `seed` | Populate crawl:queue from curated catalog or `--url` |
 | `crawl` | Run crawler workers |
 | `index` | Run index workers |
 | `init-index` | Create Redis Search index schema |

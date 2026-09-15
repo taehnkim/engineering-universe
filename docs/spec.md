@@ -2,11 +2,9 @@
 
 ## Scope
 
-- Crawl engineering blogs:
-  - `https://engineering.fb.com/`
-  - `https://builders.ramp.com/`
-  - `https://www.anthropic.com/engineering`
-  - `https://developers.openai.com/blog/`
+- Crawl engineering blogs from the curated source catalog in
+  `eng_universe/ingest/sources.py` (Meta, Ramp, Anthropic, OpenAI, Stripe,
+  Airbnb Medium publication, and others).
 - Provide hybrid search (BM25 + vector) with Redis Stack/RediSearch.
 - Serve a minimal HTML/JS frontend and a Vercel-hosted API.
 
@@ -14,13 +12,12 @@
 
 ### Source Discovery
 
-- Input: seed domains:
-  - `engineering.fb.com`
-  - `builders.ramp.com`
-  - `www.anthropic.com`
-  - `developers.openai.com`
-- Output: URLs to crawl (RSS, sitemap, in-domain links).
+- Input: curated `SourceConfig` rows (host, listing roots, article path rules).
+- Operator seeds a listing root such as `https://stripe.dev/blog`.
+- Output: URLs to crawl (sitemap locs + in-domain links that pass `classify_url`).
 - Emit: `CrawlQueue` events with `{url, source, discovered_at}`.
+- Non-matching paths (careers, other Medium pubs, marketing) are rejected.
+- Details: `docs/seeding.md`.
 
 ### Scraper
 

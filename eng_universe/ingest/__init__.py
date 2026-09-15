@@ -9,6 +9,7 @@ from eng_universe.ingest.crawler import (
     is_allowed_url,
     normalize_url,
     run_crawlers,
+    seed_catalog,
     seed_queue,
 )
 from eng_universe.ingest.etl import ParsedDocument, parse_html
@@ -25,6 +26,15 @@ from eng_universe.ingest.robots import (
     parse_domain,
     reserve_next_allowed,
 )
+from eng_universe.ingest.sources import (
+    SOURCES,
+    SourceConfig,
+    UrlKind,
+    classify_url,
+    is_article_url,
+    is_listing_url,
+    is_sitemap_url,
+)
 
 __all__ = [
     # crawler
@@ -36,6 +46,7 @@ __all__ = [
     "is_allowed_url",
     "normalize_url",
     "run_crawlers",
+    "seed_catalog",
     "seed_queue",
     # etl
     "ParsedDocument",
@@ -51,4 +62,12 @@ __all__ = [
     "get_or_fetch_robots",
     "parse_domain",
     "reserve_next_allowed",
+    # sources
+    "SOURCES",
+    "SourceConfig",
+    "UrlKind",
+    "classify_url",
+    "is_article_url",
+    "is_listing_url",
+    "is_sitemap_url",
 ]
