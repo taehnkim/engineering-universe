@@ -64,6 +64,29 @@ The leased Redis stage queue (`fetch_raw`) still expects exact article URLs as
 inputs. Connecting `source_catalog` discovery into that queue remains a later
 step; until then, the legacy `seed` / `crawl` path uses the catalog above.
 
+## Legacy crawl worker loop
+
+`python main.py crawl` runs `run_crawlers()` with `max_workers` asyncio
+workers and one shared `aiohttp` session. Per queue item:
+
+1. **Promote delays** — `requeue_delayed_items()` moves due work from
+   `crawl:delay` → `crawl:queue`.
+2. **Dequeue** — `dequeue()` pops one `CrawlItem(url, source, depth)`.
+3. **Robots** — `get_or_fetch_robots()` + `can_fetch()`; if denied, drop.
+   `reserve_next_allowed()` enforces crawl-delay / request-rate; if too soon,
+   `delay()` requeues to `crawl:delay`.
+4. **Fetch** — `fetch_html()`; non-200 or transport failure drops the URL.
+5. **Discover** — sitemaps parse `<loc>` values; HTML pages extract `<a href>`
+   links, keep same-host when `CRAWL_ALLOW_EXTERNAL=false`, keep only paths
+   that pass `classify_url()`, and enqueue at `depth + 1` while under
+   `CRAWL_DEPTH_LIMIT`.
+6. **Store** — only `UrlKind.ARTICLE` pages are stored. Listings and sitemaps
+   are discovery-only. `_clean_container()` keeps article → main → body
+   (removes nav/footer/aside/script/style/noscript). `doc_id = INCR
+   crawl:doc_seq`; raw/clean artifacts write when storage is enabled.
+7. **Metadata** — Redis `crawl:doc:{doc_id}` stores url, domain, source,
+   depth, paths, url_hash, fetched_at, status.
+
 ## Main design
 
 - `StageIdentity` gives each stage a stable name and version.
