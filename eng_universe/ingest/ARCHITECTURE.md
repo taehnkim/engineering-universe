@@ -82,6 +82,17 @@ Typed failures select retryable, permanent, or blocked outcomes.
 `fetch_boundary.py` applies the existing robots parser to the exact request path.
 Redirect handlers must call the checker again before each redirected request.
 
+`fetch_worker.py` owns the v1 fetch process:
+
+- One process holds a token-safe Redis process lease.
+- The process starts 100 configurable asyncio fetch workers.
+- All workers share one `aiohttp` session and one 100-connection connector.
+- Redis origin queues still enforce per-origin in-flight and spacing limits.
+- R2 uploads use a separate bounded semaphore and do not consume fetch slots.
+- The runtime rejects a configured process count other than one.
+- A second process also fails the Redis lease, so it cannot multiply the global limit.
+- CPU parsing stays in downstream parser workers, outside the fetch event loop.
+
 ## Boundaries
 
 The contract module has no Redis, HTTP, R2, database, or model client.

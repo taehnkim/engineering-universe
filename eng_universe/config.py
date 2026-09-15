@@ -81,7 +81,19 @@ class Settings:
     stage_reclaim_interval_ms = int(
         os.getenv("STAGE_RECLAIM_INTERVAL_MS", "1000")
     )
+    fetch_worker_processes = int(os.getenv("FETCH_WORKER_PROCESSES", "1"))
+    fetch_worker_concurrency = int(os.getenv("FETCH_WORKER_CONCURRENCY", "100"))
+    fetch_global_connection_limit = int(
+        os.getenv("FETCH_GLOBAL_CONNECTION_LIMIT", "100")
+    )
     fetch_origin_max_inflight = int(os.getenv("FETCH_ORIGIN_MAX_INFLIGHT", "1"))
+    fetch_r2_upload_concurrency = int(
+        os.getenv("FETCH_R2_UPLOAD_CONCURRENCY", "8")
+    )
+    fetch_process_lease_ms = int(os.getenv("FETCH_PROCESS_LEASE_MS", "30000"))
+    fetch_process_heartbeat_ms = int(
+        os.getenv("FETCH_PROCESS_HEARTBEAT_MS", "10000")
+    )
     embeddings_provider = os.getenv("EMBEDDINGS_PROVIDER", "dummy")
     embeddings_dim = int(os.getenv("EMBEDDINGS_DIM", 384))
     keyword_only = env_bool("KEYWORD_ONLY", "false")
