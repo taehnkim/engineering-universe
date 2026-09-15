@@ -68,4 +68,9 @@ uv run python scripts/clear_crawl.py
 
 ## Docs
 
-See `docs/` for detailed specs. Start with `docs/seeding.md` for how company blog roots become crawlable posts.
+See `docs/` for detailed specs:
+
+- `docs/seeding.md` — how company blog roots become crawlable posts
+- `docs/architecture.md` — crawl/index data-flow diagram and Q&A
+- `docs/spec.md` — product scope and module contracts
+
