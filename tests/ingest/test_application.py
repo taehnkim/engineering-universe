@@ -48,6 +48,21 @@ class IngestionApplicationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(args.ingest_command, "enqueue-fetch")
         self.assertEqual(args.config_version, "sources-1")
 
+    def test_cli_preserves_curated_seed_options(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(
+            [
+                "seed",
+                "--url",
+                "https://stripe.dev/blog",
+                "--catalog",
+            ]
+        )
+
+        self.assertEqual(args.urls, ["https://stripe.dev/blog"])
+        self.assertTrue(args.catalog)
+        self.assertFalse(args.list_catalog)
+
 
 if __name__ == "__main__":
     unittest.main()

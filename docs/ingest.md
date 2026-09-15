@@ -233,8 +233,8 @@ Succeeded run hashes receive a TTL (`STAGE_SUCCEEDED_RUN_TTL_S`, default 7 days)
 
 Queue record schema version 2 removes the separate retry-wait state.
 Schema version 1 run hashes are not read as version 2 records.
-PR #3 had no application entrypoint, so PR #4 does not add an in-place data migration.
-Clear an experimental version 1 namespace before using the PR #4 entrypoint.
+PR #3 had no application entrypoint, so this change does not add an in-place data migration.
+Clear an experimental version 1 namespace before using the new entrypoint.
 
 ## Boundaries
 
@@ -243,7 +243,7 @@ Tests can use it without infrastructure.
 The queue is Redis-only and stores no raw artifact body.
 Artifact publication and downstream stage scheduling remain separate concerns.
 
-PR #4 adds only these application commands:
+This change adds only these application commands:
 
 ```text
 eng-universe ingest enqueue-fetch <url> --config-version <version>
@@ -254,4 +254,4 @@ The enqueue command writes only Redis queue state.
 The worker command exposes the existing `fetch_raw` handler.
 Publishing HTTP response bytes to R2 and publishing Redis artifact records remain deferred.
 The legacy `seed`, `crawl`, and `index` paths remain separate.
-PR #4 does not add dual writes, migration, or legacy cutover.
+This change does not add dual writes, migration, or legacy cutover.
