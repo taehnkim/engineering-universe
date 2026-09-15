@@ -2,9 +2,11 @@ import asyncio
 import unittest
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
+from unittest.mock import patch
 
 import fakeredis.aioredis as fakeredis
 
+from eng_universe.config import Settings
 from eng_universe.ingest.contracts import (
     JsonValue,
     StageIdentity,
@@ -420,9 +422,6 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
 
 
     async def test_complete_sets_ttl_on_succeeded_runs_only(self) -> None:
-        from unittest.mock import patch
-        from eng_universe.config import Settings
-
         with patch.object(Settings, "stage_succeeded_run_ttl_s", 3600):
             enqueued = await self.queue.enqueue(request_for("ttl-ok"))
             lease = await self.queue.claim(

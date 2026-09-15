@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dataclasses import dataclass
-from enum import Enum
 import hashlib
 import json
 import math
 import re
+from collections.abc import Mapping
+from dataclasses import dataclass
+from enum import Enum
 from typing import Generic, Protocol, TypeAlias, TypeVar
-
 
 JsonScalar: TypeAlias = str | int | float | bool | None
 JsonValue: TypeAlias = (

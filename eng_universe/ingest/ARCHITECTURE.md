@@ -12,7 +12,7 @@ Python / CLI / worker / API
              |
        Redis stage runner
              |
-        Stage.execute
+        stage handler
              |
         StageResult
 ```
@@ -24,12 +24,9 @@ All callers use the same contract. This prevents duplicate stage logic.
 - `StageIdentity` gives each stage a stable name and version.
 - `StageInput` exposes only values that can change the result.
 - `StageRequest` joins the stage identity, semantic input, and configuration version.
-- `ExecutionPolicy` keeps force and promotion controls out of semantic input.
-- `StageContext` gives run metadata to the stage.
 - `StageResult` returns typed output and artifact references.
 - `ArtifactRef` points to an immutable object, such as a Cloudflare R2 object.
 - `StageStatus` defines states that the Redis runner persists.
-- `Stage` is a protocol. A stage does not need to inherit a base class.
 
 Generic input and output types let type checkers find invalid stage connections.
 Frozen data classes prevent accidental field reassignment.
@@ -67,7 +64,7 @@ The hash verifies content identity and supports immutable, content-addressed sto
 
 ## Redis queue and workers
 
-`stage_queue.py` stores versioned run and attempt hashes under `eu:v1:`.
+`stage_queue.py` stores versioned run hashes under `eu:v1:`.
 Ready and leased work use sorted sets, so due work and expired leases stay bounded.
 Lua scripts make enqueue, claim, heartbeat, completion, retry, and reclaim atomic.
 
@@ -76,8 +73,21 @@ The scheduler rotates ready origins, applies request spacing, and limits in-flig
 A lease token must match before a completion or failure releases an origin slot.
 
 `worker.py` runs asynchronous handler pools and heartbeats active leases.
-`ContractStageHandler` adapts the typed `Stage` protocol to persisted queue records.
-Typed failures select retryable, permanent, or blocked outcomes.
+Handlers are plain async functions. `StageError(kind=...)` selects retryable, permanent, or blocked outcomes.
+`fetch_worker.py` exposes `run_fetch_worker()` as the single fetch composition root.
+
+
+```text
+Settings (env)
+   |
+run_fetch_worker(queue, stop)        fn: lease + session + pool
+   |- ProcessLease                   class (token)
+   |- make_fetch_handler(...)        fn: robots + HTTP + R2
+   `- StageWorkerPool / run_pool     claim -> heartbeat -> complete/fail
+         `- StageQueue               class: thin wrapper over the Lua scripts
+```
+
+
 
 ### Run states and failure paths
 

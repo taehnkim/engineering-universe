@@ -8,10 +8,14 @@ import redis.asyncio as redis
 
 from eng_universe.config import Settings
 from eng_universe.ingest.contracts import JsonValue
-from eng_universe.ingest.queue_models import FETCH_RAW_STAGE, Origin, StageLease
+from eng_universe.ingest.queue_models import (
+    FETCH_RAW_STAGE,
+    FailureKind,
+    Origin,
+    StageLease,
+)
 from eng_universe.ingest.robots import can_fetch_path, get_or_fetch_robots, parse_domain
 from eng_universe.ingest.stage_queue import StageQueue
-from eng_universe.ingest.queue_models import FailureKind
 from eng_universe.ingest.worker import StageError, StageHandler
 
 
@@ -70,6 +74,7 @@ def make_fetch_handler(
 ) -> StageHandler:
     """Builds the fetch_raw stage handler for one shared HTTP session."""
     selected_checker = checker or FetchPathChecker(queue.redis, session)
+    upload_limiter = uploads
     max_inflight = Settings.fetch_origin_max_inflight
     if max_inflight < 1:
         raise ValueError("max_inflight must be at least 1")
@@ -96,7 +101,7 @@ def make_fetch_handler(
         async with session.get(decision.url) as response:
             body = await response.read()
             status_code = response.status
-        del uploads
+        _ = upload_limiter
         return {
             "url": decision.url,
             "status_code": status_code,
