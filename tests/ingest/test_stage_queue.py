@@ -103,7 +103,6 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         counts = await self.queue.counts("parse_article")
         self.assertEqual(counts.ready, 1)
 
-
     async def test_concurrent_claims_have_no_duplicates_or_loss(self) -> None:
         total = 250
         runs = await asyncio.gather(
@@ -430,7 +429,6 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         counts = await self.queue.counts("parse_article")
         self.assertEqual(counts.ready, total)
 
-
     async def test_complete_sets_ttl_on_succeeded_runs_only(self) -> None:
         with patch.object(Settings, "stage_succeeded_run_ttl_s", 3600):
             enqueued = await self.queue.enqueue(request_for("ttl-ok"))
@@ -460,7 +458,6 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         )
         fail_ttl = await self.redis.ttl(self.queue.keys.run(failed.run.run_id))
         self.assertEqual(fail_ttl, -1)
-
 
 
 if __name__ == "__main__":
