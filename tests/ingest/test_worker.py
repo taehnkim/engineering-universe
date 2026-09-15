@@ -26,6 +26,8 @@ from eng_universe.ingest.worker import (
 
 @dataclass(frozen=True)
 class WorkerInput:
+    """Provides semantic input for worker tests."""
+
     identifier: str
 
     def idempotency_payload(self) -> Mapping[str, JsonValue]:
@@ -41,6 +43,8 @@ def worker_request(identifier: str) -> StageRequest[WorkerInput]:
 
 
 class RecordingHandler:
+    """Records each stage run handled by a test."""
+
     def __init__(self) -> None:
         self.run_ids: set[str] = set()
         self._lock = asyncio.Lock()
@@ -56,6 +60,8 @@ class RecordingHandler:
 
 
 class RetryOnceHandler:
+    """Fails once before it returns a result."""
+
     def __init__(self) -> None:
         self.calls = 0
 
@@ -71,12 +77,16 @@ class RetryOnceHandler:
 
 
 class SlowHandler:
+    """Runs long enough to require a heartbeat."""
+
     async def __call__(self, lease: StageLease) -> JsonValue:
         await asyncio.sleep(0.08)
         return {"heartbeat": True}
 
 
 class BlockingHandler:
+    """Waits until the worker cancels the task."""
+
     def __init__(self) -> None:
         self.started = asyncio.Event()
 
@@ -87,6 +97,8 @@ class BlockingHandler:
 
 
 class ContractStage:
+    """Implements a typed stage for adapter tests."""
+
     identity = StageIdentity(name="normalize_article", version="1.0.0")
 
     def __init__(self) -> None:
@@ -102,6 +114,8 @@ class ContractStage:
 
 
 class StageWorkerPoolTests(unittest.IsolatedAsyncioTestCase):
+    """Tests async stage worker behavior."""
+
     async def asyncSetUp(self) -> None:
         self.redis = fakeredis.FakeRedis()
         self.queue = StageQueue(

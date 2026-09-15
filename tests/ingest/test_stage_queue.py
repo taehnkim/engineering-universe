@@ -23,6 +23,8 @@ from eng_universe.ingest.stage_queue import LeaseLostError, StageQueue
 
 @dataclass(frozen=True)
 class QueueInput:
+    """Provides semantic input for queue tests."""
+
     values: Mapping[str, JsonValue]
 
     def idempotency_payload(self) -> Mapping[str, JsonValue]:
@@ -46,6 +48,8 @@ def request_for(
 
 
 class StageQueueTests(unittest.IsolatedAsyncioTestCase):
+    """Tests Redis stage queue behavior."""
+
     async def asyncSetUp(self) -> None:
         self.redis = fakeredis.FakeRedis()
         self.queue = StageQueue(

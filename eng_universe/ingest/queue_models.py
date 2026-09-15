@@ -18,6 +18,8 @@ FETCH_RAW_STAGE = "fetch_raw"
 
 
 class FailureKind(str, Enum):
+    """Classifies how the queue handles a failed attempt."""
+
     RETRYABLE = "retryable"
     PERMANENT = "permanent"
     BLOCKED = "blocked"
@@ -61,6 +63,8 @@ def new_lease_token() -> str:
 
 @dataclass(frozen=True, slots=True)
 class Origin:
+    """Identifies the normalized origin for a fetch URL."""
+
     origin_id: str
     value: str
 
@@ -89,6 +93,8 @@ class Origin:
 
 @dataclass(frozen=True, slots=True)
 class StageQueueKeys:
+    """Builds versioned Redis keys for stage queues."""
+
     namespace: str = QUEUE_NAMESPACE
 
     def __post_init__(self) -> None:
@@ -144,6 +150,8 @@ class StageQueueKeys:
 
 @dataclass(frozen=True, slots=True)
 class StageRunRecord:
+    """Represents one persisted stage run."""
+
     run_id: str
     stage_name: str
     stage_version: str
@@ -275,6 +283,8 @@ class StageRunRecord:
 
 @dataclass(frozen=True, slots=True)
 class AttemptRecord:
+    """Represents one leased execution attempt."""
+
     attempt_id: str
     run_id: str
     number: int
@@ -312,12 +322,16 @@ class AttemptRecord:
 
 @dataclass(frozen=True, slots=True)
 class EnqueueResult:
+    """Reports the result of an enqueue operation."""
+
     run: StageRunRecord
     created: bool
 
 
 @dataclass(frozen=True, slots=True)
 class StageLease:
+    """Holds the token for one leased stage run."""
+
     run: StageRunRecord
     attempt: AttemptRecord
 
@@ -332,6 +346,8 @@ class StageLease:
 
 @dataclass(frozen=True, slots=True)
 class QueueCounts:
+    """Reports stage queue counts by state."""
+
     ready: int
     leased: int
     dead: int

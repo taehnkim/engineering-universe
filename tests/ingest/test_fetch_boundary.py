@@ -24,6 +24,8 @@ from eng_universe.ingest.worker import StageWorkerPool
 
 @dataclass(frozen=True)
 class FetchInput:
+    """Provides a URL for fetch boundary tests."""
+
     url: str
 
     def idempotency_payload(self) -> Mapping[str, JsonValue]:
@@ -39,6 +41,8 @@ def fetch_request(url: str) -> StageRequest[FetchInput]:
 
 
 class RecordingFetch:
+    """Records whether an authorized fetch ran."""
+
     def __init__(self) -> None:
         self.called = False
 
@@ -53,6 +57,8 @@ class RecordingFetch:
 
 
 class DenyingChecker:
+    """Denies each URL used by a test."""
+
     async def check(self, url: str) -> FetchPathDecision:
         return FetchPathDecision(
             url=url,
@@ -64,6 +70,8 @@ class DenyingChecker:
 
 
 class FetchBoundaryTests(unittest.IsolatedAsyncioTestCase):
+    """Tests robots checks at the fetch boundary."""
+
     async def asyncSetUp(self) -> None:
         self.redis = fakeredis.FakeRedis()
         self.queue = StageQueue(

@@ -31,6 +31,8 @@ import eng_universe.storage.r2 as r2
 
 @dataclass
 class CrawlResult:
+    """Stores one successful HTTP crawl response."""
+
     url: str
     status: int
     html: str

@@ -17,6 +17,8 @@ from eng_universe.ingest.worker import BlockedStageError
 
 @dataclass(frozen=True, slots=True)
 class FetchPathDecision:
+    """Reports the robots decision for one exact URL."""
+
     url: str
     origin: Origin
     allowed: bool
@@ -25,6 +27,8 @@ class FetchPathDecision:
 
 
 class FetchPathChecker:
+    """Checks robots rules for each requested URL."""
+
     def __init__(
         self,
         redis_client: redis.Redis,
@@ -59,6 +63,8 @@ class FetchPathChecker:
 
 
 class AuthorizedFetchHandler(Protocol):
+    """Executes a fetch after a robots check."""
+
     async def __call__(
         self,
         lease: StageLease,
@@ -74,6 +80,8 @@ class AuthorizedFetchHandler(Protocol):
 
 
 class RobotsAwareFetchHandler:
+    """Checks robots rules before each queued fetch."""
+
     def __init__(
         self,
         queue: StageQueue,

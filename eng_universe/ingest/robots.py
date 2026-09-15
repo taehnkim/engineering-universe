@@ -13,6 +13,8 @@ from eng_universe.config import Settings
 
 @dataclass
 class RobotsRules:
+    """Stores parsed robots policy data for one domain."""
+
     domain: str
     crawl_delay_s: int
     request_rate_s: int

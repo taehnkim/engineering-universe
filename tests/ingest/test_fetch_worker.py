@@ -33,6 +33,8 @@ from eng_universe.ingest.stage_queue import StageQueue
 
 @dataclass(frozen=True)
 class RuntimeFetchInput:
+    """Provides a URL for fetch runtime tests."""
+
     url: str
 
     def idempotency_payload(self) -> Mapping[str, JsonValue]:
@@ -48,6 +50,8 @@ def runtime_request(url: str) -> StageRequest[RuntimeFetchInput]:
 
 
 class AllowingChecker:
+    """Allows each URL used by a test."""
+
     async def check(self, url: str) -> FetchPathDecision:
         return FetchPathDecision(
             url=url,
@@ -59,6 +63,8 @@ class AllowingChecker:
 
 
 class RuntimeHandlerFactory:
+    """Records shared fetch runtime resources."""
+
     def __init__(self, stop_event: asyncio.Event, expected: int) -> None:
         self.stop_event = stop_event
         self.expected = expected
@@ -83,6 +89,8 @@ class RuntimeHandlerFactory:
 
 
 class HandlerFactory:
+    """Builds the recording fetch handler."""
+
     def __init__(self, runtime: RuntimeHandlerFactory) -> None:
         self.runtime = runtime
 
@@ -100,6 +108,8 @@ class HandlerFactory:
 
 
 class FetchWorkerTests(unittest.IsolatedAsyncioTestCase):
+    """Tests fetch worker concurrency boundaries."""
+
     async def asyncSetUp(self) -> None:
         self.redis = fakeredis.FakeRedis()
         self.queue = StageQueue(

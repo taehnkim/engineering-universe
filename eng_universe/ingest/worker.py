@@ -19,6 +19,8 @@ from eng_universe.ingest.stage_queue import LeaseLostError, StageQueue
 
 
 class StageHandler(Protocol):
+    """Executes one leased stage run."""
+
     async def __call__(self, lease: StageLease) -> JsonValue:
         """
         Execute one leased stage run and return its serializable output.
@@ -26,6 +28,8 @@ class StageHandler(Protocol):
 
 
 class ContractStageHandler:
+    """Adapts a typed stage to the Redis worker."""
+
     def __init__(
         self,
         stage: Stage[StageInput, Any],
@@ -75,6 +79,8 @@ class ContractStageHandler:
 
 @dataclass(frozen=True, slots=True)
 class StageExecutionError(Exception):
+    """Describes a controlled stage execution failure."""
+
     error_code: str
     message: str
     retry_delay_ms: int | None = None
@@ -85,18 +91,20 @@ class StageExecutionError(Exception):
 
 
 class RetryableStageError(StageExecutionError):
-    pass
+    """Reports a stage failure that can be retried."""
 
 
 class PermanentStageError(StageExecutionError):
-    pass
+    """Reports a stage failure that cannot be retried."""
 
 
 class BlockedStageError(StageExecutionError):
-    pass
+    """Reports a stage run blocked by policy."""
 
 
 class StageWorkerPool:
+    """Runs leased stages with async worker coroutines."""
+
     def __init__(
         self,
         queue: StageQueue,

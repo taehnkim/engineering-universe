@@ -21,6 +21,8 @@ def env_bool(name: str, default: str = "false") -> bool:
 
 @dataclass(frozen=True)
 class KeywordFieldConfig:
+    """Defines one Redis search field."""
+
     name: str
     field_type: str
     weight: float | None = None
@@ -45,6 +47,8 @@ KEYWORD_FIELDS: list[KeywordFieldConfig] = [
 
 
 class Settings:
+    """Loads application settings from environment variables."""
+
     user_agent = os.getenv("EU_USER_AGENT", "EngUniverseBot/0.1")
     redis_url = env("REDIS_URL", "redis://default:devpass@localhost:6379/0")
     crawl_queue_key = os.getenv("CRAWL_QUEUE_KEY", "crawl:queue")

@@ -45,10 +45,12 @@ from eng_universe.ingest.queue_scripts import (
 
 
 class LeaseLostError(RuntimeError):
-    pass
+    """Reports that a worker no longer owns a lease."""
 
 
 class _LuaScript:
+    """Loads and runs one cached Redis Lua script."""
+
     def __init__(self, source: str) -> None:
         self.source = source
         self.sha = hashlib.sha1(source.encode("utf-8")).hexdigest()
@@ -96,6 +98,8 @@ def _first_integer(response: object) -> int:
 
 
 class StageQueue:
+    """Manages durable stage work in Redis."""
+
     def __init__(
         self,
         redis_client: redis.Redis,

@@ -37,15 +37,17 @@ ResultT = TypeVar("ResultT")
 
 
 class FetchWorkerAlreadyRunning(RuntimeError):
-    pass
+    """Reports that another fetch process owns the lease."""
 
 
 class FetchWorkerLeaseLost(RuntimeError):
-    pass
+    """Reports that the fetch process lost its lease."""
 
 
 @dataclass(frozen=True, slots=True)
 class FetchWorkerConfig:
+    """Defines fetch process concurrency limits."""
+
     process_count: int = 1
     concurrency: int = 100
     global_connection_limit: int = 100
@@ -93,6 +95,8 @@ class FetchWorkerConfig:
 
 
 class R2UploadLimiter:
+    """Limits concurrent blocking R2 uploads."""
+
     def __init__(self, concurrency: int) -> None:
         if concurrency < 1:
             raise ValueError("R2 upload concurrency must be positive")
@@ -110,6 +114,8 @@ class R2UploadLimiter:
 
 
 class FetchHandlerFactory(Protocol):
+    """Builds a handler for the shared HTTP session."""
+
     def __call__(
         self,
         session: aiohttp.ClientSession,
@@ -124,6 +130,8 @@ class FetchHandlerFactory(Protocol):
 
 
 class FetchProcessLease:
+    """Prevents more than one active fetch process."""
+
     def __init__(
         self,
         redis_client: redis.Redis,
@@ -176,6 +184,8 @@ class FetchProcessLease:
 
 
 class FetchWorkerRuntime:
+    """Runs the single async fetch process."""
+
     def __init__(
         self,
         queue: StageQueue,
