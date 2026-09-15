@@ -79,6 +79,50 @@ A lease token must match before a completion or failure releases an origin slot.
 `ContractStageHandler` adapts the typed `Stage` protocol to persisted queue records.
 Typed failures select retryable, permanent, or blocked outcomes.
 
+### Run states and failure paths
+
+`StageStatus` values that the queue scripts drive:
+
+```text
+enqueue → queued ──claim──► leased ──heartbeat──► running ──complete──► succeeded
+                              │                      │
+                              └──────── fail / reclaim ────────┐
+                                                               ▼
+                                              retryable+attempts → retry_wait ──claim──► leased
+                                              permanent/exhausted → failed (dead)
+                                              blocked             → blocked
+```
+
+Lease expiry (watchdog reclaim):
+
+```text
+leased/running ──lease expired──► attempt=expired
+                     │
+         attempts left → retry_wait
+         none left     → failed
+```
+
+Failure kinds:
+
+```text
+leased / running
+       |
+   fail(kind)
+       |
+ +-----+-----+---------------------+
+ |           |                     |
+retryable   permanent           blocked
+ |           |                     |
+ |      state=failed        state=blocked
+ |      → dead ZSET        → blocked ZSET
+ |
+ +-- attempts left → retry_wait → ready again
+ +-- exhausted     → failed     → dead ZSET
+```
+
+Default `max_attempts` is 5. Retry delay uses exponential backoff with full jitter.
+`cancelled` and `skipped` exist on `StageStatus` but have no queue transition yet.
+
 `fetch_boundary.py` applies the existing robots parser to the exact request path.
 Redirect handlers must call the checker again before each redirected request.
 
