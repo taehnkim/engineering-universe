@@ -47,6 +47,10 @@ KEYWORD_FIELDS: list[KeywordFieldConfig] = [
 class Settings:
     user_agent = os.getenv("EU_USER_AGENT", "EngUniverseBot/0.1")
     redis_url = env("REDIS_URL", "redis://default:devpass@localhost:6379/0")
+    database_url = env(
+        "DATABASE_URL",
+        "postgresql+psycopg://eng_universe:eng_universe@localhost:5432/eng_universe",
+    )
     crawl_queue_key = os.getenv("CRAWL_QUEUE_KEY", "crawl:queue")
     crawl_delay_key = os.getenv("CRAWL_DELAY_KEY", "crawl:delay")
     raw_queue_key = os.getenv("RAW_QUEUE_KEY", "raw:queue")
