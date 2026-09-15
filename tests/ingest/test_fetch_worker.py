@@ -1,26 +1,26 @@
+from __future__ import annotations
+
 import asyncio
 import threading
 import time
 import unittest
 from collections.abc import Mapping
 from dataclasses import dataclass
+from unittest.mock import patch
 
-import aiohttp
 import fakeredis.aioredis as fakeredis
 
+from eng_universe.config import Settings
 from eng_universe.ingest.contracts import JsonValue, StageIdentity, StageRequest
-from eng_universe.ingest.fetch_boundary import (
-    AuthorizedFetchHandler,
-    FetchPathChecker,
-    FetchPathDecision,
-)
+from eng_universe.ingest.fetch_boundary import FetchPathDecision
 from eng_universe.ingest.fetch_worker import (
-    FetchProcessLease,
+    ProcessLease,
     FetchWorkerAlreadyRunning,
-    FetchWorkerConfig,
     FetchWorkerLeaseLost,
-    FetchWorkerRuntime,
     R2UploadLimiter,
+    _validate_fetch_settings,
+    fetch_process_lock_key,
+    run_fetch_worker,
 )
 from eng_universe.ingest.queue_models import (
     FETCH_RAW_STAGE,
@@ -62,49 +62,21 @@ class AllowingChecker:
         )
 
 
-class RuntimeHandlerFactory:
-    """Records shared fetch runtime resources."""
+class RecordingHandler:
+    """Records leased runs handled by the fetch worker."""
 
     def __init__(self, stop_event: asyncio.Event, expected: int) -> None:
         self.stop_event = stop_event
         self.expected = expected
-        self.session_ids: set[int] = set()
-        self.connection_limits: set[int] = set()
-        self.upload_limiters: set[int] = set()
         self.handled: set[str] = set()
-        self.factory_calls = 0
         self.started = asyncio.Event()
 
-    async def handle(
-        self,
-        lease: StageLease,
-        decision: FetchPathDecision,
-        checker: FetchPathChecker,
-    ) -> JsonValue:
+    async def __call__(self, lease: StageLease) -> JsonValue:
         self.handled.add(lease.run.run_id)
         self.started.set()
-        if len(self.handled) == self.expected:
+        if len(self.handled) >= self.expected:
             self.stop_event.set()
-        return {"url": decision.url}
-
-
-class HandlerFactory:
-    """Builds the recording fetch handler."""
-
-    def __init__(self, runtime: RuntimeHandlerFactory) -> None:
-        self.runtime = runtime
-
-    def __call__(
-        self,
-        session: aiohttp.ClientSession,
-        uploads: R2UploadLimiter,
-    ) -> AuthorizedFetchHandler:
-        self.runtime.factory_calls += 1
-        self.runtime.session_ids.add(id(session))
-        assert session.connector is not None
-        self.runtime.connection_limits.add(session.connector.limit)
-        self.runtime.upload_limiters.add(id(uploads))
-        return self.runtime.handle
+        return {"url": lease.run.input_payload.get("url")}
 
 
 class FetchWorkerTests(unittest.IsolatedAsyncioTestCase):
@@ -122,20 +94,20 @@ class FetchWorkerTests(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.redis.aclose()
 
-    def test_v1_defaults_and_process_boundary(self) -> None:
-        config = FetchWorkerConfig()
-
-        self.assertEqual(config.process_count, 1)
-        self.assertEqual(config.concurrency, 100)
-        self.assertEqual(config.global_connection_limit, 100)
-        self.assertEqual(config.origin_max_inflight, 1)
-        with self.assertRaisesRegex(ValueError, "process_count must remain 1"):
-            FetchWorkerConfig(process_count=2)
+    def test_settings_validation_rejects_invalid_limits(self) -> None:
+        _validate_fetch_settings()
+        with patch.object(Settings, "fetch_worker_concurrency", 0):
+            with self.assertRaisesRegex(ValueError, "fetch concurrency"):
+                _validate_fetch_settings()
+        with patch.object(Settings, "stage_lease_ms", 1):
+            with patch.object(Settings, "request_timeout_s", 20):
+                with self.assertRaisesRegex(ValueError, "longer than the HTTP"):
+                    _validate_fetch_settings()
 
     async def test_redis_process_lease_prevents_limit_multiplication(self) -> None:
-        key = "eu:fetch-runtime-test:v1:lock:fetch-worker"
-        first = FetchProcessLease(self.redis, key, lease_ms=1_000)  # type: ignore[arg-type]
-        second = FetchProcessLease(self.redis, key, lease_ms=1_000)  # type: ignore[arg-type]
+        key = fetch_process_lock_key(self.queue)
+        first = ProcessLease(self.redis, key, lease_ms=1_000)
+        second = ProcessLease(self.redis, key, lease_ms=1_000)
 
         await first.acquire()
         with self.assertRaises(FetchWorkerAlreadyRunning):
@@ -144,7 +116,7 @@ class FetchWorkerTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(await first.release())
         self.assertEqual(await self.redis.get(key), b"replacement-token")
 
-    async def test_runtime_uses_one_shared_limited_session(self) -> None:
+    async def test_run_fetch_worker_uses_injected_handler(self) -> None:
         total = 6
         await asyncio.gather(
             *(
@@ -155,27 +127,21 @@ class FetchWorkerTests(unittest.IsolatedAsyncioTestCase):
             )
         )
         stop_event = asyncio.Event()
-        observed = RuntimeHandlerFactory(stop_event, total)
-        runtime = FetchWorkerRuntime(
-            self.queue,
-            HandlerFactory(observed),  # type: ignore[arg-type]
-            config=FetchWorkerConfig(
-                concurrency=total,
-                global_connection_limit=4,
-                r2_upload_concurrency=2,
-                process_lease_ms=1_000,
-                process_heartbeat_ms=200,
-            ),
-            checker_factory=lambda client, session: AllowingChecker(),  # type: ignore[arg-type]
-        )
+        handler = RecordingHandler(stop_event, total)
+        with patch.object(Settings, "fetch_worker_concurrency", total):
+            with patch.object(Settings, "fetch_process_lease_ms", 1_000):
+                with patch.object(Settings, "fetch_process_heartbeat_ms", 200):
+                    await asyncio.wait_for(
+                        run_fetch_worker(
+                            self.queue,
+                            stop_event,
+                            handler=handler,
+                            checker=AllowingChecker(),  # type: ignore[arg-type]
+                        ),
+                        timeout=2,
+                    )
 
-        await asyncio.wait_for(runtime.run(stop_event), timeout=2)
-
-        self.assertEqual(observed.factory_calls, 1)
-        self.assertEqual(len(observed.session_ids), 1)
-        self.assertEqual(observed.connection_limits, {4})
-        self.assertEqual(len(observed.upload_limiters), 1)
-        self.assertEqual(len(observed.handled), total)
+        self.assertEqual(len(handler.handled), total)
 
     async def test_r2_uploads_use_a_separate_bounded_semaphore(self) -> None:
         limiter = R2UploadLimiter(2)
@@ -200,30 +166,30 @@ class FetchWorkerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(results, list(range(8)))
         self.assertEqual(maximum, 2)
 
-    async def test_runtime_stops_if_process_lease_is_lost(self) -> None:
+    async def test_run_fetch_worker_stops_if_process_lease_is_lost(self) -> None:
         await self.queue.enqueue(runtime_request("https://example.com/article"))
         stop_event = asyncio.Event()
-        observed = RuntimeHandlerFactory(stop_event, expected=2)
-        runtime = FetchWorkerRuntime(
-            self.queue,
-            HandlerFactory(observed),  # type: ignore[arg-type]
-            config=FetchWorkerConfig(
-                concurrency=1,
-                process_lease_ms=100,
-                process_heartbeat_ms=20,
-            ),
-            checker_factory=lambda client, session: AllowingChecker(),  # type: ignore[arg-type]
-        )
-        running = asyncio.create_task(runtime.run(stop_event))
-        await asyncio.wait_for(observed.started.wait(), timeout=1)
-        await self.redis.set(
-            runtime.process_lock_key,
-            "replacement-token",
-            px=1_000,
-        )
+        handler = RecordingHandler(stop_event, expected=2)
+        with patch.object(Settings, "fetch_worker_concurrency", 1):
+            with patch.object(Settings, "fetch_process_lease_ms", 100):
+                with patch.object(Settings, "fetch_process_heartbeat_ms", 20):
+                    running = asyncio.create_task(
+                        run_fetch_worker(
+                            self.queue,
+                            stop_event,
+                            handler=handler,
+                            checker=AllowingChecker(),  # type: ignore[arg-type]
+                        )
+                    )
+                    await asyncio.wait_for(handler.started.wait(), timeout=1)
+                    await self.redis.set(
+                        fetch_process_lock_key(self.queue),
+                        "replacement-token",
+                        px=1_000,
+                    )
 
-        with self.assertRaises(FetchWorkerLeaseLost):
-            await asyncio.wait_for(running, timeout=1)
+                    with self.assertRaises(FetchWorkerLeaseLost):
+                        await asyncio.wait_for(running, timeout=1)
 
 
 if __name__ == "__main__":

@@ -116,3 +116,35 @@ class RobotsAwareFetchHandler:
                 message=f"robots policy denied exact path {url}",
             )
         return await self.handler(lease, decision, self.checker)
+
+
+def make_fetch_handler(
+    queue: StageQueue,
+    session: aiohttp.ClientSession,
+    checker: FetchPathChecker | None,
+    uploads: object,
+) -> RobotsAwareFetchHandler:
+    """Builds the fetch_raw stage handler for one shared HTTP session."""
+    selected_checker = checker or FetchPathChecker(queue.redis, session)
+
+    async def authorized(
+        lease: StageLease,
+        decision: FetchPathDecision,
+        path_checker: FetchPathChecker,
+    ) -> JsonValue:
+        del lease, path_checker, uploads
+        async with session.get(decision.url) as response:
+            body = await response.read()
+            status_code = response.status
+        return {
+            "url": decision.url,
+            "status_code": status_code,
+            "byte_size": len(body),
+        }
+
+    return RobotsAwareFetchHandler(
+        queue,
+        selected_checker,
+        authorized,
+        max_inflight=Settings.fetch_origin_max_inflight,
+    )
