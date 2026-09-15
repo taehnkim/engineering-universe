@@ -81,7 +81,7 @@ local score = redis.call("ZSCORE", KEYS[1], ARGV[1])
 if not score or tonumber(score) > now then
     return {0}
 end
-if state ~= "queued" and state ~= "retry_wait" then
+if state ~= "queued" then
     redis.call("ZREM", KEYS[1], ARGV[1])
     return {0}
 end
@@ -141,7 +141,7 @@ local run_score = redis.call("ZSCORE", KEYS[2], ARGV[2])
 if not origin_score or tonumber(origin_score) > now or not run_score or tonumber(run_score) > now then
     return {0}
 end
-if state ~= "queued" and state ~= "retry_wait" then
+if state ~= "queued" then
     redis.call("ZREM", KEYS[2], ARGV[2])
     redis.call("ZREM", KEYS[3], ARGV[2])
     schedule_origin(now)
@@ -345,7 +345,7 @@ if ARGV[4] == "retryable" and attempt_count < max_attempts then
     redis.call(
         "HSET",
         KEYS[2],
-        "state", "retry_wait",
+        "state", "queued",
         "due_at_ms", retry_at,
         "error_class", ARGV[4],
         "error_code", ARGV[5],
@@ -363,7 +363,7 @@ if ARGV[4] == "retryable" and attempt_count < max_attempts then
             ARGV[10]
         )
     end
-    return {1, "retry_wait", retry_at}
+    return {1, "queued", retry_at}
 end
 
 local terminal_state = "failed"
@@ -431,7 +431,7 @@ if attempt_count < max_attempts then
     redis.call(
         "HSET",
         KEYS[2],
-        "state", "retry_wait",
+        "state", "queued",
         "due_at_ms", retry_at,
         "error_class", "retryable",
         "error_code", "lease_expired",
@@ -449,7 +449,7 @@ if attempt_count < max_attempts then
             ARGV[7]
         )
     end
-    return {1, "retry_wait", retry_at}
+    return {1, "queued", retry_at}
 end
 
 redis.call(

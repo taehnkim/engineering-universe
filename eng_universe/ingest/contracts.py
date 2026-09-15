@@ -29,7 +29,6 @@ class StageStatus(str, Enum):
     LEASED = "leased"
     RUNNING = "running"
     SUCCEEDED = "succeeded"
-    RETRY_WAIT = "retry_wait"
     FAILED = "failed"
     BLOCKED = "blocked"
     CANCELLED = "cancelled"

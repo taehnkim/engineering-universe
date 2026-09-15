@@ -67,7 +67,7 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         result = await self.queue.enqueue(request_for("doc-1"))
 
         self.assertTrue(result.created)
-        self.assertEqual(result.run.schema_version, "1")
+        self.assertEqual(result.run.schema_version, "2")
         self.assertEqual(result.run.state, StageStatus.QUEUED)
         self.assertEqual(result.run.input_payload, {"id": "doc-1"})
         self.assertTrue(
@@ -135,17 +135,27 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         first = await self.queue.claim("parse_article", worker_id="worker-1")
         self.assertIsNotNone(first)
         assert first is not None
+        before_failure_ms = await self.queue.server_time_ms()
 
         failed = await self.queue.fail(
             first,
             kind=FailureKind.RETRYABLE,
             error_code="timeout",
             error_message="request timed out",
-            retry_delay_ms=0,
+            retry_delay_ms=50,
         )
-        self.assertEqual(failed.state, StageStatus.RETRY_WAIT)
+        self.assertEqual(failed.state, StageStatus.QUEUED)
         self.assertEqual(failed.run_id, enqueued.run.run_id)
+        self.assertEqual(failed.attempt_count, 1)
+        self.assertGreaterEqual(failed.due_at_ms, before_failure_ms + 50)
+        self.assertEqual(failed.error_class, FailureKind.RETRYABLE.value)
+        self.assertEqual(failed.error_code, "timeout")
+        self.assertEqual(failed.error_message, "request timed out")
+        self.assertIsNone(
+            await self.queue.claim("parse_article", worker_id="worker-too-early")
+        )
 
+        await asyncio.sleep(0.06)
         second = await self.queue.claim("parse_article", worker_id="worker-2")
         self.assertIsNotNone(second)
         assert second is not None

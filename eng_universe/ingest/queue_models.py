@@ -12,7 +12,7 @@ from urllib.parse import urlsplit
 
 from eng_universe.ingest.contracts import JsonValue, StageStatus
 
-QUEUE_SCHEMA_VERSION = "1"
+QUEUE_SCHEMA_VERSION = "2"
 QUEUE_NAMESPACE = "eu:v1"
 FETCH_RAW_STAGE = "fetch_raw"
 

@@ -135,6 +135,8 @@ The hash verifies content identity and supports immutable, content-addressed sto
 `stage_queue.py` stores versioned run hashes under `eu:v1:`.
 Ready and leased work use sorted sets, so due work and expired leases stay bounded.
 Lua scripts make enqueue, claim, heartbeat, completion, retry, and reclaim atomic.
+Readiness means `state=queued` and `due_at_ms` is not later than Redis server time.
+The ready sorted-set score is the same `due_at_ms` value.
 
 `fetch_raw` has one sorted set per origin and a global origin schedule.
 The scheduler rotates ready origins, applies request spacing, and limits in-flight work.
@@ -143,6 +145,8 @@ A lease token must match before a completion or failure releases an origin slot.
 `worker.py` runs asynchronous handler pools and heartbeats active leases.
 Handlers are plain async functions. `StageError(kind=...)` selects retryable, permanent, or blocked outcomes.
 `fetch_worker.py` exposes `run_fetch_worker()` as the single fetch composition root.
+`application.py` builds the configured queue and the `fetch_raw` request.
+`eng_universe.cli` exposes that application through the installed `eng-universe` command.
 
 ```text
 Settings (env)
@@ -159,13 +163,18 @@ run_fetch_worker(queue, stop)        fn: lease + session + pool
 `StageStatus` values that the queue scripts drive:
 
 ```text
-enqueue → queued ──claim──► leased ──heartbeat──► running ──complete──► succeeded
-                              │                      │
-                              └──────── fail / reclaim ────────┐
-                                                               ▼
-                                              retryable+attempts → retry_wait ──claim──► leased
-                                              permanent/exhausted → failed (dead)
-                                              blocked             → blocked
+enqueue → queued + due_at_ms ──due claim──► leased ──heartbeat──► running
+              ▲                                │                      │
+              │                                └──── fail/reclaim ────┤
+              │                                                       │
+              └──── retryable + attempts left + future due_at_ms ─────┘
+                                                                      │
+                                              complete ──► succeeded  │
+                                              permanent/exhausted ◄───┤
+                                                    │                 │
+                                                    ▼                 │
+                                              failed (dead)           │
+                                              blocked ◄───────────────┘
 ```
 
 Lease expiry (watchdog reclaim):
@@ -173,7 +182,7 @@ Lease expiry (watchdog reclaim):
 ```text
 leased/running ──lease expired──► attempt=expired
                      │
-         attempts left → retry_wait
+         attempts left → queued + new due_at_ms
          none left     → failed
 ```
 
@@ -191,11 +200,12 @@ retryable   permanent           blocked
  |      state=failed        state=blocked
  |      → dead ZSET        → blocked ZSET
  |
- +-- attempts left → retry_wait → ready again
+ +-- attempts left → queued + future due_at_ms
  +-- exhausted     → failed     → dead ZSET
 ```
 
 Default `max_attempts` is 5. Retry delay uses exponential backoff with full jitter.
+Queued work is claimable only when its ready sorted-set score is due.
 `cancelled` and `skipped` exist on `StageStatus` but have no queue transition yet.
 
 `fetch_boundary.py` applies the existing robots parser to the exact request path.
@@ -221,9 +231,27 @@ Redis AOF is enabled with `appendfsync everysec`, and the Redis `/data` director
 
 Succeeded run hashes receive a TTL (`STAGE_SUCCEEDED_RUN_TTL_S`, default 7 days). Failed, dead, and blocked runs keep no TTL so operators can inspect them.
 
+Queue record schema version 2 removes the separate retry-wait state.
+Schema version 1 run hashes are not read as version 2 records.
+PR #3 had no application entrypoint, so PR #4 does not add an in-place data migration.
+Clear an experimental version 1 namespace before using the PR #4 entrypoint.
+
 ## Boundaries
 
 The contract module has no Redis, HTTP, R2, database, or model client.
 Tests can use it without infrastructure.
 The queue is Redis-only and stores no raw artifact body.
 Artifact publication and downstream stage scheduling remain separate concerns.
+
+PR #4 adds only these application commands:
+
+```text
+eng-universe ingest enqueue-fetch <url> --config-version <version>
+eng-universe ingest run-fetch-worker
+```
+
+The enqueue command writes only Redis queue state.
+The worker command exposes the existing `fetch_raw` handler.
+Publishing HTTP response bytes to R2 and publishing Redis artifact records remain deferred.
+The legacy `seed`, `crawl`, and `index` paths remain separate.
+PR #4 does not add dual writes, migration, or legacy cutover.
