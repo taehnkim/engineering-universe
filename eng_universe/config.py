@@ -67,11 +67,12 @@ class Settings:
     crawl_log = env_bool("CRAWL_LOG", "true")
     seed_domains = os.getenv(
         "SEED_DOMAINS",
-        "engineering.fb.com",
+        "",
     )
+    # Comma-separated override. Empty = seed every listing root in source_catalog.SOURCES.
     seed_start_urls = os.getenv(
         "SEED_START_URLS",
-        "https://engineering.fb.com/",
+        "",
     )
     max_workers = int(
         os.getenv("MAX_WORKERS") or os.getenv("CRAWLER_CONCURRENCY", "200")

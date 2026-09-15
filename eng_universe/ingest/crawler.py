@@ -1,7 +1,6 @@
 import asyncio
 from dataclasses import dataclass
 import hashlib
-import re
 import time
 from urllib.parse import urldefrag, urljoin, urlparse
 import xml.etree.ElementTree as ElementTree
@@ -26,6 +25,15 @@ from eng_universe.ingest.robots import (
     parse_domain,
     reserve_next_allowed,
 )
+from eng_universe.ingest.sources import (
+    UrlKind,
+    all_seed_urls,
+    classify_url,
+    is_allowed_url,
+    is_sitemap_url,
+    resolve_seed_url,
+    sitemap_urls_for_host,
+)
 import eng_universe.storage.r2 as r2
 
 
@@ -41,52 +49,6 @@ class CrawlResult:
 UNWANTED_TAGS = ("nav", "footer", "aside", "script", "style", "noscript")
 
 log_event = get_event_logger("crawler")
-
-
-ALLOWED_URL_PATTERNS: dict[str, list[re.Pattern[str]]] = {
-    "engineering.fb.com": [
-        re.compile(r"^/\d{4}/\d{2}/\d{2}/[^/]+/[^/]+$"),
-    ],
-    "builders.ramp.com": [re.compile(r"^/post/[^/]+$")],
-    "airbnb.tech": [re.compile(r"^/[^/]+/[^/]+$")],
-    "www.anthropic.com": [re.compile(r"^/engineering/[^/]+$")],
-    "developers.openai.com": [re.compile(r"^/blog/[^/]+$")],
-    "blog.cloudflare.com": [re.compile(r"^/[^/]+$")],
-    "developers.googleblog.com": [re.compile(r"^/[^/]+$")],
-    "www.notion.com": [re.compile(r"^/blog/[^/]+$")],
-    "cursor.com": [re.compile(r"^/blog/[^/]+$")],
-    "shopify.engineering": [re.compile(r"^/[^/]+$")],
-    "netflixtechblog.com": [re.compile(r"^/[^/]+-[0-9a-f]{8,}$")],
-    "github.blog": [re.compile(r"^/engineering/[^/]+/[^/]+$")],
-    "engineering.atspotify.com": [re.compile(r"^/\d{4}/\d{1,2}/[^/]+$")],
-    "slack.engineering": [re.compile(r"^/[^/]+$")],
-    "stripe.com": [re.compile(r"^/blog/[^/]+$")],
-    "www.uber.com": [re.compile(r"^/blog/[^/]+$")],
-}
-
-ALLOWED_SEED_PATHS: dict[str, set[str]] = {
-    "engineering.fb.com": {"/"},
-    "builders.ramp.com": {"/"},
-    "airbnb.tech": {"/"},
-    "www.anthropic.com": {"/engineering"},
-    "developers.openai.com": {"/blog"},
-    "blog.cloudflare.com": {"/"},
-    "developers.googleblog.com": {"/"},
-    "www.notion.com": {"/blog"},
-    "cursor.com": {"/blog"},
-    "shopify.engineering": {"/"},
-    "netflixtechblog.com": {"/"},
-    "github.blog": {"/engineering"},
-    "engineering.atspotify.com": {"/"},
-    "slack.engineering": {"/"},
-    "stripe.com": {"/blog"},
-    "www.uber.com": {"/blog"},
-}
-
-DEFAULT_SITEMAP_PATHS = ("/sitemap.xml", "/sitemap_index.xml")
-SITEMAP_PATHS: dict[str, tuple[str, ...]] = {
-    "netflixtechblog.com": ("/sitemap/sitemap.xml", "/sitemap.xml"),
-}
 
 
 def _clean_container(soup: BeautifulSoup) -> BeautifulSoup:
@@ -144,45 +106,11 @@ def extract_links_from_soup(soup: BeautifulSoup, base_url: str) -> set[str]:
     return links
 
 
-def is_allowed_url(url: str) -> bool:
-    parsed = urlparse(url)
-    seed_paths = ALLOWED_SEED_PATHS.get(parsed.netloc)
-    path = parsed.path or "/"
-    if seed_paths and path in seed_paths:
-        return True
-    patterns = ALLOWED_URL_PATTERNS.get(parsed.netloc)
-    if not patterns:
-        return False
-    for pattern in patterns:
-        if pattern.match(path):
-            return True
-    return False
-
-
-def is_listing_url(url: str) -> bool:
-    parsed = urlparse(url)
-    seed_paths = ALLOWED_SEED_PATHS.get(parsed.netloc)
-    if not seed_paths:
-        return False
-    path = parsed.path or "/"
-    return path in seed_paths
-
-
 def sitemap_urls_for_domain(domain: str) -> set[str]:
-    if domain not in ALLOWED_URL_PATTERNS:
+    urls = sitemap_urls_for_host(domain)
+    if not urls:
         print(f"[sitemap_urls_for_domain] Ignored {domain}")
-        return set()
-    paths = SITEMAP_PATHS.get(domain, DEFAULT_SITEMAP_PATHS)
-    return {f"https://{domain}{path}" for path in paths}
-
-
-def is_sitemap_url(url: str) -> bool:
-    parsed = urlparse(url)
-    if parsed.netloc not in ALLOWED_URL_PATTERNS:
-        return False
-    if parsed.path.endswith(".xml") or "sitemap" in parsed.path:
-        return True
-    return url in sitemap_urls_for_domain(parsed.netloc)
+    return urls
 
 
 def parse_sitemap_links(xml_text: str) -> set[str]:
@@ -289,19 +217,10 @@ async def upload_r2(
     result: CrawlResult,
     domain: str,
 ) -> bool:
-    should_store = (
-        not (item.source == "seed" and item.depth == 0)
-        and item.source != "sitemap"
-        and not is_listing_url(item.url)
-    )
+    kind = classify_url(item.url)
+    should_store = kind == UrlKind.ARTICLE
     if not should_store:
-        if item.source == "seed" and item.depth == 0:
-            reason = "seed"
-        elif is_listing_url(item.url):
-            reason = "listing"
-        else:
-            reason = item.source
-        log_event("skip", url=item.url, reason=reason)
+        log_event("skip", url=item.url, reason=kind.value)
         return False
     if not r2.r2_enabled():
         log_event("skip", url=item.url, reason="r2_disabled")
@@ -448,7 +367,16 @@ async def seed_queue(seed_url: str, source: str = "seed") -> None:
     log_event("seed_queue", normalized_url=normalized)
     if not normalized:
         return
-    await enqueue(redis_client, CrawlItem(url=normalized, source=source, depth=0))
+    kind, error = resolve_seed_url(normalized)
+    if error:
+        log_event("seed_reject", url=normalized, reason=error)
+        raise ValueError(error)
+    item_source = "sitemap" if kind == UrlKind.SITEMAP else source
+    await enqueue(
+        redis_client, CrawlItem(url=normalized, source=item_source, depth=0)
+    )
+    if kind != UrlKind.LISTING:
+        return
     for sitemap_url in sitemap_urls_for_domain(parse_domain(normalized)):
         log_event(
             "seed_queue", domain=parse_domain(normalized), sitemap_url=sitemap_url
@@ -457,3 +385,12 @@ async def seed_queue(seed_url: str, source: str = "seed") -> None:
             redis_client,
             CrawlItem(url=sitemap_url, source="sitemap", depth=0),
         )
+
+
+async def seed_catalog() -> list[str]:
+    """Enqueue every curated listing root from the source catalog."""
+    seeded: list[str] = []
+    for url in all_seed_urls():
+        await seed_queue(url)
+        seeded.append(url)
+    return seeded

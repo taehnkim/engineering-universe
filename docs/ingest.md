@@ -1,4 +1,4 @@
-# Ingestion contract architecture
+# Ingestion architecture
 
 ## Purpose
 
@@ -18,6 +18,74 @@ Python / CLI / worker / API
 ```
 
 All callers use the same contract. This prevents duplicate stage logic.
+
+## Source catalog and seeding
+
+Company roots are human-curated. They live in
+`eng_universe/ingest/source_catalog.py` as `SOURCES`.
+
+Each `SourceConfig` names:
+
+- `seed_urls` — listing roots (example: `https://stripe.dev/blog`)
+- `listing_paths` / `follow_path_patterns` — hubs to crawl for links only
+- `article_path_patterns` — path regexes that mark storeable posts
+- `sitemap_paths` — optional sitemaps enqueued with a listing seed
+
+`sources.py` classifies normalized URLs as `listing` | `article` | `sitemap` |
+`reject`. Only articles are stored. Irrelevant links on a listing page are
+dropped at classify time; they are never enqueued.
+
+```text
+human finds blog root
+        |
+        v
+source_catalog.SOURCES
+        |
+        v
+seed listing @ depth 0
+        |
+        +--> follow allowed links (depth < CRAWL_DEPTH_LIMIT)
+        |
+        +--> store articles only
+```
+
+Operator entry points (legacy crawl CLI):
+
+```bash
+uv run python main.py seed --url https://stripe.dev/blog   # one company
+uv run python main.py seed --catalog                       # all companies
+uv run python main.py crawl --max-docs 20 --concurrency 4
+```
+
+Already-seen URLs are skipped via Redis set `crawl:seen`.
+See `docs/seeding.md` for listing vs article rules and Medium publication scope.
+
+The leased Redis stage queue (`fetch_raw`) still expects exact article URLs as
+inputs. Connecting `source_catalog` discovery into that queue remains a later
+step; until then, the legacy `seed` / `crawl` path uses the catalog above.
+
+## Legacy crawl worker loop
+
+`python main.py crawl` runs `run_crawlers()` with `max_workers` asyncio
+workers and one shared `aiohttp` session. Per queue item:
+
+1. **Promote delays** — `requeue_delayed_items()` moves due work from
+   `crawl:delay` → `crawl:queue`.
+2. **Dequeue** — `dequeue()` pops one `CrawlItem(url, source, depth)`.
+3. **Robots** — `get_or_fetch_robots()` + `can_fetch()`; if denied, drop.
+   `reserve_next_allowed()` enforces crawl-delay / request-rate; if too soon,
+   `delay()` requeues to `crawl:delay`.
+4. **Fetch** — `fetch_html()`; non-200 or transport failure drops the URL.
+5. **Discover** — sitemaps parse `<loc>` values; HTML pages extract `<a href>`
+   links, keep same-host when `CRAWL_ALLOW_EXTERNAL=false`, keep only paths
+   that pass `classify_url()`, and enqueue at `depth + 1` while under
+   `CRAWL_DEPTH_LIMIT`.
+6. **Store** — only `UrlKind.ARTICLE` pages are stored. Listings and sitemaps
+   are discovery-only. `_clean_container()` keeps article → main → body
+   (removes nav/footer/aside/script/style/noscript). `doc_id = INCR
+   crawl:doc_seq`; raw/clean artifacts write when storage is enabled.
+7. **Metadata** — Redis `crawl:doc:{doc_id}` stores url, domain, source,
+   depth, paths, url_hash, fetched_at, status.
 
 ## Main design
 
@@ -76,7 +144,6 @@ A lease token must match before a completion or failure releases an origin slot.
 Handlers are plain async functions. `StageError(kind=...)` selects retryable, permanent, or blocked outcomes.
 `fetch_worker.py` exposes `run_fetch_worker()` as the single fetch composition root.
 
-
 ```text
 Settings (env)
    |
@@ -86,8 +153,6 @@ run_fetch_worker(queue, stop)        fn: lease + session + pool
    `- StageWorkerPool / run_pool     claim -> heartbeat -> complete/fail
          `- StageQueue               class: thin wrapper over the Lua scripts
 ```
-
-
 
 ### Run states and failure paths
 
@@ -155,7 +220,6 @@ Redirect handlers must call the checker again before each redirected request.
 Redis AOF is enabled with `appendfsync everysec`, and the Redis `/data` directory uses a named Docker volume so restarts keep queue state.
 
 Succeeded run hashes receive a TTL (`STAGE_SUCCEEDED_RUN_TTL_S`, default 7 days). Failed, dead, and blocked runs keep no TTL so operators can inspect them.
-
 
 ## Boundaries
 
