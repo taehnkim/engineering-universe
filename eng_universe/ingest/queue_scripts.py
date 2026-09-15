@@ -219,7 +219,11 @@ redis.call(
     "next_allowed_ms", now + request_interval,
     "last_claimed_at_ms", now
 )
-schedule_origin(now)
+local fairness_not_before = now
+if redis.call("ZCARD", KEYS[1]) > 1 then
+    fairness_not_before = now + 1
+end
+schedule_origin(fairness_not_before)
 return {1, attempt, lease_until}
 """
 

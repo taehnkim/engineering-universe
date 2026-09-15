@@ -267,6 +267,33 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         assert second is not None
         self.assertNotEqual(first.run.origin_id, second.run.origin_id)
 
+    async def test_fetch_claims_fill_high_origin_limit_under_contention(self) -> None:
+        total = 100
+        await asyncio.gather(
+            *(
+                self.queue.enqueue(
+                    request_for(
+                        str(index),
+                        stage_name=FETCH_RAW_STAGE,
+                        url=f"https://bulk.example/articles/{index}",
+                    ),
+                    origin_max_inflight=total,
+                )
+                for index in range(total)
+            )
+        )
+
+        leases = await asyncio.gather(
+            *(
+                self.queue.claim(FETCH_RAW_STAGE, worker_id=f"worker-{index}")
+                for index in range(total)
+            )
+        )
+
+        claimed = [lease for lease in leases if lease is not None]
+        self.assertEqual(len(claimed), total)
+        self.assertEqual(len({lease.run.run_id for lease in claimed}), total)
+
     async def test_origin_backoff_does_not_block_other_origins(self) -> None:
         await self.queue.enqueue(
             request_for(

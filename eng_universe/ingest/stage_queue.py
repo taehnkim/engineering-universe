@@ -102,7 +102,7 @@ class StageQueue:
         *,
         keys: StageQueueKeys | None = None,
         default_lease_ms: int = 30_000,
-        claim_scan_limit: int = 64,
+        claim_scan_limit: int = 128,
         claim_contention_retries: int = 4,
         origin_scan_limit: int = 64,
         origin_busy_delay_ms: int = 50,
@@ -334,7 +334,7 @@ class StageQueue:
             )
             if not origins:
                 return None
-            for raw_origin_id in self._rotated(origins):
+            for raw_origin_id in origins:
                 origin_id = _decoded(raw_origin_id)
                 origin_queue = self.keys.origin_ready(origin_id)
                 run_ids = await self.redis.zrangebyscore(
@@ -342,38 +342,39 @@ class StageQueue:
                     "-inf",
                     now,
                     start=0,
-                    num=1,
+                    num=self.claim_scan_limit,
                 )
                 if not run_ids:
                     await self.redis.zrem(self.keys.fetch_origins, origin_id)
                     continue
-                run_id = _decoded(run_ids[0])
-                token = new_lease_token()
-                attempt_id = f"a_{token}"
-                response = await _CLAIM_FETCH(
-                    self.redis,
-                    keys=[
-                        self.keys.fetch_origins,
-                        origin_queue,
-                        self.keys.ready(FETCH_RAW_STAGE),
-                        self.keys.leased(FETCH_RAW_STAGE),
-                        self.keys.run(run_id),
-                        self.keys.attempt(attempt_id),
-                        self.keys.origin_state(origin_id),
-                    ],
-                    args=[
-                        origin_id,
-                        run_id,
-                        worker_id,
-                        token,
-                        lease_ms,
-                        attempt_id,
-                        QUEUE_SCHEMA_VERSION,
-                        self.origin_busy_delay_ms,
-                    ],
-                )
-                if _first_integer(response) != 0:
-                    return await self._load_lease(run_id, attempt_id)
+                for raw_run_id in self._rotated(run_ids):
+                    run_id = _decoded(raw_run_id)
+                    token = new_lease_token()
+                    attempt_id = f"a_{token}"
+                    response = await _CLAIM_FETCH(
+                        self.redis,
+                        keys=[
+                            self.keys.fetch_origins,
+                            origin_queue,
+                            self.keys.ready(FETCH_RAW_STAGE),
+                            self.keys.leased(FETCH_RAW_STAGE),
+                            self.keys.run(run_id),
+                            self.keys.attempt(attempt_id),
+                            self.keys.origin_state(origin_id),
+                        ],
+                        args=[
+                            origin_id,
+                            run_id,
+                            worker_id,
+                            token,
+                            lease_ms,
+                            attempt_id,
+                            QUEUE_SCHEMA_VERSION,
+                            self.origin_busy_delay_ms,
+                        ],
+                    )
+                    if _first_integer(response) != 0:
+                        return await self._load_lease(run_id, attempt_id)
         return None
 
     @staticmethod
