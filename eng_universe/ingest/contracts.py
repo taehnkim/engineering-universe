@@ -22,7 +22,7 @@ _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 
 class StageStatus(str, Enum):
     """Lifecycle state persisted for one stage run.
-    Example: ``StageStatus.SUCCEEDED``.
+    Example: StageStatus.SUCCEEDED.
     """
 
     QUEUED = "queued"
@@ -39,7 +39,7 @@ class StageStatus(str, Enum):
 @dataclass(frozen=True, slots=True)
 class StageIdentity:
     """Stable name and version for one stage implementation.
-    Example: ``StageIdentity(name="parse_article", version="1.0.0")``.
+    Example: StageIdentity(name="parse_article", version="1.0.0").
     """
 
     name: str
@@ -58,7 +58,7 @@ class StageIdentity:
 @dataclass(frozen=True, slots=True)
 class ArtifactRef:
     """Reference to an immutable stage artifact in object storage, such as Cloudflare R2.
-    Example: ``ArtifactRef(..., kind="raw_http", object_key="raw-http/v1/...")``.
+    Example: ArtifactRef(..., kind="raw_http", object_key="raw-http/v1/...").
     """
 
     artifact_id: str
@@ -88,7 +88,7 @@ class ArtifactRef:
 
 class StageInput(Protocol):
     """Semantic input that a stage uses to calculate its idempotency key.
-    Example: ``ParseArticleInput(fetch_id="fetch-1")`` implements this protocol.
+    Example: ParseArticleInput(fetch_id="fetch-1") implements this protocol.
     """
 
     def idempotency_payload(self) -> Mapping[str, JsonValue]:
@@ -102,7 +102,7 @@ OutputT = TypeVar("OutputT")
 @dataclass(frozen=True, slots=True)
 class StageRequest(Generic[InputT]):
     """Versioned stage invocation with semantic input and configuration.
-    Example: ``StageRequest(identity=identity, stage_input=value, config_version="1")``.
+    Example: StageRequest(identity=identity, stage_input=value, config_version="1").
     """
 
     identity: StageIdentity
@@ -124,7 +124,7 @@ class StageRequest(Generic[InputT]):
 @dataclass(frozen=True, slots=True)
 class ExecutionPolicy:
     """Run controls that do not change the semantic stage input.
-    Example: ``ExecutionPolicy.forced("manual-run-1")``.
+    Example: ExecutionPolicy.forced("manual-run-1").
     """
 
     force: bool = False
@@ -145,7 +145,7 @@ class ExecutionPolicy:
 @dataclass(frozen=True, slots=True)
 class StageContext:
     """Execution metadata supplied to a stage by its future runner.
-    Example: ``StageContext(run_id="run-1", attempt=1, policy=ExecutionPolicy())``.
+    Example: StageContext(run_id="run-1", attempt=1, policy=ExecutionPolicy()).
     """
 
     run_id: str
@@ -162,7 +162,7 @@ class StageContext:
 @dataclass(frozen=True, slots=True)
 class StageResult(Generic[OutputT]):
     """Typed stage output with references to immutable artifacts.
-    Example: ``StageResult(output=parsed, artifacts=(raw_artifact,))``.
+    Example: StageResult(output=parsed, artifacts=(raw_artifact,)).
     """
 
     output: OutputT
@@ -171,7 +171,7 @@ class StageResult(Generic[OutputT]):
 
 class Stage(Protocol[InputT, OutputT]):
     """Asynchronous interface implemented by each ingestion stage.
-    Example: ``ParseArticleStage.execute(parse_input, context)``.
+    Example: ParseArticleStage.execute(parse_input, context).
     """
 
     identity: ClassVar[StageIdentity]
