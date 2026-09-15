@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import unittest
 from collections.abc import Mapping
 from dataclasses import dataclass
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import fakeredis.aioredis as fakeredis
 
@@ -9,12 +11,11 @@ from eng_universe.ingest.contracts import JsonValue, StageIdentity, StageRequest
 from eng_universe.ingest.fetch_boundary import (
     FetchPathChecker,
     FetchPathDecision,
-    RobotsAwareFetchHandler,
+    make_fetch_handler,
 )
 from eng_universe.ingest.queue_models import (
     FETCH_RAW_STAGE,
     Origin,
-    StageLease,
     StageQueueKeys,
 )
 from eng_universe.ingest.robots import RobotsRules
@@ -38,22 +39,6 @@ def fetch_request(url: str) -> StageRequest[FetchInput]:
         stage_input=FetchInput(url),
         config_version="sources-1",
     )
-
-
-class RecordingFetch:
-    """Records whether an authorized fetch ran."""
-
-    def __init__(self) -> None:
-        self.called = False
-
-    async def __call__(
-        self,
-        lease: StageLease,
-        decision: FetchPathDecision,
-        checker: FetchPathChecker,
-    ) -> JsonValue:
-        self.called = True
-        return {"url": decision.url, "allowed": decision.allowed}
 
 
 class DenyingChecker:
@@ -140,11 +125,15 @@ class FetchBoundaryTests(unittest.IsolatedAsyncioTestCase):
     async def test_denied_path_is_blocked_and_releases_origin_slot(self) -> None:
         url = "https://example.com/private/article"
         result = await self.queue.enqueue(fetch_request(url))
-        recording_fetch = RecordingFetch()
-        handler = RobotsAwareFetchHandler(
+        session = MagicMock()
+        session.get = MagicMock(
+            side_effect=AssertionError("denied URLs must not be fetched")
+        )
+        handler = make_fetch_handler(
             self.queue,
+            session,
             DenyingChecker(),  # type: ignore[arg-type]
-            recording_fetch,
+            uploads=object(),
         )
         pool = StageWorkerPool(
             self.queue,
@@ -160,7 +149,7 @@ class FetchBoundaryTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(run)
         assert run is not None
         self.assertEqual(run.state.value, "blocked")
-        self.assertFalse(recording_fetch.called)
+        session.get.assert_not_called()
         state = await self.queue.origin_state(Origin.from_url(url))
         self.assertEqual(int(state["inflight"]), 0)
         self.assertEqual(int(state["request_interval_ms"]), 2_000)
