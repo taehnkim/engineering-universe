@@ -104,10 +104,6 @@ class StageQueueKeys:
             )
 
     @property
-    def events(self) -> str:
-        return f"{self.namespace}:events"
-
-    @property
     def fetch_origins(self) -> str:
         return f"{self.namespace}:q:origins:{FETCH_RAW_STAGE}"
 
@@ -121,9 +117,6 @@ class StageQueueKeys:
 
     def run(self, run_id: str) -> str:
         return f"{self.namespace}:run:{run_id}"
-
-    def attempt(self, attempt_id: str) -> str:
-        return f"{self.namespace}:attempt:{attempt_id}"
 
     def idempotency(self, execution_key: str) -> str:
         digest = hashlib.sha256(execution_key.encode("utf-8")).hexdigest()
@@ -160,9 +153,6 @@ class StageRunRecord:
     execution_idempotency_key: str
     config_version: str
     input_json: str
-    promote: bool
-    force: bool
-    rerun_nonce: str | None
     max_attempts: int
     attempt_count: int
     due_at_ms: int
@@ -217,8 +207,6 @@ class StageRunRecord:
             "execution_idempotency_key": self.execution_idempotency_key,
             "config_version": self.config_version,
             "input_json": self.input_json,
-            "promote": int(self.promote),
-            "force": int(self.force),
             "max_attempts": self.max_attempts,
             "attempt_count": self.attempt_count,
             "due_at_ms": self.due_at_ms,
@@ -227,7 +215,6 @@ class StageRunRecord:
         optional: dict[str, object | None] = {
             "origin_id": self.origin_id,
             "origin": self.origin,
-            "rerun_nonce": self.rerun_nonce,
             "started_at_ms": self.started_at_ms,
             "finished_at_ms": self.finished_at_ms,
             "lease_owner": self.lease_owner,
@@ -259,9 +246,6 @@ class StageRunRecord:
             execution_idempotency_key=decoded["execution_idempotency_key"],
             config_version=decoded["config_version"],
             input_json=decoded["input_json"],
-            promote=_boolean(decoded.get("promote")),
-            force=_boolean(decoded.get("force")),
-            rerun_nonce=decoded.get("rerun_nonce") or None,
             max_attempts=_integer(decoded.get("max_attempts")),
             attempt_count=_integer(decoded.get("attempt_count")),
             due_at_ms=_integer(decoded.get("due_at_ms")),
@@ -282,45 +266,6 @@ class StageRunRecord:
 
 
 @dataclass(frozen=True, slots=True)
-class AttemptRecord:
-    """Represents one leased execution attempt."""
-
-    attempt_id: str
-    run_id: str
-    number: int
-    worker_id: str
-    lease_token: str
-    state: str
-    started_at_ms: int
-    finished_at_ms: int | None = None
-    error_class: str | None = None
-    error_code: str | None = None
-    error_message: str | None = None
-
-    @classmethod
-    def from_redis(cls, values: Mapping[object, object]) -> AttemptRecord:
-        decoded = decode_hash(values)
-        if not decoded:
-            raise ValueError("attempt record is empty")
-        schema_version = decoded.get("schema_version", "")
-        if schema_version != QUEUE_SCHEMA_VERSION:
-            raise ValueError(f"unsupported queue schema version {schema_version!r}")
-        return cls(
-            attempt_id=decoded["attempt_id"],
-            run_id=decoded["run_id"],
-            number=_integer(decoded["number"]),
-            worker_id=decoded["worker_id"],
-            lease_token=decoded["lease_token"],
-            state=decoded["state"],
-            started_at_ms=_integer(decoded["started_at_ms"]),
-            finished_at_ms=_optional_integer(decoded.get("finished_at_ms")),
-            error_class=decoded.get("error_class") or None,
-            error_code=decoded.get("error_code") or None,
-            error_message=decoded.get("error_message") or None,
-        )
-
-
-@dataclass(frozen=True, slots=True)
 class EnqueueResult:
     """Reports the result of an enqueue operation."""
 
@@ -333,15 +278,8 @@ class StageLease:
     """Holds the token for one leased stage run."""
 
     run: StageRunRecord
-    attempt: AttemptRecord
-
-    @property
-    def token(self) -> str:
-        return self.attempt.lease_token
-
-    @property
-    def worker_id(self) -> str:
-        return self.attempt.worker_id
+    worker_id: str
+    token: str
 
 
 @dataclass(frozen=True, slots=True)

@@ -7,7 +7,7 @@ import hashlib
 import json
 import math
 import re
-from typing import ClassVar, Generic, Protocol, TypeAlias, TypeVar
+from typing import Generic, Protocol, TypeAlias, TypeVar
 
 
 JsonScalar: TypeAlias = str | int | float | bool | None
@@ -128,44 +128,6 @@ class StageRequest(Generic[InputT]):
         )
 
 
-@dataclass(frozen=True, slots=True)
-class ExecutionPolicy:
-    """
-    Run controls that do not change the semantic stage input.
-    Example: ExecutionPolicy.forced("manual-run-1").
-    """
-
-    force: bool = False
-    promote: bool = True
-    rerun_nonce: str | None = None
-
-    def __post_init__(self) -> None:
-        if self.force and not self.rerun_nonce:
-            raise ValueError("a forced execution requires a rerun_nonce")
-        if not self.force and self.rerun_nonce is not None:
-            raise ValueError("rerun_nonce is valid only for a forced execution")
-
-    @classmethod
-    def forced(cls, rerun_nonce: str, *, promote: bool = False) -> ExecutionPolicy:
-        return cls(force=True, promote=promote, rerun_nonce=rerun_nonce)
-
-
-@dataclass(frozen=True, slots=True)
-class StageContext:
-    """
-    Execution metadata supplied to a stage by its future runner.
-    Example: StageContext(run_id="run-1", attempt=1, policy=ExecutionPolicy()).
-    """
-
-    run_id: str
-    attempt: int
-    policy: ExecutionPolicy
-
-    def __post_init__(self) -> None:
-        if not self.run_id:
-            raise ValueError("run_id must not be empty")
-        if self.attempt < 1:
-            raise ValueError("attempt must be at least 1")
 
 
 @dataclass(frozen=True, slots=True)
@@ -179,20 +141,6 @@ class StageResult(Generic[OutputT]):
     artifacts: tuple[ArtifactRef, ...] = ()
 
 
-class Stage(Protocol[InputT, OutputT]):
-    """
-    Asynchronous interface implemented by each ingestion stage.
-    Example: ParseArticleStage.execute(parse_input, context).
-    """
-
-    identity: ClassVar[StageIdentity]
-
-    async def execute(
-        self, stage_input: InputT, context: StageContext
-    ) -> StageResult[OutputT]:
-        """
-        Execute domain logic without queue or transport concerns.
-        """
 
 
 def _normalize_json_value(value: object, path: str = "$") -> JsonValue:
@@ -248,10 +196,10 @@ def make_idempotency_key(
     return f"{identity.name}:{identity.version}:{digest}"
 
 
-def make_run_idempotency_key(base_key: str, policy: ExecutionPolicy) -> str:
+def make_run_idempotency_key(base_key: str, *, rerun_nonce: str | None = None) -> str:
     if not base_key:
         raise ValueError("base_key must not be empty")
-    if not policy.force:
+    if not rerun_nonce:
         return base_key
-    nonce_digest = hashlib.sha256(policy.rerun_nonce.encode("utf-8")).hexdigest()
+    nonce_digest = hashlib.sha256(rerun_nonce.encode("utf-8")).hexdigest()
     return f"{base_key}:force:{nonce_digest}"

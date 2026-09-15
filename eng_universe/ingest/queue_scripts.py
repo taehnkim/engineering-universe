@@ -31,15 +31,10 @@ redis.call(
     "due_at_ms", due_at,
     "max_attempts", ARGV[10],
     "attempt_count", 0,
-    "promote", ARGV[11],
-    "force", ARGV[16],
     "created_at_ms", now
 )
 if ARGV[12] ~= "" then
     redis.call("HSET", KEYS[2], "origin_id", ARGV[12], "origin", ARGV[13])
-end
-if ARGV[17] ~= "" then
-    redis.call("HSET", KEYS[2], "rerun_nonce", ARGV[17])
 end
 redis.call("SET", KEYS[1], ARGV[2])
 redis.call("ZADD", KEYS[3], due_at, ARGV[2])
@@ -90,10 +85,6 @@ if state ~= "queued" and state ~= "retry_wait" then
     redis.call("ZREM", KEYS[1], ARGV[1])
     return {0}
 end
-if redis.call("EXISTS", KEYS[4]) == 1 then
-    return redis.error_reply("attempt id already exists")
-end
-
 redis.call("ZREM", KEYS[1], ARGV[1])
 local attempt = redis.call("HINCRBY", KEYS[3], "attempt_count", 1)
 local lease_until = now + tonumber(ARGV[4])
@@ -105,20 +96,10 @@ redis.call(
     "lease_token", ARGV[3],
     "lease_until_ms", lease_until,
     "attempt_id", ARGV[5],
-    "started_at_ms", now
+    "started_at_ms", now,
+    "last_attempt_at_ms", now
 )
-redis.call(
-    "HSET",
-    KEYS[4],
-    "schema_version", ARGV[6],
-    "attempt_id", ARGV[5],
-    "run_id", ARGV[1],
-    "number", attempt,
-    "worker_id", ARGV[2],
-    "lease_token", ARGV[3],
-    "state", "leased",
-    "started_at_ms", now
-)
+redis.call("HDEL", KEYS[3], "error_class", "error_code", "error_message")
 redis.call("ZADD", KEYS[2], lease_until, ARGV[1])
 return {1, attempt, lease_until}
 """
@@ -186,10 +167,6 @@ if next_allowed > now or backoff_until > now then
     schedule_origin(math.max(next_allowed, backoff_until))
     return {0}
 end
-if redis.call("EXISTS", KEYS[6]) == 1 then
-    return redis.error_reply("attempt id already exists")
-end
-
 redis.call("ZREM", KEYS[2], ARGV[2])
 redis.call("ZREM", KEYS[3], ARGV[2])
 local attempt = redis.call("HINCRBY", KEYS[5], "attempt_count", 1)
@@ -202,20 +179,10 @@ redis.call(
     "lease_token", ARGV[4],
     "lease_until_ms", lease_until,
     "attempt_id", ARGV[6],
-    "started_at_ms", now
+    "started_at_ms", now,
+    "last_attempt_at_ms", now
 )
-redis.call(
-    "HSET",
-    KEYS[6],
-    "schema_version", ARGV[7],
-    "attempt_id", ARGV[6],
-    "run_id", ARGV[2],
-    "number", attempt,
-    "worker_id", ARGV[3],
-    "lease_token", ARGV[4],
-    "state", "leased",
-    "started_at_ms", now
-)
+redis.call("HDEL", KEYS[5], "error_class", "error_code", "error_message")
 redis.call("ZADD", KEYS[4], lease_until, ARGV[2])
 
 local request_interval = tonumber(redis.call("HGET", KEYS[7], "request_interval_ms") or "0")
@@ -250,7 +217,6 @@ local clock = redis.call("TIME")
 local now = (tonumber(clock[1]) * 1000) + math.floor(tonumber(clock[2]) / 1000)
 local lease_until = now + tonumber(ARGV[4])
 redis.call("HSET", KEYS[1], "state", "running", "lease_until_ms", lease_until)
-redis.call("HSET", KEYS[3], "state", "running")
 redis.call("ZADD", KEYS[2], lease_until, ARGV[1])
 return {1, lease_until}
 """
@@ -312,7 +278,6 @@ redis.call(
     "error_code",
     "error_message"
 )
-redis.call("HSET", KEYS[3], "state", "succeeded", "finished_at_ms", now)
 release_origin(now)
 return {1, now}
 """
@@ -366,15 +331,6 @@ end
 local clock = redis.call("TIME")
 local now = (tonumber(clock[1]) * 1000) + math.floor(tonumber(clock[2]) / 1000)
 redis.call("ZREM", KEYS[1], ARGV[1])
-redis.call(
-    "HSET",
-    KEYS[3],
-    "state", ARGV[4],
-    "finished_at_ms", now,
-    "error_class", ARGV[4],
-    "error_code", ARGV[5],
-    "error_message", ARGV[6]
-)
 redis.call("HDEL", KEYS[2], "lease_owner", "lease_token", "lease_until_ms")
 schedule_origin(now)
 
@@ -461,15 +417,6 @@ if lease_until > now then
 end
 
 redis.call("ZREM", KEYS[1], ARGV[1])
-redis.call(
-    "HSET",
-    KEYS[3],
-    "state", "expired",
-    "finished_at_ms", now,
-    "error_class", "retryable",
-    "error_code", "lease_expired",
-    "error_message", "worker lease expired"
-)
 redis.call("HDEL", KEYS[2], "lease_owner", "lease_token", "lease_until_ms")
 schedule_origin(now)
 

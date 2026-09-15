@@ -10,17 +10,15 @@ import redis.asyncio as redis
 from redis.exceptions import NoScriptError
 
 from eng_universe.ingest.contracts import (
-    ExecutionPolicy,
     JsonValue,
     StageInput,
     StageRequest,
     canonical_json,
-    make_run_idempotency_key,
+    make_idempotency_key,
 )
 from eng_universe.ingest.queue_models import (
     FETCH_RAW_STAGE,
     QUEUE_SCHEMA_VERSION,
-    AttemptRecord,
     EnqueueResult,
     FailureKind,
     Origin,
@@ -145,7 +143,6 @@ class StageQueue:
         self,
         request: StageRequest[StageInput],
         *,
-        policy: ExecutionPolicy | None = None,
         run_id: str | None = None,
         due_at_ms: int = 0,
         max_attempts: int = 5,
@@ -162,9 +159,8 @@ class StageQueue:
         if origin_interval_ms < 0:
             raise ValueError("origin_interval_ms must not be negative")
 
-        execution_policy = policy or ExecutionPolicy()
         semantic_key = request.idempotency_key()
-        execution_key = make_run_idempotency_key(semantic_key, execution_policy)
+        execution_key = semantic_key
         payload = request.stage_input.idempotency_payload()
         input_json = canonical_json(payload)
         selected_origin = self._origin_for_request(request, origin, payload)
@@ -200,13 +196,13 @@ class StageQueue:
                 input_json,
                 due_at_ms,
                 max_attempts,
-                int(execution_policy.promote),
+                1,
                 origin_id,
                 origin_value,
                 origin_max_inflight,
                 origin_interval_ms,
-                int(execution_policy.force),
-                execution_policy.rerun_nonce or "",
+                0,
+                "",
                 self.fetch_global_limit,
             ],
         )
@@ -240,12 +236,6 @@ class StageQueue:
         if not values:
             return None
         return StageRunRecord.from_redis(values)
-
-    async def get_attempt(self, attempt_id: str) -> AttemptRecord | None:
-        values = await self.redis.hgetall(self.keys.attempt(attempt_id))
-        if not values:
-            return None
-        return AttemptRecord.from_redis(values)
 
     async def claim(
         self,
@@ -313,7 +303,7 @@ class StageQueue:
                 self.keys.ready(stage_name),
                 self.keys.leased(stage_name),
                 self.keys.run(run_id),
-                self.keys.attempt(attempt_id),
+                self.keys.unused,
             ],
             args=[
                 run_id,
@@ -326,7 +316,7 @@ class StageQueue:
         )
         if _first_integer(response) == 0:
             return None
-        return await self._load_lease(run_id, attempt_id)
+        return await self._load_lease(run_id, worker_id, token)
 
     async def _claim_fetch(
         self,
@@ -369,7 +359,7 @@ class StageQueue:
                             self.keys.ready(FETCH_RAW_STAGE),
                             self.keys.leased(FETCH_RAW_STAGE),
                             self.keys.run(run_id),
-                            self.keys.attempt(attempt_id),
+                            self.keys.unused,
                             self.keys.origin_state(origin_id),
                             self.keys.fetch_global_state,
                         ],
@@ -385,7 +375,7 @@ class StageQueue:
                         ],
                     )
                     if _first_integer(response) != 0:
-                        return await self._load_lease(run_id, attempt_id)
+                        return await self._load_lease(run_id, worker_id, token)
         return None
 
     @staticmethod
@@ -395,16 +385,14 @@ class StageQueue:
         offset = secrets.randbelow(len(values))
         return [*values[offset:], *values[:offset]]
 
-    async def _load_lease(self, run_id: str, attempt_id: str) -> StageLease:
-        pipe = self.redis.pipeline(transaction=False)
-        pipe.hgetall(self.keys.run(run_id))
-        pipe.hgetall(self.keys.attempt(attempt_id))
-        run_values, attempt_values = await pipe.execute()
-        if not run_values or not attempt_values:
-            raise RuntimeError("claim completed without run and attempt records")
+    async def _load_lease(self, run_id: str, worker_id: str, token: str) -> StageLease:
+        run_values = await self.redis.hgetall(self.keys.run(run_id))
+        if not run_values:
+            raise RuntimeError("claim completed without a stage run record")
         return StageLease(
             run=StageRunRecord.from_redis(run_values),
-            attempt=AttemptRecord.from_redis(attempt_values),
+            worker_id=worker_id,
+            token=token,
         )
 
     async def heartbeat(
@@ -419,7 +407,7 @@ class StageQueue:
             keys=[
                 self.keys.run(lease.run.run_id),
                 self.keys.leased(lease.run.stage_name),
-                self.keys.attempt(lease.attempt.attempt_id),
+                self.keys.unused,
             ],
             args=[
                 lease.run.run_id,
@@ -442,7 +430,7 @@ class StageQueue:
             keys=[
                 self.keys.leased(lease.run.stage_name),
                 self.keys.run(lease.run.run_id),
-                self.keys.attempt(lease.attempt.attempt_id),
+                self.keys.unused,
                 self.keys.fetch_origins if origin_id else self.keys.unused,
                 self.keys.origin_ready(origin_id) if origin_id else self.keys.unused,
                 self.keys.origin_state(origin_id) if origin_id else self.keys.unused,
@@ -488,7 +476,7 @@ class StageQueue:
             keys=[
                 self.keys.leased(lease.run.stage_name),
                 self.keys.run(lease.run.run_id),
-                self.keys.attempt(lease.attempt.attempt_id),
+                self.keys.unused,
                 self.keys.ready(lease.run.stage_name),
                 self.keys.dead(lease.run.stage_name),
                 self.keys.blocked(lease.run.stage_name),
@@ -506,7 +494,7 @@ class StageQueue:
                 error_message[:2048],
                 delay,
                 QUEUE_SCHEMA_VERSION,
-                lease.attempt.attempt_id,
+                lease.run.attempt_id or "",
                 origin_id,
                 origin_backoff_ms,
             ],
@@ -557,7 +545,7 @@ class StageQueue:
                 keys=[
                     self.keys.leased(stage_name),
                     self.keys.run(run_id),
-                    self.keys.attempt(run.attempt_id),
+                    self.keys.unused,
                     self.keys.ready(stage_name),
                     self.keys.dead(stage_name),
                     self.keys.blocked(stage_name),

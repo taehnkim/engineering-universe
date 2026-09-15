@@ -6,7 +6,6 @@ from dataclasses import dataclass, replace
 import fakeredis.aioredis as fakeredis
 
 from eng_universe.ingest.contracts import (
-    ExecutionPolicy,
     JsonValue,
     StageIdentity,
     StageRequest,
@@ -102,16 +101,6 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         counts = await self.queue.counts("parse_article")
         self.assertEqual(counts.ready, 1)
 
-    async def test_forced_execution_uses_separate_idempotency_identity(self) -> None:
-        request = request_for("doc-1")
-        normal = await self.queue.enqueue(request)
-        forced = await self.queue.enqueue(
-            request,
-            policy=ExecutionPolicy.forced("manual-1"),
-        )
-
-        self.assertNotEqual(normal.run.run_id, forced.run.run_id)
-        self.assertFalse(forced.run.promote)
 
     async def test_concurrent_claims_have_no_duplicates_or_loss(self) -> None:
         total = 250
@@ -263,8 +252,7 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         assert first is not None
         assert second is not None
 
-        stale_attempt = replace(first.attempt, lease_token="stale-token")
-        stale_lease = replace(first, attempt=stale_attempt)
+        stale_lease = replace(first, token="stale-token")
         with self.assertRaises(LeaseLostError):
             await self.queue.complete(stale_lease)
         state = await self.queue.origin_state(origin)
