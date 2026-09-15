@@ -1,0 +1,205 @@
+import asyncio
+from collections.abc import Mapping
+from dataclasses import dataclass
+import unittest
+
+import fakeredis.aioredis as fakeredis
+
+from eng_universe.ingest.contracts import (
+    ExecutionPolicy,
+    JsonValue,
+    StageContext,
+    StageIdentity,
+    StageRequest,
+    StageResult,
+    StageStatus,
+)
+from eng_universe.ingest.queue_models import StageLease, StageQueueKeys
+from eng_universe.ingest.stage_queue import StageQueue
+from eng_universe.ingest.worker import (
+    ContractStageHandler,
+    RetryableStageError,
+    StageWorkerPool,
+)
+
+
+@dataclass(frozen=True)
+class WorkerInput:
+    identifier: str
+
+    def idempotency_payload(self) -> Mapping[str, JsonValue]:
+        return {"id": self.identifier}
+
+
+def worker_request(identifier: str) -> StageRequest[WorkerInput]:
+    return StageRequest(
+        identity=StageIdentity(name="normalize_article", version="1.0.0"),
+        stage_input=WorkerInput(identifier),
+        config_version="sources-1",
+    )
+
+
+class RecordingHandler:
+    def __init__(self) -> None:
+        self.run_ids: set[str] = set()
+        self._lock = asyncio.Lock()
+
+    async def __call__(self, lease: StageLease) -> JsonValue:
+        run_id = lease.run.run_id
+        async with self._lock:
+            if run_id in self.run_ids:
+                raise AssertionError("run executed more than once")
+            self.run_ids.add(run_id)
+        await asyncio.sleep(0)
+        return {"normalized": True}
+
+
+class RetryOnceHandler:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def __call__(self, lease: StageLease) -> JsonValue:
+        self.calls += 1
+        if self.calls == 1:
+            raise RetryableStageError(
+                error_code="temporary",
+                message="temporary stage failure",
+                retry_delay_ms=0,
+            )
+        return {"attempt": lease.run.attempt_count}
+
+
+class SlowHandler:
+    async def __call__(self, lease: StageLease) -> JsonValue:
+        await asyncio.sleep(0.08)
+        return {"heartbeat": True}
+
+
+class ContractStage:
+    identity = StageIdentity(name="normalize_article", version="1.0.0")
+
+    def __init__(self) -> None:
+        self.policy: ExecutionPolicy | None = None
+
+    async def execute(
+        self,
+        stage_input: WorkerInput,
+        context: StageContext,
+    ) -> StageResult[dict[str, JsonValue]]:
+        self.policy = context.policy
+        return StageResult(output={"id": stage_input.identifier})
+
+
+class StageWorkerPoolTests(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self) -> None:
+        self.redis = fakeredis.FakeRedis()
+        self.queue = StageQueue(
+            self.redis,  # type: ignore[arg-type]
+            keys=StageQueueKeys(namespace="eu:worker-test:v1"),
+            retry_base_ms=0,
+            retry_max_ms=0,
+        )
+
+    async def asyncTearDown(self) -> None:
+        await self.redis.aclose()
+
+    async def test_concurrent_worker_pool_processes_each_run_once(self) -> None:
+        total = 50
+        results = await asyncio.gather(
+            *(self.queue.enqueue(worker_request(str(index))) for index in range(total))
+        )
+        handler = RecordingHandler()
+        pool = StageWorkerPool(
+            self.queue,
+            {"normalize_article": handler},
+            concurrency=10,
+            lease_ms=1_000,
+            heartbeat_interval_ms=200,
+        )
+
+        worked = await asyncio.gather(
+            *(pool.run_one(worker_id=f"worker-{index}") for index in range(total))
+        )
+
+        self.assertTrue(all(worked))
+        self.assertEqual(handler.run_ids, {result.run.run_id for result in results})
+        states = await asyncio.gather(
+            *(self.queue.get_run(result.run.run_id) for result in results)
+        )
+        self.assertTrue(
+            all(run is not None and run.state == StageStatus.SUCCEEDED for run in states)
+        )
+
+    async def test_worker_retries_typed_failure(self) -> None:
+        result = await self.queue.enqueue(worker_request("retry"), max_attempts=3)
+        handler = RetryOnceHandler()
+        pool = StageWorkerPool(
+            self.queue,
+            {"normalize_article": handler},
+            concurrency=1,
+            lease_ms=1_000,
+            heartbeat_interval_ms=200,
+        )
+
+        self.assertTrue(await pool.run_one(worker_id="worker-1"))
+        retried = await self.queue.get_run(result.run.run_id)
+        self.assertIsNotNone(retried)
+        assert retried is not None
+        self.assertEqual(retried.state, StageStatus.RETRY_WAIT)
+
+        self.assertTrue(await pool.run_one(worker_id="worker-1"))
+        completed = await self.queue.get_run(result.run.run_id)
+        self.assertIsNotNone(completed)
+        assert completed is not None
+        self.assertEqual(completed.state, StageStatus.SUCCEEDED)
+        self.assertEqual(completed.attempt_count, 2)
+
+    async def test_worker_heartbeats_during_slow_execution(self) -> None:
+        result = await self.queue.enqueue(worker_request("slow"))
+        pool = StageWorkerPool(
+            self.queue,
+            {"normalize_article": SlowHandler()},
+            concurrency=1,
+            lease_ms=40,
+            heartbeat_interval_ms=10,
+        )
+
+        self.assertTrue(await pool.run_one(worker_id="worker-1"))
+        completed = await self.queue.get_run(result.run.run_id)
+        self.assertIsNotNone(completed)
+        assert completed is not None
+        self.assertEqual(completed.state, StageStatus.SUCCEEDED)
+
+    async def test_contract_stage_handler_restores_execution_policy(self) -> None:
+        request = worker_request("forced")
+        result = await self.queue.enqueue(
+            request,
+            policy=ExecutionPolicy.forced("manual-1"),
+        )
+        stage = ContractStage()
+        handler = ContractStageHandler(
+            stage,  # type: ignore[arg-type]
+            decode_input=lambda payload: WorkerInput(str(payload["id"])),
+            encode_output=lambda output: output,
+        )
+        pool = StageWorkerPool(
+            self.queue,
+            {"normalize_article": handler},
+            concurrency=1,
+            lease_ms=1_000,
+            heartbeat_interval_ms=200,
+        )
+
+        self.assertTrue(await pool.run_one(worker_id="worker-1"))
+        self.assertEqual(stage.policy, ExecutionPolicy.forced("manual-1"))
+        completed = await self.queue.get_run(result.run.run_id)
+        self.assertIsNotNone(completed)
+        assert completed is not None
+        self.assertEqual(
+            completed.output_payload,
+            {"artifacts": [], "output": {"id": "forced"}},
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`contracts.py` defines the common language for future ingestion stages.
+`contracts.py` defines the common language for ingestion stages.
 It does not fetch, parse, store, or index data.
 
 ```text
@@ -10,7 +10,7 @@ Python / CLI / worker / API
              |
         StageRequest
              |
-       future runner
+       Redis stage runner
              |
         Stage.execute
              |
@@ -28,7 +28,7 @@ All callers use the same contract. This prevents duplicate stage logic.
 - `StageContext` gives run metadata to the stage.
 - `StageResult` returns typed output and artifact references.
 - `ArtifactRef` points to an immutable object, such as a Cloudflare R2 object.
-- `StageStatus` defines states that a future runner can persist.
+- `StageStatus` defines states that the Redis runner persists.
 - `Stage` is a protocol. A stage does not need to inherit a base class.
 
 Generic input and output types let type checkers find invalid stage connections.
@@ -65,8 +65,26 @@ Large content does not move through stage requests.
 Stages pass an `ArtifactRef` with an object key, content hash, media type, and size.
 The hash verifies content identity and supports immutable, content-addressed storage.
 
+## Redis queue and workers
+
+`stage_queue.py` stores versioned run and attempt hashes under `eu:v1:`.
+Ready and leased work use sorted sets, so due work and expired leases stay bounded.
+Lua scripts make enqueue, claim, heartbeat, completion, retry, and reclaim atomic.
+
+`fetch_raw` has one sorted set per origin and a global origin schedule.
+The scheduler rotates ready origins, applies request spacing, and limits in-flight work.
+A lease token must match before a completion or failure releases an origin slot.
+
+`worker.py` runs asynchronous handler pools and heartbeats active leases.
+`ContractStageHandler` adapts the typed `Stage` protocol to persisted queue records.
+Typed failures select retryable, permanent, or blocked outcomes.
+
+`fetch_boundary.py` applies the existing robots parser to the exact request path.
+Redirect handlers must call the checker again before each redirected request.
+
 ## Boundaries
 
-This module has no Redis, HTTP, R2, database, or model client.
+The contract module has no Redis, HTTP, R2, database, or model client.
 Tests can use it without infrastructure.
-A later runner will add persistence, leases, retries, and stage scheduling.
+The queue is Redis-only and stores no raw artifact body.
+Artifact publication and downstream stage scheduling remain separate concerns.
