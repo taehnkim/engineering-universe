@@ -2,85 +2,21 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from collections.abc import Callable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Protocol
 
-from eng_universe.ingest.contracts import (
-    ExecutionPolicy,
-    JsonValue,
-    Stage,
-    StageContext,
-    StageInput,
-    canonical_json,
-)
+from eng_universe.ingest.contracts import JsonValue
 from eng_universe.ingest.queue_models import FailureKind, StageLease
 from eng_universe.ingest.stage_queue import LeaseLostError, StageQueue
 
-
-class StageHandler(Protocol):
-    """Executes one leased stage run."""
-
-    async def __call__(self, lease: StageLease) -> JsonValue:
-        """
-        Execute one leased stage run and return its serializable output.
-        """
-
-
-class ContractStageHandler:
-    """Adapts a typed stage to the Redis worker."""
-
-    def __init__(
-        self,
-        stage: Stage[StageInput, Any],
-        *,
-        decode_input: Callable[[Mapping[str, JsonValue]], StageInput],
-        encode_output: Callable[[Any], JsonValue],
-    ) -> None:
-        self.stage = stage
-        self.decode_input = decode_input
-        self.encode_output = encode_output
-
-    async def __call__(self, lease: StageLease) -> JsonValue:
-        if lease.run.stage_name != self.stage.identity.name:
-            raise ValueError("leased stage name does not match handler identity")
-        if lease.run.stage_version != self.stage.identity.version:
-            raise ValueError("leased stage version does not match handler identity")
-        policy = ExecutionPolicy(
-            force=lease.run.force,
-            promote=lease.run.promote,
-            rerun_nonce=lease.run.rerun_nonce,
-        )
-        stage_input = self.decode_input(lease.run.input_payload)
-        result = await self.stage.execute(
-            stage_input,
-            StageContext(
-                run_id=lease.run.run_id,
-                attempt=lease.run.attempt_count,
-                policy=policy,
-            ),
-        )
-        output = self.encode_output(result.output)
-        canonical_json(output)
-        artifacts: list[JsonValue] = [
-            {
-                "artifact_id": artifact.artifact_id,
-                "kind": artifact.kind,
-                "schema_version": artifact.schema_version,
-                "content_sha256": artifact.content_sha256,
-                "object_key": artifact.object_key,
-                "content_type": artifact.content_type,
-                "byte_size": artifact.byte_size,
-            }
-            for artifact in result.artifacts
-        ]
-        return {"output": output, "artifacts": artifacts}
+StageHandler = Callable[[StageLease], Awaitable[JsonValue]]
 
 
 @dataclass(frozen=True, slots=True)
-class StageExecutionError(Exception):
+class StageError(Exception):
     """Describes a controlled stage execution failure."""
 
+    kind: FailureKind
     error_code: str
     message: str
     retry_delay_ms: int | None = None
@@ -88,18 +24,6 @@ class StageExecutionError(Exception):
 
     def __str__(self) -> str:
         return self.message
-
-
-class RetryableStageError(StageExecutionError):
-    """Reports a stage failure that can be retried."""
-
-
-class PermanentStageError(StageExecutionError):
-    """Reports a stage failure that cannot be retried."""
-
-
-class BlockedStageError(StageExecutionError):
-    """Reports a stage run blocked by policy."""
 
 
 class StageWorkerPool:
@@ -224,24 +148,8 @@ class StageWorkerPool:
         try:
             output = await execution
             await self.queue.complete(lease, output=output)
-        except RetryableStageError as exc:
-            await self._fail_if_owned(
-                lease,
-                kind=FailureKind.RETRYABLE,
-                error=exc,
-            )
-        except BlockedStageError as exc:
-            await self._fail_if_owned(
-                lease,
-                kind=FailureKind.BLOCKED,
-                error=exc,
-            )
-        except PermanentStageError as exc:
-            await self._fail_if_owned(
-                lease,
-                kind=FailureKind.PERMANENT,
-                error=exc,
-            )
+        except StageError as exc:
+            await self._fail_if_owned(lease, error=exc)
         except LeaseLostError:
             return
         except asyncio.CancelledError:
@@ -249,15 +157,12 @@ class StageWorkerPool:
                 return
             raise
         except Exception as exc:  # noqa: BLE001
-            error = RetryableStageError(
+            error = StageError(
+                kind=FailureKind.RETRYABLE,
                 error_code=type(exc).__name__,
                 message=str(exc) or type(exc).__name__,
             )
-            await self._fail_if_owned(
-                lease,
-                kind=FailureKind.RETRYABLE,
-                error=error,
-            )
+            await self._fail_if_owned(lease, error=error)
         finally:
             if not heartbeat.done():
                 heartbeat.cancel()
@@ -288,13 +193,12 @@ class StageWorkerPool:
         self,
         lease: StageLease,
         *,
-        kind: FailureKind,
-        error: StageExecutionError,
+        error: StageError,
     ) -> None:
         try:
             await self.queue.fail(
                 lease,
-                kind=kind,
+                kind=error.kind,
                 error_code=error.error_code,
                 error_message=error.message,
                 retry_delay_ms=error.retry_delay_ms,

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import unittest
 from collections.abc import Mapping
@@ -7,21 +9,14 @@ from unittest.mock import AsyncMock
 import fakeredis.aioredis as fakeredis
 
 from eng_universe.ingest.contracts import (
-    ExecutionPolicy,
     JsonValue,
-    StageContext,
     StageIdentity,
     StageRequest,
-    StageResult,
     StageStatus,
 )
-from eng_universe.ingest.queue_models import StageLease, StageQueueKeys
+from eng_universe.ingest.queue_models import FailureKind, StageLease, StageQueueKeys
 from eng_universe.ingest.stage_queue import StageQueue
-from eng_universe.ingest.worker import (
-    ContractStageHandler,
-    RetryableStageError,
-    StageWorkerPool,
-)
+from eng_universe.ingest.worker import StageError, StageWorkerPool
 
 
 @dataclass(frozen=True)
@@ -68,7 +63,8 @@ class RetryOnceHandler:
     async def __call__(self, lease: StageLease) -> JsonValue:
         self.calls += 1
         if self.calls == 1:
-            raise RetryableStageError(
+            raise StageError(
+                kind=FailureKind.RETRYABLE,
                 error_code="temporary",
                 message="temporary stage failure",
                 retry_delay_ms=0,
@@ -94,23 +90,6 @@ class BlockingHandler:
         self.started.set()
         await asyncio.Event().wait()
         return {"unreachable": True}
-
-
-class ContractStage:
-    """Implements a typed stage for adapter tests."""
-
-    identity = StageIdentity(name="normalize_article", version="1.0.0")
-
-    def __init__(self) -> None:
-        self.policy: ExecutionPolicy | None = None
-
-    async def execute(
-        self,
-        stage_input: WorkerInput,
-        context: StageContext,
-    ) -> StageResult[dict[str, JsonValue]]:
-        self.policy = context.policy
-        return StageResult(output={"id": stage_input.identifier})
 
 
 class StageWorkerPoolTests(unittest.IsolatedAsyncioTestCase):
@@ -196,36 +175,6 @@ class StageWorkerPoolTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(completed)
         assert completed is not None
         self.assertEqual(completed.state, StageStatus.SUCCEEDED)
-
-    async def test_contract_stage_handler_restores_execution_policy(self) -> None:
-        request = worker_request("forced")
-        result = await self.queue.enqueue(
-            request,
-            policy=ExecutionPolicy.forced("manual-1"),
-        )
-        stage = ContractStage()
-        handler = ContractStageHandler(
-            stage,  # type: ignore[arg-type]
-            decode_input=lambda payload: WorkerInput(str(payload["id"])),
-            encode_output=lambda output: output,
-        )
-        pool = StageWorkerPool(
-            self.queue,
-            {"normalize_article": handler},
-            concurrency=1,
-            lease_ms=1_000,
-            heartbeat_interval_ms=200,
-        )
-
-        self.assertTrue(await pool.run_one(worker_id="worker-1"))
-        self.assertEqual(stage.policy, ExecutionPolicy.forced("manual-1"))
-        completed = await self.queue.get_run(result.run.run_id)
-        self.assertIsNotNone(completed)
-        assert completed is not None
-        self.assertEqual(
-            completed.output_payload,
-            {"artifacts": [], "output": {"id": "forced"}},
-        )
 
     async def test_lost_heartbeat_cancels_only_the_current_execution(self) -> None:
         result = await self.queue.enqueue(worker_request("lost"), max_attempts=2)

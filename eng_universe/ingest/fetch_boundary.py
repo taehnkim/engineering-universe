@@ -11,7 +11,8 @@ from eng_universe.ingest.contracts import JsonValue
 from eng_universe.ingest.queue_models import FETCH_RAW_STAGE, Origin, StageLease
 from eng_universe.ingest.robots import can_fetch_path, get_or_fetch_robots, parse_domain
 from eng_universe.ingest.stage_queue import StageQueue
-from eng_universe.ingest.worker import BlockedStageError, StageHandler
+from eng_universe.ingest.queue_models import FailureKind
+from eng_universe.ingest.worker import StageError, StageHandler
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,7 +88,8 @@ def make_fetch_handler(
             reserve_from_now=True,
         )
         if not decision.allowed:
-            raise BlockedStageError(
+            raise StageError(
+                kind=FailureKind.BLOCKED,
                 error_code="robots_denied",
                 message=f"robots policy denied exact path {url}",
             )
