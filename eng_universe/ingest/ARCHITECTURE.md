@@ -88,7 +88,8 @@ Redirect handlers must call the checker again before each redirected request.
 - The process starts 100 configurable asyncio fetch workers.
 - All workers share one `aiohttp` session and one 100-connection connector.
 - Redis origin queues still enforce per-origin in-flight and spacing limits.
-- R2 uploads use a separate bounded semaphore and do not consume fetch slots.
+- Blocking R2 SDK calls use bounded background threads behind a separate semaphore.
+- HTTP fetch concurrency uses asyncio coroutines, not thread or process workers.
 - The runtime rejects a configured process count other than one.
 - A second process also fails the Redis lease, so it cannot multiply the global limit.
 - CPU parsing stays in downstream parser workers, outside the fetch event loop.

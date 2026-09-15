@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import uuid
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any, Protocol
-import uuid
 
 from eng_universe.ingest.contracts import (
     ExecutionPolicy,
@@ -117,7 +117,9 @@ class StageWorkerPool:
         if lease_ms < 1:
             raise ValueError("lease_ms must be positive")
         if heartbeat_interval_ms < 1 or heartbeat_interval_ms >= lease_ms:
-            raise ValueError("heartbeat interval must be positive and shorter than lease")
+            raise ValueError(
+                "heartbeat interval must be positive and shorter than lease"
+            )
         if idle_sleep_ms < 1 or reclaim_interval_ms < 1:
             raise ValueError("worker timing values must be positive")
         if reclaim_limit < 1 or reclaim_limit > 100:
@@ -208,8 +210,9 @@ class StageWorkerPool:
 
     async def _process_lease(self, lease: StageLease) -> None:
         handler = self.handlers[lease.run.stage_name]
+        lease_lost = asyncio.Event()
         execution = asyncio.create_task(handler(lease))
-        heartbeat = asyncio.create_task(self._heartbeat(lease, execution))
+        heartbeat = asyncio.create_task(self._heartbeat(lease, execution, lease_lost))
         try:
             output = await execution
             await self.queue.complete(lease, output=output)
@@ -234,8 +237,10 @@ class StageWorkerPool:
         except LeaseLostError:
             return
         except asyncio.CancelledError:
+            if lease_lost.is_set():
+                return
             raise
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             error = RetryableStageError(
                 error_code=type(exc).__name__,
                 message=str(exc) or type(exc).__name__,
@@ -254,6 +259,7 @@ class StageWorkerPool:
         self,
         lease: StageLease,
         execution: asyncio.Task[JsonValue],
+        lease_lost: asyncio.Event,
     ) -> None:
         while not execution.done():
             await asyncio.sleep(self.heartbeat_interval_ms / 1000)
@@ -261,6 +267,7 @@ class StageWorkerPool:
                 return
             owned = await self.queue.heartbeat(lease, lease_ms=self.lease_ms)
             if not owned:
+                lease_lost.set()
                 execution.cancel()
                 return
 

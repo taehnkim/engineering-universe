@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol, TypeVar
-import uuid
 
 import aiohttp
 import redis.asyncio as redis
@@ -18,7 +18,6 @@ from eng_universe.ingest.fetch_boundary import (
 from eng_universe.ingest.queue_models import FETCH_RAW_STAGE
 from eng_universe.ingest.stage_queue import StageQueue
 from eng_universe.ingest.worker import StageWorkerPool
-
 
 _COMPARE_EXPIRE = r"""
 if redis.call("GET", KEYS[1]) ~= ARGV[1] then
@@ -50,6 +49,7 @@ class FetchWorkerConfig:
     process_count: int = 1
     concurrency: int = 100
     global_connection_limit: int = 100
+    origin_max_inflight: int = 1
     r2_upload_concurrency: int = 8
     process_lease_ms: int = 30_000
     process_heartbeat_ms: int = 10_000
@@ -65,6 +65,8 @@ class FetchWorkerConfig:
             raise ValueError("fetch concurrency must be positive")
         if self.global_connection_limit < 1:
             raise ValueError("global connection limit must be positive")
+        if self.origin_max_inflight < 1:
+            raise ValueError("origin max-inflight must be positive")
         if self.r2_upload_concurrency < 1:
             raise ValueError("R2 upload concurrency must be positive")
         if self.process_lease_ms < 1:
@@ -73,7 +75,9 @@ class FetchWorkerConfig:
             self.process_heartbeat_ms < 1
             or self.process_heartbeat_ms >= self.process_lease_ms
         ):
-            raise ValueError("process heartbeat must be positive and shorter than lease")
+            raise ValueError(
+                "process heartbeat must be positive and shorter than lease"
+            )
 
     @classmethod
     def from_settings(cls) -> FetchWorkerConfig:
@@ -81,6 +85,7 @@ class FetchWorkerConfig:
             process_count=Settings.fetch_worker_processes,
             concurrency=Settings.fetch_worker_concurrency,
             global_connection_limit=Settings.fetch_global_connection_limit,
+            origin_max_inflight=Settings.fetch_origin_max_inflight,
             r2_upload_concurrency=Settings.fetch_r2_upload_concurrency,
             process_lease_ms=Settings.fetch_process_lease_ms,
             process_heartbeat_ms=Settings.fetch_process_heartbeat_ms,
@@ -220,7 +225,7 @@ class FetchWorkerRuntime:
                     self.queue,
                     checker,
                     self.handler_factory(session, uploads),
-                    max_inflight=Settings.fetch_origin_max_inflight,
+                    max_inflight=self.config.origin_max_inflight,
                 )
                 pool = StageWorkerPool(
                     self.queue,
@@ -249,7 +254,8 @@ class FetchWorkerRuntime:
                         exception = heartbeat_task.exception()
                         if exception is not None:
                             stop_event.set()
-                            await pool_task
+                            pool_task.cancel()
+                            await asyncio.gather(pool_task, return_exceptions=True)
                             raise exception
                     await pool_task
                 finally:

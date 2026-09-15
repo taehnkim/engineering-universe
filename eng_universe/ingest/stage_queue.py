@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping, Sequence
 import hashlib
 import secrets
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 import redis.asyncio as redis
@@ -18,12 +18,12 @@ from eng_universe.ingest.contracts import (
     make_run_idempotency_key,
 )
 from eng_universe.ingest.queue_models import (
+    FETCH_RAW_STAGE,
+    QUEUE_SCHEMA_VERSION,
     AttemptRecord,
     EnqueueResult,
     FailureKind,
-    FETCH_RAW_STAGE,
     Origin,
-    QUEUE_SCHEMA_VERSION,
     QueueCounts,
     StageLease,
     StageQueueKeys,
@@ -102,7 +102,8 @@ class StageQueue:
         *,
         keys: StageQueueKeys | None = None,
         default_lease_ms: int = 30_000,
-        claim_scan_limit: int = 16,
+        claim_scan_limit: int = 64,
+        claim_contention_retries: int = 4,
         origin_scan_limit: int = 64,
         origin_busy_delay_ms: int = 50,
         retry_base_ms: int = 1_000,
@@ -112,6 +113,8 @@ class StageQueue:
             raise ValueError("default_lease_ms must be positive")
         if claim_scan_limit < 1 or origin_scan_limit < 1:
             raise ValueError("claim scan limits must be positive")
+        if claim_contention_retries < 1:
+            raise ValueError("claim_contention_retries must be positive")
         if origin_busy_delay_ms < 1:
             raise ValueError("origin_busy_delay_ms must be positive")
         if retry_base_ms < 0 or retry_max_ms < retry_base_ms:
@@ -120,6 +123,7 @@ class StageQueue:
         self.keys = keys or StageQueueKeys()
         self.default_lease_ms = default_lease_ms
         self.claim_scan_limit = claim_scan_limit
+        self.claim_contention_retries = claim_contention_retries
         self.origin_scan_limit = origin_scan_limit
         self.origin_busy_delay_ms = origin_busy_delay_ms
         self.retry_base_ms = retry_base_ms
@@ -217,7 +221,7 @@ class StageQueue:
             return origin
         url = payload.get("url")
         if not isinstance(url, str):
-            raise ValueError("fetch_raw stage input must contain a string URL")
+            raise TypeError("fetch_raw stage input must contain a string URL")
         return Origin.from_url(url)
 
     async def get_run(self, run_id: str) -> StageRunRecord | None:
@@ -259,24 +263,27 @@ class StageQueue:
         worker_id: str,
         lease_ms: int,
     ) -> StageLease | None:
-        now = await self.server_time_ms()
-        run_ids = await self.redis.zrangebyscore(
-            self.keys.ready(stage_name),
-            "-inf",
-            now,
-            start=0,
-            num=self.claim_scan_limit,
-        )
-        for raw_run_id in run_ids:
-            run_id = _decoded(raw_run_id)
-            lease = await self._claim_candidate(
-                stage_name=stage_name,
-                run_id=run_id,
-                worker_id=worker_id,
-                lease_ms=lease_ms,
+        for _ in range(self.claim_contention_retries):
+            now = await self.server_time_ms()
+            run_ids = await self.redis.zrangebyscore(
+                self.keys.ready(stage_name),
+                "-inf",
+                now,
+                start=0,
+                num=self.claim_scan_limit,
             )
-            if lease is not None:
-                return lease
+            if not run_ids:
+                return None
+            for raw_run_id in self._rotated(run_ids):
+                run_id = _decoded(raw_run_id)
+                lease = await self._claim_candidate(
+                    stage_name=stage_name,
+                    run_id=run_id,
+                    worker_id=worker_id,
+                    lease_ms=lease_ms,
+                )
+                if lease is not None:
+                    return lease
         return None
 
     async def _claim_candidate(
@@ -316,55 +323,65 @@ class StageQueue:
         worker_id: str,
         lease_ms: int,
     ) -> StageLease | None:
-        now = await self.server_time_ms()
-        origins = await self.redis.zrangebyscore(
-            self.keys.fetch_origins,
-            "-inf",
-            now,
-            start=0,
-            num=self.origin_scan_limit,
-        )
-        for raw_origin_id in origins:
-            origin_id = _decoded(raw_origin_id)
-            origin_queue = self.keys.origin_ready(origin_id)
-            run_ids = await self.redis.zrangebyscore(
-                origin_queue,
+        for _ in range(self.claim_contention_retries):
+            now = await self.server_time_ms()
+            origins = await self.redis.zrangebyscore(
+                self.keys.fetch_origins,
                 "-inf",
                 now,
                 start=0,
-                num=1,
+                num=self.origin_scan_limit,
             )
-            if not run_ids:
-                await self.redis.zrem(self.keys.fetch_origins, origin_id)
-                continue
-            run_id = _decoded(run_ids[0])
-            token = new_lease_token()
-            attempt_id = f"a_{token}"
-            response = await _CLAIM_FETCH(
-                self.redis,
-                keys=[
-                    self.keys.fetch_origins,
+            if not origins:
+                return None
+            for raw_origin_id in self._rotated(origins):
+                origin_id = _decoded(raw_origin_id)
+                origin_queue = self.keys.origin_ready(origin_id)
+                run_ids = await self.redis.zrangebyscore(
                     origin_queue,
-                    self.keys.ready(FETCH_RAW_STAGE),
-                    self.keys.leased(FETCH_RAW_STAGE),
-                    self.keys.run(run_id),
-                    self.keys.attempt(attempt_id),
-                    self.keys.origin_state(origin_id),
-                ],
-                args=[
-                    origin_id,
-                    run_id,
-                    worker_id,
-                    token,
-                    lease_ms,
-                    attempt_id,
-                    QUEUE_SCHEMA_VERSION,
-                    self.origin_busy_delay_ms,
-                ],
-            )
-            if _first_integer(response) != 0:
-                return await self._load_lease(run_id, attempt_id)
+                    "-inf",
+                    now,
+                    start=0,
+                    num=1,
+                )
+                if not run_ids:
+                    await self.redis.zrem(self.keys.fetch_origins, origin_id)
+                    continue
+                run_id = _decoded(run_ids[0])
+                token = new_lease_token()
+                attempt_id = f"a_{token}"
+                response = await _CLAIM_FETCH(
+                    self.redis,
+                    keys=[
+                        self.keys.fetch_origins,
+                        origin_queue,
+                        self.keys.ready(FETCH_RAW_STAGE),
+                        self.keys.leased(FETCH_RAW_STAGE),
+                        self.keys.run(run_id),
+                        self.keys.attempt(attempt_id),
+                        self.keys.origin_state(origin_id),
+                    ],
+                    args=[
+                        origin_id,
+                        run_id,
+                        worker_id,
+                        token,
+                        lease_ms,
+                        attempt_id,
+                        QUEUE_SCHEMA_VERSION,
+                        self.origin_busy_delay_ms,
+                    ],
+                )
+                if _first_integer(response) != 0:
+                    return await self._load_lease(run_id, attempt_id)
         return None
+
+    @staticmethod
+    def _rotated(values: Sequence[object]) -> Sequence[object]:
+        if len(values) < 2:
+            return values
+        offset = secrets.randbelow(len(values))
+        return [*values[offset:], *values[:offset]]
 
     async def _load_lease(self, run_id: str, attempt_id: str) -> StageLease:
         pipe = self.redis.pipeline(transaction=False)
@@ -531,8 +548,12 @@ class StageQueue:
                     self.keys.dead(stage_name),
                     self.keys.blocked(stage_name),
                     self.keys.fetch_origins if origin_id else self.keys.unused,
-                    self.keys.origin_ready(origin_id) if origin_id else self.keys.unused,
-                    self.keys.origin_state(origin_id) if origin_id else self.keys.unused,
+                    self.keys.origin_ready(origin_id)
+                    if origin_id
+                    else self.keys.unused,
+                    self.keys.origin_state(origin_id)
+                    if origin_id
+                    else self.keys.unused,
                 ],
                 args=[
                     run_id,
@@ -555,6 +576,7 @@ class StageQueue:
         request_interval_ms: int,
         next_allowed_ms: int | None = None,
         backoff_until_ms: int | None = None,
+        reserve_from_now: bool = False,
     ) -> int:
         if max_inflight < 1:
             raise ValueError("max_inflight must be at least 1")
@@ -575,6 +597,7 @@ class StageQueue:
                 request_interval_ms,
                 next_allowed_ms if next_allowed_ms is not None else -1,
                 backoff_until_ms if backoff_until_ms is not None else -1,
+                int(reserve_from_now),
             ],
         )
         return int(response[1])

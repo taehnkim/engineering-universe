@@ -95,12 +95,13 @@ class RobotsAwareFetchHandler:
             raise ValueError("robots-aware handler requires a fetch_raw lease")
         url = lease.run.input_payload.get("url")
         if not isinstance(url, str):
-            raise ValueError("fetch_raw input must contain a string URL")
+            raise TypeError("fetch_raw input must contain a string URL")
         decision = await self.checker.check(url)
         await self.queue.configure_origin(
             decision.origin,
             max_inflight=self.max_inflight,
             request_interval_ms=decision.request_interval_ms,
+            reserve_from_now=True,
         )
         if not decision.allowed:
             raise BlockedStageError(

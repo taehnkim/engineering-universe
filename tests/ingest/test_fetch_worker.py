@@ -1,9 +1,9 @@
 import asyncio
-from collections.abc import Mapping
-from dataclasses import dataclass
 import threading
 import time
 import unittest
+from collections.abc import Mapping
+from dataclasses import dataclass
 
 import aiohttp
 import fakeredis.aioredis as fakeredis
@@ -18,6 +18,7 @@ from eng_universe.ingest.fetch_worker import (
     FetchProcessLease,
     FetchWorkerAlreadyRunning,
     FetchWorkerConfig,
+    FetchWorkerLeaseLost,
     FetchWorkerRuntime,
     R2UploadLimiter,
 )
@@ -66,6 +67,7 @@ class RuntimeHandlerFactory:
         self.upload_limiters: set[int] = set()
         self.handled: set[str] = set()
         self.factory_calls = 0
+        self.started = asyncio.Event()
 
     async def handle(
         self,
@@ -74,6 +76,7 @@ class RuntimeHandlerFactory:
         checker: FetchPathChecker,
     ) -> JsonValue:
         self.handled.add(lease.run.run_id)
+        self.started.set()
         if len(self.handled) == self.expected:
             self.stop_event.set()
         return {"url": decision.url}
@@ -115,6 +118,7 @@ class FetchWorkerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(config.process_count, 1)
         self.assertEqual(config.concurrency, 100)
         self.assertEqual(config.global_connection_limit, 100)
+        self.assertEqual(config.origin_max_inflight, 1)
         with self.assertRaisesRegex(ValueError, "process_count must remain 1"):
             FetchWorkerConfig(process_count=2)
 
@@ -135,8 +139,7 @@ class FetchWorkerTests(unittest.IsolatedAsyncioTestCase):
         await asyncio.gather(
             *(
                 self.queue.enqueue(
-                    runtime_request(f"https://example.com/articles/{index}"),
-                    origin_max_inflight=total,
+                    runtime_request(f"https://example-{index}.com/articles/1"),
                 )
                 for index in range(total)
             )
@@ -180,10 +183,37 @@ class FetchWorkerTests(unittest.IsolatedAsyncioTestCase):
                 active -= 1
             return value
 
-        results = await asyncio.gather(*(limiter.run(upload, index) for index in range(8)))
+        results = await asyncio.gather(
+            *(limiter.run(upload, index) for index in range(8))
+        )
 
         self.assertEqual(results, list(range(8)))
         self.assertEqual(maximum, 2)
+
+    async def test_runtime_stops_if_process_lease_is_lost(self) -> None:
+        await self.queue.enqueue(runtime_request("https://example.com/article"))
+        stop_event = asyncio.Event()
+        observed = RuntimeHandlerFactory(stop_event, expected=2)
+        runtime = FetchWorkerRuntime(
+            self.queue,
+            HandlerFactory(observed),  # type: ignore[arg-type]
+            config=FetchWorkerConfig(
+                concurrency=1,
+                process_lease_ms=100,
+                process_heartbeat_ms=20,
+            ),
+            checker_factory=lambda client, session: AllowingChecker(),  # type: ignore[arg-type]
+        )
+        running = asyncio.create_task(runtime.run(stop_event))
+        await asyncio.wait_for(observed.started.wait(), timeout=1)
+        await self.redis.set(
+            runtime.process_lock_key,
+            "replacement-token",
+            px=1_000,
+        )
+
+        with self.assertRaises(FetchWorkerLeaseLost):
+            await asyncio.wait_for(running, timeout=1)
 
 
 if __name__ == "__main__":

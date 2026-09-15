@@ -1,7 +1,7 @@
 import asyncio
+import unittest
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
-import unittest
 
 import fakeredis.aioredis as fakeredis
 
@@ -13,8 +13,8 @@ from eng_universe.ingest.contracts import (
     StageStatus,
 )
 from eng_universe.ingest.queue_models import (
-    FailureKind,
     FETCH_RAW_STAGE,
+    FailureKind,
     Origin,
     StageQueueKeys,
 )
@@ -68,6 +68,13 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(
             self.queue.keys.run(result.run.run_id).startswith("eu:test:v1:run:")
         )
+
+    def test_origin_identity_normalizes_ports_and_ipv6(self) -> None:
+        self.assertEqual(
+            Origin.from_url("https://EXAMPLE.com:443/path"),
+            Origin.from_url("https://example.com/other"),
+        )
+        self.assertEqual(Origin.from_url("http://[::1]:80/path").value, "http://[::1]")
 
     async def test_duplicate_suppression_is_atomic_under_concurrency(self) -> None:
         request = request_for("same")

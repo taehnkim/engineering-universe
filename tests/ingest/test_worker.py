@@ -1,7 +1,7 @@
 import asyncio
+import unittest
 from collections.abc import Mapping
 from dataclasses import dataclass
-import unittest
 
 import fakeredis.aioredis as fakeredis
 
@@ -75,6 +75,16 @@ class SlowHandler:
         return {"heartbeat": True}
 
 
+class BlockingHandler:
+    def __init__(self) -> None:
+        self.started = asyncio.Event()
+
+    async def __call__(self, lease: StageLease) -> JsonValue:
+        self.started.set()
+        await asyncio.Event().wait()
+        return {"unreachable": True}
+
+
 class ContractStage:
     identity = StageIdentity(name="normalize_article", version="1.0.0")
 
@@ -127,7 +137,9 @@ class StageWorkerPoolTests(unittest.IsolatedAsyncioTestCase):
             *(self.queue.get_run(result.run.run_id) for result in results)
         )
         self.assertTrue(
-            all(run is not None and run.state == StageStatus.SUCCEEDED for run in states)
+            all(
+                run is not None and run.state == StageStatus.SUCCEEDED for run in states
+            )
         )
 
     async def test_worker_retries_typed_failure(self) -> None:
@@ -198,6 +210,34 @@ class StageWorkerPoolTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             completed.output_payload,
             {"artifacts": [], "output": {"id": "forced"}},
+        )
+
+    async def test_lost_heartbeat_cancels_only_the_current_execution(self) -> None:
+        result = await self.queue.enqueue(worker_request("lost"), max_attempts=2)
+        handler = BlockingHandler()
+        pool = StageWorkerPool(
+            self.queue,
+            {"normalize_article": handler},
+            concurrency=1,
+            lease_ms=40,
+            heartbeat_interval_ms=10,
+        )
+        work = asyncio.create_task(pool.run_one(worker_id="worker-1"))
+        await asyncio.wait_for(handler.started.wait(), timeout=1)
+        await self.redis.hset(
+            self.queue.keys.run(result.run.run_id),
+            "lease_token",
+            "replacement-token",
+        )
+
+        self.assertTrue(await asyncio.wait_for(work, timeout=1))
+        await asyncio.sleep(0.05)
+        self.assertEqual(
+            await self.queue.reclaim_expired(
+                "normalize_article",
+                retry_delay_ms=0,
+            ),
+            1,
         )
 
 

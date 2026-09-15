@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 ENQUEUE_RUN = r"""
 local existing = redis.call("GET", KEYS[1])
 if existing then
@@ -220,7 +219,7 @@ redis.call(
     "next_allowed_ms", now + request_interval,
     "last_claimed_at_ms", now
 )
-schedule_origin(now + 1)
+schedule_origin(now)
 return {1, attempt, lease_until}
 """
 
@@ -501,6 +500,14 @@ redis.call(
 )
 if tonumber(ARGV[6]) >= 0 then
     redis.call("HSET", KEYS[3], "next_allowed_ms", ARGV[6])
+elseif ARGV[8] == "1" and tonumber(ARGV[5]) > 0 then
+    local current = tonumber(redis.call("HGET", KEYS[3], "next_allowed_ms") or "0")
+    redis.call(
+        "HSET",
+        KEYS[3],
+        "next_allowed_ms",
+        math.max(current, now + tonumber(ARGV[5]))
+    )
 end
 if tonumber(ARGV[7]) >= 0 then
     redis.call("HSET", KEYS[3], "backoff_until_ms", ARGV[7])

@@ -1,6 +1,6 @@
+import unittest
 from collections.abc import Mapping
 from dataclasses import dataclass
-import unittest
 from unittest.mock import AsyncMock, patch
 
 import fakeredis.aioredis as fakeredis
@@ -83,7 +83,7 @@ class FetchBoundaryTests(unittest.IsolatedAsyncioTestCase):
             request_rate_s=0,
             allowed=True,
             fetched_at=123,
-            text="User-agent: *\nDisallow: /private\nAllow: /private/public\n",
+            text="User-agent: *\nDisallow: /private\n",
         )
         session = object()
         checker = FetchPathChecker(
@@ -97,7 +97,7 @@ class FetchBoundaryTests(unittest.IsolatedAsyncioTestCase):
             new=AsyncMock(return_value=rules),
         ) as fetch_rules:
             denied = await checker.check("https://example.com/private/article")
-            allowed = await checker.check("https://example.com/private/public/article")
+            allowed = await checker.check("https://example.com/public/article")
 
         self.assertFalse(denied.allowed)
         self.assertTrue(allowed.allowed)
@@ -121,6 +121,7 @@ class FetchBoundaryTests(unittest.IsolatedAsyncioTestCase):
             heartbeat_interval_ms=200,
         )
 
+        before = await self.queue.server_time_ms()
         self.assertTrue(await pool.run_one(worker_id="worker-1"))
         run = await self.queue.get_run(result.run.run_id)
         self.assertIsNotNone(run)
@@ -130,6 +131,7 @@ class FetchBoundaryTests(unittest.IsolatedAsyncioTestCase):
         state = await self.queue.origin_state(Origin.from_url(url))
         self.assertEqual(int(state["inflight"]), 0)
         self.assertEqual(int(state["request_interval_ms"]), 2_000)
+        self.assertGreaterEqual(int(state["next_allowed_ms"]), before + 2_000)
 
 
 if __name__ == "__main__":

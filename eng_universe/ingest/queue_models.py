@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dataclasses import dataclass
-from enum import Enum
 import hashlib
 import json
 import time
+import uuid
+from collections.abc import Mapping
+from dataclasses import dataclass
+from enum import Enum
 from typing import Any
 from urllib.parse import urlsplit
-import uuid
 
 from eng_universe.ingest.contracts import JsonValue, StageStatus
-
 
 QUEUE_SCHEMA_VERSION = "1"
 QUEUE_NAMESPACE = "eu:v1"
@@ -81,7 +80,8 @@ class Origin:
         except (UnicodeError, ValueError) as exc:
             raise ValueError("fetch URL contains an invalid host or port") from exc
         default_port = 80 if scheme == "http" else 443
-        authority = host if port in {None, default_port} else f"{host}:{port}"
+        address = f"[{host}]" if ":" in host else host
+        authority = address if port in {None, default_port} else f"{address}:{port}"
         value = f"{scheme}://{authority}"
         digest = hashlib.sha256(value.encode("utf-8")).hexdigest()
         return cls(origin_id=f"o_{digest}", value=value)
@@ -93,7 +93,9 @@ class StageQueueKeys:
 
     def __post_init__(self) -> None:
         if not self.namespace or self.namespace.endswith(":"):
-            raise ValueError("queue namespace must be non-empty and omit a trailing colon")
+            raise ValueError(
+                "queue namespace must be non-empty and omit a trailing colon"
+            )
 
     @property
     def events(self) -> str:
@@ -170,6 +172,10 @@ class StageRunRecord:
     def __post_init__(self) -> None:
         if not self.run_id:
             raise ValueError("run_id must not be empty")
+        if self.schema_version != QUEUE_SCHEMA_VERSION:
+            raise ValueError(
+                f"unsupported queue schema version {self.schema_version!r}"
+            )
         if self.max_attempts < 1:
             raise ValueError("max_attempts must be at least 1")
         if self.attempt_count < 0:
@@ -181,7 +187,7 @@ class StageRunRecord:
     def input_payload(self) -> Mapping[str, JsonValue]:
         payload = json.loads(self.input_json)
         if not isinstance(payload, dict):
-            raise ValueError("stage input JSON must contain an object")
+            raise TypeError("stage input JSON must contain an object")
         return payload
 
     @property
@@ -221,7 +227,9 @@ class StageRunRecord:
             "error_code": self.error_code,
             "error_message": self.error_message,
         }
-        values.update({key: value for key, value in optional.items() if value is not None})
+        values.update(
+            {key: value for key, value in optional.items() if value is not None}
+        )
         return values
 
     @classmethod
@@ -280,6 +288,9 @@ class AttemptRecord:
         decoded = decode_hash(values)
         if not decoded:
             raise ValueError("attempt record is empty")
+        schema_version = decoded.get("schema_version", "")
+        if schema_version != QUEUE_SCHEMA_VERSION:
+            raise ValueError(f"unsupported queue schema version {schema_version!r}")
         return cls(
             attempt_id=decoded["attempt_id"],
             run_id=decoded["run_id"],
