@@ -21,6 +21,8 @@ def env_bool(name: str, default: str = "false") -> bool:
 
 @dataclass(frozen=True)
 class KeywordFieldConfig:
+    """Defines one Redis search field."""
+
     name: str
     field_type: str
     weight: float | None = None
@@ -45,6 +47,8 @@ KEYWORD_FIELDS: list[KeywordFieldConfig] = [
 
 
 class Settings:
+    """Loads application settings from environment variables."""
+
     user_agent = os.getenv("EU_USER_AGENT", "EngUniverseBot/0.1")
     redis_url = env("REDIS_URL", "redis://default:devpass@localhost:6379/0")
     crawl_queue_key = os.getenv("CRAWL_QUEUE_KEY", "crawl:queue")
@@ -74,6 +78,29 @@ class Settings:
     )
     request_timeout_s = int(os.getenv("REQUEST_TIMEOUT_S", 20))
     crawl_delay_default_s = int(os.getenv("CRAWL_DELAY_DEFAULT_S", 5))
+    stage_queue_namespace = os.getenv("STAGE_QUEUE_NAMESPACE", "eu:v1")
+    stage_worker_concurrency = int(os.getenv("STAGE_WORKER_CONCURRENCY", "16"))
+    stage_lease_ms = int(os.getenv("STAGE_LEASE_MS", "30000"))
+    stage_heartbeat_ms = int(os.getenv("STAGE_HEARTBEAT_MS", "10000"))
+    stage_reclaim_interval_ms = int(
+        os.getenv("STAGE_RECLAIM_INTERVAL_MS", "1000")
+    )
+    stage_succeeded_run_ttl_s = int(
+        os.getenv("STAGE_SUCCEEDED_RUN_TTL_S", str(7 * 24 * 60 * 60))
+    )
+    fetch_worker_processes = int(os.getenv("FETCH_WORKER_PROCESSES", "1"))
+    fetch_worker_concurrency = int(os.getenv("FETCH_WORKER_CONCURRENCY", "100"))
+    fetch_global_connection_limit = int(
+        os.getenv("FETCH_GLOBAL_CONNECTION_LIMIT", "100")
+    )
+    fetch_origin_max_inflight = int(os.getenv("FETCH_ORIGIN_MAX_INFLIGHT", "1"))
+    fetch_r2_upload_concurrency = int(
+        os.getenv("FETCH_R2_UPLOAD_CONCURRENCY", "8")
+    )
+    fetch_process_lease_ms = int(os.getenv("FETCH_PROCESS_LEASE_MS", "30000"))
+    fetch_process_heartbeat_ms = int(
+        os.getenv("FETCH_PROCESS_HEARTBEAT_MS", "10000")
+    )
     embeddings_provider = os.getenv("EMBEDDINGS_PROVIDER", "dummy")
     embeddings_dim = int(os.getenv("EMBEDDINGS_DIM", 384))
     keyword_only = env_bool("KEYWORD_ONLY", "false")

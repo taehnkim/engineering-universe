@@ -1,17 +1,15 @@
-import asyncio
-from collections.abc import Mapping
-from dataclasses import dataclass
+from __future__ import annotations
+
 import math
 import unittest
+from collections.abc import Mapping
+from dataclasses import dataclass
 
 from eng_universe.ingest.contracts import (
     ArtifactRef,
-    ExecutionPolicy,
     JsonValue,
-    StageContext,
     StageIdentity,
     StageRequest,
-    StageResult,
     canonical_json,
     make_run_idempotency_key,
 )
@@ -23,20 +21,6 @@ class ExampleInput:
 
     def idempotency_payload(self) -> Mapping[str, JsonValue]:
         return self.values
-
-
-class ExampleStage:
-    identity = StageIdentity(name="example", version="1.0.0")
-
-    async def execute(
-        self, stage_input: ExampleInput, context: StageContext
-    ) -> StageResult[dict[str, JsonValue]]:
-        return StageResult(
-            output={
-                "attempt": context.attempt,
-                "input": stage_input.idempotency_payload(),
-            }
-        )
 
 
 class StageContractTests(unittest.TestCase):
@@ -136,34 +120,13 @@ class StageContractTests(unittest.TestCase):
         }
         self.assertEqual(len(keys), 4)
 
-    def test_force_policy_is_separate_and_non_promoting_by_default(self) -> None:
+    def test_run_idempotency_key_changes_only_with_rerun_nonce(self) -> None:
         base_key = "parse_article:1.0.0:abc"
-        normal_policy = ExecutionPolicy()
-        forced_policy = ExecutionPolicy.forced("manual-run-1")
-
-        self.assertEqual(make_run_idempotency_key(base_key, normal_policy), base_key)
+        self.assertEqual(make_run_idempotency_key(base_key), base_key)
         self.assertNotEqual(
-            make_run_idempotency_key(base_key, forced_policy),
+            make_run_idempotency_key(base_key, rerun_nonce="manual-run-1"),
             base_key,
         )
-        self.assertFalse(forced_policy.promote)
-        with self.assertRaisesRegex(ValueError, "rerun_nonce"):
-            ExecutionPolicy(force=True)
-
-    def test_stage_contract_executes_without_transport_dependencies(self) -> None:
-        result = asyncio.run(
-            ExampleStage().execute(
-                ExampleInput({"fetch_id": "fetch-1"}),
-                StageContext(
-                    run_id="run-1",
-                    attempt=1,
-                    policy=ExecutionPolicy(),
-                ),
-            )
-        )
-
-        self.assertEqual(result.output["attempt"], 1)
-        self.assertEqual(result.artifacts, ())
 
 
 if __name__ == "__main__":
