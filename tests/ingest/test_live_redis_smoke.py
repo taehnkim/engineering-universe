@@ -38,7 +38,7 @@ class LiveRedisQueueSmokeTests(unittest.IsolatedAsyncioTestCase):
         await self.redis.aclose()
 
     async def test_queued_retry_is_claimable_only_when_due(self) -> None:
-        enqueued = await enqueue_fetch(
+        await enqueue_fetch(
             self.queue,
             "https://example.com/article",
             config_version="smoke-1",
