@@ -49,6 +49,8 @@ class StageIdentity:
 
 @dataclass(frozen=True, slots=True)
 class ArtifactRef:
+    """Reference to an immutable stage artifact in object storage, such as Cloudflare R2."""
+
     artifact_id: str
     kind: str
     schema_version: str
