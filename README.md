@@ -71,6 +71,6 @@ uv run python scripts/clear_crawl.py
 See `docs/` for detailed specs:
 
 - `docs/seeding.md` — how company blog roots become crawlable posts
-- `docs/architecture.md` — crawl/index data-flow diagram and Q&A
+- `docs/ingest.md` — ingestion architecture (catalog, contracts, stage queue)
 - `docs/spec.md` — product scope and module contracts
 
