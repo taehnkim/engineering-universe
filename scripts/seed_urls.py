@@ -61,7 +61,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--catalog",
         action="store_true",
-        help="Seed every listing root in eng_universe.ingest.sources.SOURCES",
+        help="Seed every listing root in eng_universe.ingest.source_catalog.SOURCES",
     )
     parser.add_argument(
         "--list",

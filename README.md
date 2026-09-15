@@ -15,7 +15,7 @@ Combines keyword (BM25) and semantic search for hybrid results.
 
 1. Set `REDIS_URL` and optional embedding provider env vars
 2. If you want R2 storage, set `R2_UPLOAD=true` plus `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` (optional: `R2_REGION`, `R2_ENDPOINT_URL`)
-3. Add or review company blog roots in `eng_universe/ingest/sources.py` (see `docs/seeding.md`)
+3. Add or review company blog roots in `eng_universe/ingest/source_catalog.py` (see `docs/seeding.md`)
 4. Seed and crawl (see [Ingestion runs](#ingestion-runs) below)
 5. `uv run python main.py index` (uploads clean text + index JSON to R2; reads raw HTML from R2)
 6. `uvicorn api.search:app --reload`

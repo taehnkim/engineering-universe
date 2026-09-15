@@ -26,9 +26,8 @@ from eng_universe.ingest.robots import (
     parse_domain,
     reserve_next_allowed,
 )
+from eng_universe.ingest.source_catalog import SOURCES, SourceConfig
 from eng_universe.ingest.sources import (
-    SOURCES,
-    SourceConfig,
     UrlKind,
     classify_url,
     is_article_url,

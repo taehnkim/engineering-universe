@@ -69,7 +69,7 @@ class Settings:
         "SEED_DOMAINS",
         "",
     )
-    # Comma-separated override. Empty = seed every listing root in sources.SOURCES.
+    # Comma-separated override. Empty = seed every listing root in source_catalog.SOURCES.
     seed_start_urls = os.getenv(
         "SEED_START_URLS",
         "",

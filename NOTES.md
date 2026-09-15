@@ -8,7 +8,7 @@
     ┌─────────────────────────────▼─────────────────────────────┐
     │  main.py seed / scripts/seed_urls.py                      │
     │  ┌─────────────────────────────────────────────────────┐  │
-    │  │ Curated catalog: eng_universe/ingest/sources.py     │  │
+    │  │ Curated catalog: eng_universe/ingest/source_catalog.py │
     │  │ • listing roots (stripe.dev/blog, …)                │  │
     │  │ • article path regexes per host                     │  │
     │  │ • optional SEED_START_URLS override                 │  │
@@ -142,7 +142,7 @@
 ## Data Flow Q&A
 
 ### 1. Which URLs get seeded?
-- Curated listing roots in `eng_universe/ingest/sources.py` (`SOURCES`)
+- Curated listing roots in `eng_universe/ingest/source_catalog.py` (`SOURCES`)
 - Default CLI: `python main.py seed` seeds the full catalog
 - Override: `SEED_START_URLS` or `python main.py seed --url <listing-or-article>`
 - Listing seeds also enqueue configured sitemap.xml URLs for that host

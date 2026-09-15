@@ -26,7 +26,7 @@ A single post URL is allowed as a one-off seed only when it already matches a kn
 
 ## How do we know which company URLs to crawl?
 
-**Curated catalog:** `eng_universe/ingest/sources.py` → `SOURCES`.
+**Curated catalog:** `eng_universe/ingest/source_catalog.py` → `SOURCES`.
 
 Each `SourceConfig` has:
 
@@ -95,7 +95,7 @@ Pagination uses `follow_path_patterns` so `/blog/page/2` stays a listing and can
 "I found Stripe. Root is https://stripe.dev/blog"
         |
         v
-Add SourceConfig (host, listing_paths, article_path_patterns)
+Add SourceConfig in source_catalog.py (host, listing_paths, article_path_patterns)
         |
         v
 python main.py seed --url https://stripe.dev/blog

@@ -3,7 +3,7 @@
 ## Scope
 
 - Crawl engineering blogs from the curated source catalog in
-  `eng_universe/ingest/sources.py` (Meta, Ramp, Anthropic, OpenAI, Stripe,
+  `eng_universe/ingest/source_catalog.py` (Meta, Ramp, Anthropic, OpenAI, Stripe,
   Airbnb Medium publication, and others).
 - Provide hybrid search (BM25 + vector) with Redis Stack/RediSearch.
 - Serve a minimal HTML/JS frontend and a Vercel-hosted API.
