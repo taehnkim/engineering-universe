@@ -85,6 +85,32 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         assert lease is not None
         self.assertEqual(lease.run.schema_version, "1")
 
+    async def test_older_schema_lease_does_not_crash_reclaimer(self) -> None:
+        result = await self.queue.enqueue(request_for("doc-1"), max_attempts=2)
+        lease = await self.queue.claim(
+            "parse_article",
+            worker_id="worker-1",
+            lease_ms=10,
+        )
+        self.assertIsNotNone(lease)
+        await self.redis.hset(
+            self.queue.keys.run(result.run.run_id),
+            "schema_version",
+            "1",
+        )
+        await asyncio.sleep(0.02)
+
+        reclaimed = await self.queue.reclaim_expired(
+            "parse_article",
+            retry_delay_ms=0,
+        )
+        recovered = await self.queue.claim("parse_article", worker_id="worker-2")
+
+        self.assertEqual(reclaimed, 1)
+        self.assertIsNotNone(recovered)
+        assert recovered is not None
+        self.assertEqual(recovered.run.schema_version, "1")
+
     def test_origin_identity_normalizes_ports_and_ipv6(self) -> None:
         self.assertEqual(
             Origin.from_url("https://EXAMPLE.com:443/path"),
