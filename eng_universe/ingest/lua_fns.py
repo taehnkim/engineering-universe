@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+"""Redis Lua scripts for atomic ingest operations (loaded via EVALSHA)."""
+
+# Create run hash, idempotency key, and ready-queue membership.
 ENQUEUE_RUN = r"""
 local existing = redis.call("GET", KEYS[1])
 if existing then
@@ -63,7 +66,7 @@ end
 return {1, ARGV[2]}
 """
 
-
+# Move one due general-stage run from ready to leased.
 CLAIM_RUN = r"""
 local state = redis.call("HGET", KEYS[3], "state")
 if (state == "leased" or state == "running")
@@ -105,7 +108,7 @@ redis.call("ZADD", KEYS[2], lease_until, ARGV[1])
 return {1, attempt, lease_until}
 """
 
-
+# Claim fetch_raw with origin and global concurrency limits.
 CLAIM_FETCH_RUN = r"""
 local function schedule_origin(not_before)
     local next_item = redis.call("ZRANGE", KEYS[2], 0, 0, "WITHSCORES")
@@ -203,7 +206,7 @@ schedule_origin(fairness_not_before)
 return {1, attempt, lease_until}
 """
 
-
+# Extend lease and mark an owned run as running.
 HEARTBEAT_RUN = r"""
 local state = redis.call("HGET", KEYS[1], "state")
 if state ~= "leased" and state ~= "running" then
@@ -222,7 +225,7 @@ redis.call("ZADD", KEYS[2], lease_until, ARGV[1])
 return {1, lease_until}
 """
 
-
+# Return a leased run to queued with a future due time.
 DEFER_RUN = r"""
 local state = redis.call("HGET", KEYS[2], "state")
 if (state ~= "leased" and state ~= "running")
@@ -255,7 +258,7 @@ redis.call("ZADD", KEYS[4], due_at, ARGV[1])
 return {1, due_at}
 """
 
-
+# Mark success, release origin slots, optional run TTL.
 COMPLETE_RUN = r"""
 local function release_origin(now)
     if ARGV[5] == "" then
@@ -316,7 +319,7 @@ release_origin(now)
 return {1, now}
 """
 
-
+# Retry, dead-letter, or block a failed leased run.
 FAIL_RUN = r"""
 local function schedule_origin(now)
     if ARGV[8] == "" then
@@ -408,7 +411,7 @@ redis.call("ZADD", terminal_key, now, ARGV[1])
 return {1, terminal_state, now}
 """
 
-
+# Recover expired leases into retry_wait or failed.
 RECLAIM_RUN = r"""
 local function schedule_origin(now)
     if ARGV[6] == "" then
@@ -494,7 +497,7 @@ redis.call("ZADD", KEYS[5], now, ARGV[1])
 return {1, "failed", now}
 """
 
-
+# Update origin rate limits and reschedule fetch work.
 CONFIGURE_ORIGIN = r"""
 local clock = redis.call("TIME")
 local now = (tonumber(clock[1]) * 1000) + math.floor(tonumber(clock[2]) / 1000)
@@ -535,4 +538,33 @@ local backoff_until = tonumber(redis.call("HGET", KEYS[3], "backoff_until_ms") o
 local eligible_at = math.max(tonumber(next_item[2]), next_allowed, backoff_until, now)
 redis.call("ZADD", KEYS[1], eligible_at, ARGV[2])
 return {1, eligible_at}
+"""
+
+# Atomically reserve the next allowed crawl time for a domain.
+RESERVE_NEXT_ALLOWED = r"""
+local now = tonumber(ARGV[1])
+local delay = tonumber(ARGV[2])
+local current = tonumber(redis.call("GET", KEYS[1]) or "0")
+if current <= now then
+    local next_allowed = now + delay
+    redis.call("SET", KEYS[1], next_allowed)
+    return {1, next_allowed}
+end
+return {0, current}
+"""
+
+# Extend lease TTL when the holder token still matches.
+COMPARE_EXPIRE = r"""
+if redis.call("GET", KEYS[1]) ~= ARGV[1] then
+    return 0
+end
+return redis.call("PEXPIRE", KEYS[1], ARGV[2])
+"""
+
+# Delete lease key when the holder token still matches.
+COMPARE_DELETE = r"""
+if redis.call("GET", KEYS[1]) ~= ARGV[1] then
+    return 0
+end
+return redis.call("DEL", KEYS[1])
 """

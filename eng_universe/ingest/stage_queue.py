@@ -30,7 +30,7 @@ from eng_universe.ingest.queue_models import (
     new_lease_token,
     new_run_id,
 )
-from eng_universe.ingest.queue_scripts import (
+from eng_universe.ingest.lua_fns import (
     CLAIM_FETCH_RUN,
     CLAIM_RUN,
     COMPLETE_RUN,
