@@ -157,13 +157,9 @@ class CrawlMonitorApp(App[None]):
     async def action_refresh(self) -> None:
         await self._tick()
 
-    def report_worker_failure(self, exc: BaseException) -> None:
-        """Shows a worker exception in the flow pane, then exits the app."""
+    def report_worker_failure(self, _exc: BaseException) -> None:
+        """Exits the app so the runner can re-raise the worker exception."""
 
-        with contextlib.suppress(Exception):
-            self.query_one("#flow-pane", FlowPane).update(
-                f"[red]Worker failed:[/red] {type(exc).__name__}: {exc}"
-            )
         self.exit()
 
     async def _tick(self) -> None:

@@ -274,6 +274,54 @@ class CollectSnapshotTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(snap.rows[0].subject, "22")
         self.assertEqual(snap.rows[0].detail, "clean/22.txt")
 
+    async def test_leased_rows_keep_detail_when_ready_sample_is_large(self) -> None:
+        """Ready IDs must not crowd leased hashes out of the hydrate budget."""
+
+        now_ms = 4_000_000
+        ready_key = self.keys.ready(CRAWL_STAGE)
+        leased_key = self.keys.leased(CRAWL_STAGE)
+        ready_mapping = {
+            f"r_ready_{index:02d}": float(now_ms - index) for index in range(40)
+        }
+        ready_mapping.update(
+            {
+                f"r_delay_{index:02d}": float(now_ms + 10_000 + index)
+                for index in range(40)
+            }
+        )
+        await self.redis.zadd(ready_key, ready_mapping)
+        await self.redis.zadd(leased_key, {"r_leased": now_ms + 30_000})
+
+        for run_id in ready_mapping:
+            await self.redis.hset(
+                self.keys.run(run_id),
+                mapping=_run_fields(
+                    run_id=run_id,
+                    state="queued",
+                    url=f"https://ready.example/{run_id}",
+                ),
+            )
+        await self.redis.hset(
+            self.keys.run("r_leased"),
+            mapping=_run_fields(
+                run_id="r_leased",
+                state="leased",
+                url="https://inflight.example/item",
+            ),
+        )
+
+        snap = await collect_snapshot(
+            self.redis,
+            keys=self.keys,
+            stage=CRAWL_STAGE,
+            now_ms=now_ms,
+            row_limit=40,
+        )
+
+        self.assertEqual(snap.rows[0].run_id, "r_leased")
+        self.assertEqual(snap.rows[0].subject, "inflight.example")
+        self.assertEqual(snap.rows[0].detail, "https://inflight.example/item")
+
 
 class CliParserTuiTests(unittest.TestCase):
     """Ensures crawl/index expose --no-tui and monitor stage choices."""

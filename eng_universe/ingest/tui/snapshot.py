@@ -264,10 +264,24 @@ async def collect_snapshot(
     blocked_ids = [_text(run_id) for run_id in blocked_raw]
     delayed = max(int(ready_total) - int(queued), 0)
 
-    # Only hydrate hashes for the bounded display sample.
-    interest = (
-        [run_id for run_id, _ in ready_sample] + leased + dead + blocked_ids
-    )[: row_limit * 2]
+    # Hydrate in the same order as the table (leased first). Cap at row_limit so
+    # a large ready sample cannot crowd out in-flight hashes.
+    interest: list[str] = []
+    seen: set[str] = set()
+    for run_id in (
+        leased
+        + [run_id for run_id, _ in due_pairs]
+        + [run_id for run_id, _ in delayed_pairs]
+        + dead
+        + blocked_ids
+    ):
+        if run_id in seen:
+            continue
+        seen.add(run_id)
+        interest.append(run_id)
+        if len(interest) >= row_limit:
+            break
+
     runs: dict[str, dict[str, str]] = {}
     if interest:
         hash_pipe = redis_client.pipeline()

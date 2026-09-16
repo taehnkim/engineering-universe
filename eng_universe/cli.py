@@ -240,15 +240,6 @@ async def _init_index() -> None:
         await redis_client.aclose()
 
 
-async def _reindex() -> None:
-    redis_client = redis.from_url(Settings.redis_url)
-    try:
-        await create_search_index(redis_client, "idx:blogs")
-        await index_worker()
-    finally:
-        await redis_client.aclose()
-
-
 def main(argv: Sequence[str] | None = None) -> None:
     """Runs one Engineering Universe command."""
 
