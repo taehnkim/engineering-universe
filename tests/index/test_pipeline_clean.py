@@ -182,6 +182,26 @@ class IndexPipelineCleanTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(run.error_code, "r2_download_failed")
         self.assertEqual(run.error_class, "retryable")
 
+    async def test_missing_url_is_permanent(self) -> None:
+        await self.redis.hset(f"{self.prefix}{self.doc_id}", mapping={"url": ""})
+        with (
+            patch("eng_universe.index.pipeline.r2_enabled", return_value=True),
+            patch("eng_universe.index.pipeline.download_text", return_value=RAW_HTML),
+            patch(
+                "eng_universe.index.pipeline.index_document",
+                new_callable=AsyncMock,
+            ) as index_document,
+        ):
+            await index_worker()
+
+        index_document.assert_not_awaited()
+        _, run, counts = await self._failed_run()
+        self.assertEqual(counts.ready, 0)
+        self.assertEqual(counts.dead, 1)
+        self.assertEqual(run.state.value, "failed")
+        self.assertEqual(run.error_code, "missing_url")
+        self.assertEqual(run.error_class, "permanent")
+
     async def test_clean_upload_false_is_retried_before_index(self) -> None:
         with (
             patch("eng_universe.index.pipeline.r2_enabled", return_value=True),

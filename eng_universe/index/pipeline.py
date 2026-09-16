@@ -126,34 +126,43 @@ async def index_worker(doc_key_prefix: str | None = None) -> None:
         if not raw_html:
             raw_html = _read_text(raw_path)
         cleaned_html = _read_text(cleaned_path)
-        if not url or not (raw_html or cleaned_html):
+        if not url:
+            log_event("skip", doc_id=raw_doc_id, url=url, reason="missing_url")
+            await fail(
+                redis_client,
+                lease,
+                kind=FailureKind.PERMANENT,
+                error_code="missing_url",
+                error_message=f"crawl url is missing for {raw_doc_id}",
+            )
+            continue
+        if not (raw_html or cleaned_html):
             if r2_key_missing:
-                log_event("skip", doc_id=raw_doc_id, url=url, reason="r2_miss")
-                await fail(
-                    redis_client,
-                    lease,
-                    kind=FailureKind.PERMANENT,
-                    error_code="r2_miss",
-                    error_message=f"R2 raw object is missing for {raw_doc_id}",
+                kind, code, msg = (
+                    FailureKind.PERMANENT,
+                    "r2_miss",
+                    "R2 raw object is missing",
                 )
             elif r2_download_failed:
-                log_event("skip", doc_id=raw_doc_id, url=url, reason="r2_fail")
-                await fail(
-                    redis_client,
-                    lease,
-                    kind=FailureKind.RETRYABLE,
-                    error_code="r2_download_failed",
-                    error_message=f"R2 raw download failed for {raw_doc_id}",
+                kind, code, msg = (
+                    FailureKind.RETRYABLE,
+                    "r2_download_failed",
+                    "R2 raw download failed",
                 )
             else:
-                log_event("skip", doc_id=raw_doc_id, url=url, reason="missing_html")
-                await fail(
-                    redis_client,
-                    lease,
-                    kind=FailureKind.RETRYABLE,
-                    error_code="missing_html",
-                    error_message=f"crawl HTML is missing for {raw_doc_id}",
+                kind, code, msg = (
+                    FailureKind.RETRYABLE,
+                    "missing_html",
+                    "crawl HTML is missing",
                 )
+            log_event("skip", doc_id=raw_doc_id, url=url, reason=code)
+            await fail(
+                redis_client,
+                lease,
+                kind=kind,
+                error_code=code,
+                error_message=f"{msg} for {raw_doc_id}",
+            )
             continue
         base_html = raw_html or cleaned_html
         parsed = parse_html(url, base_html)
