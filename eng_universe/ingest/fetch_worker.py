@@ -11,23 +11,8 @@ from eng_universe.config import Settings
 from eng_universe.ingest.fetch_boundary import FetchPathChecker, make_fetch_handler
 from eng_universe.ingest.queue_models import FETCH_RAW_STAGE
 from eng_universe.ingest.stage_queue import StageQueue
+from eng_universe.ingest.lua_fns import COMPARE_DELETE, COMPARE_EXPIRE
 from eng_universe.ingest.worker import StageHandler, StageWorkerPool
-
-# Extend lease TTL when the holder token still matches.
-_COMPARE_EXPIRE = r"""
-if redis.call("GET", KEYS[1]) ~= ARGV[1] then
-    return 0
-end
-return redis.call("PEXPIRE", KEYS[1], ARGV[2])
-"""
-
-# Delete lease key when the holder token still matches.
-_COMPARE_DELETE = r"""
-if redis.call("GET", KEYS[1]) ~= ARGV[1] then
-    return 0
-end
-return redis.call("DEL", KEYS[1])
-"""
 
 ResultT = TypeVar("ResultT")
 
@@ -94,7 +79,7 @@ class ProcessLease:
         if not self.acquired:
             return False
         renewed = await self.redis.eval(
-            _COMPARE_EXPIRE,
+            COMPARE_EXPIRE,
             1,
             self.key,
             self.token,
@@ -106,7 +91,7 @@ class ProcessLease:
         if not self.acquired:
             return False
         released = await self.redis.eval(
-            _COMPARE_DELETE,
+            COMPARE_DELETE,
             1,
             self.key,
             self.token,

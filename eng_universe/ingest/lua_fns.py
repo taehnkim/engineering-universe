@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Redis Lua scripts for atomic stage-queue transitions (loaded via EVALSHA)."""
+"""Redis Lua scripts for atomic ingest operations (loaded via EVALSHA)."""
 
 # Create run hash, idempotency key, and ready-queue membership.
 ENQUEUE_RUN = r"""
@@ -538,4 +538,33 @@ local backoff_until = tonumber(redis.call("HGET", KEYS[3], "backoff_until_ms") o
 local eligible_at = math.max(tonumber(next_item[2]), next_allowed, backoff_until, now)
 redis.call("ZADD", KEYS[1], eligible_at, ARGV[2])
 return {1, eligible_at}
+"""
+
+# Atomically reserve the next allowed crawl time for a domain.
+RESERVE_NEXT_ALLOWED = r"""
+local now = tonumber(ARGV[1])
+local delay = tonumber(ARGV[2])
+local current = tonumber(redis.call("GET", KEYS[1]) or "0")
+if current <= now then
+    local next_allowed = now + delay
+    redis.call("SET", KEYS[1], next_allowed)
+    return {1, next_allowed}
+end
+return {0, current}
+"""
+
+# Extend lease TTL when the holder token still matches.
+COMPARE_EXPIRE = r"""
+if redis.call("GET", KEYS[1]) ~= ARGV[1] then
+    return 0
+end
+return redis.call("PEXPIRE", KEYS[1], ARGV[2])
+"""
+
+# Delete lease key when the holder token still matches.
+COMPARE_DELETE = r"""
+if redis.call("GET", KEYS[1]) ~= ARGV[1] then
+    return 0
+end
+return redis.call("DEL", KEYS[1])
 """
