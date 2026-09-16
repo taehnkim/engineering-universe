@@ -175,7 +175,6 @@ async def index_worker(doc_key_prefix: str | None = None) -> None:
                 "url": parsed.url,
                 "canonical_url": parsed.canonical_url,
                 "title": parsed.title,
-                "content": parsed.content,
                 "authors": parsed.authors,
                 "company": parsed.company,
                 "published_at": parsed.published_at,

@@ -117,9 +117,10 @@ class IndexPipelineCleanTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(uploads[f"clean/{self.doc_id}.txt"], "Clean body text.")
         index_payload = uploads[f"index/{self.doc_id}.json"]
         assert isinstance(index_payload, dict)
-        self.assertEqual(index_payload["content"], "Clean body text.")
+        self.assertNotIn("content", index_payload)
         self.assertEqual(index_payload["clean_key"], f"clean/{self.doc_id}.txt")
         self.assertEqual(index_payload["raw_key"], f"raw/{self.doc_id}.html")
+        self.assertEqual(index_payload["title"], "Demo Post")
         index_document.assert_awaited_once()
         parsed = index_document.await_args.args[1]
         self.assertEqual(parsed.content, "Clean body text.")
