@@ -26,8 +26,9 @@ def _remove_unwanted_tags(soup: BeautifulSoup) -> None:
 
 
 def _select_main(soup: BeautifulSoup) -> BeautifulSoup:
-    # Prefer article body, then main, then body; match crawler clean order.
-    return soup.find("article") or soup.find("main") or soup.body or soup
+    # Prefer <main> (stricter page container). Then article, then body.
+    # Taking the first <article> before <main> can grab related-post teasers.
+    return soup.find("main") or soup.find("article") or soup.body or soup
 
 
 def _extract_meta_content(soup: BeautifulSoup, names: Iterable[str]) -> str | None:

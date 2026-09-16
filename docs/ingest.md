@@ -85,9 +85,9 @@ workers and one shared `aiohttp` session. Per queue item:
 6. **Metadata** — Redis `crawl:doc:{doc_id}` stores url, domain, source,
    depth, raw_key, clean_key, url_hash, fetched_at, status.
 7. **Index (parse/clean)** — `main.py index` downloads raw HTML from R2,
-   parses with BeautifulSoup (`article` → `main` → `body`), uploads
+   parses with BeautifulSoup (`main` → `article` → `body`), uploads
    `clean/{doc_id}.txt` and `index/{doc_id}.json`, then writes Redis
-   `doc:{url}`.
+   `doc:{url}`. A missing R2 raw key is a permanent `r2_miss` failure.
 
 ## Main design
 

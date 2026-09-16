@@ -19,7 +19,7 @@ RAW_HTML = """
   </head>
   <body>
     <nav>Skip</nav>
-    <article><p>Clean body text.</p></article>
+    <main><p>Clean body text.</p></main>
   </body>
 </html>
 """
@@ -61,6 +61,22 @@ class IndexPipelineCleanTests(unittest.IsolatedAsyncioTestCase):
         for item in reversed(self.patches):
             item.stop()
         await self.redis.aclose()
+
+    async def _failed_run(self):
+        queue = stage_queue(self.redis)
+        counts = await queue.counts(INDEX_RAW_STAGE)
+        if counts.dead:
+            run_id = (
+                await self.redis.zrange(queue.keys.dead(INDEX_RAW_STAGE), 0, 0)
+            )[0].decode()
+        else:
+            run_id = (
+                await self.redis.zrange(queue.keys.ready(INDEX_RAW_STAGE), 0, 0)
+            )[0].decode()
+        run = await queue.get_run(run_id)
+        self.assertIsNotNone(run)
+        assert run is not None
+        return queue, run, counts
 
     async def test_reads_raw_writes_clean_and_indexes(self) -> None:
         uploads: dict[str, object] = {}
@@ -114,7 +130,7 @@ class IndexPipelineCleanTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(counts.ready, 0)
         self.assertEqual(counts.leased, 0)
 
-    async def test_missing_raw_is_retried_without_clean_upload(self) -> None:
+    async def test_r2_miss_is_permanent_without_clean_upload(self) -> None:
         uploads: list[str] = []
 
         with (
@@ -137,17 +153,36 @@ class IndexPipelineCleanTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(uploads, [])
         index_document.assert_not_awaited()
-        queue = stage_queue(self.redis)
-        run_id = (await self.redis.zrange(queue.keys.ready(INDEX_RAW_STAGE), 0, 0))[
-            0
-        ].decode()
-        run = await queue.get_run(run_id)
-        self.assertIsNotNone(run)
-        assert run is not None
-        self.assertEqual(run.state.value, "queued")
-        self.assertEqual(run.error_code, "missing_html")
+        _, run, counts = await self._failed_run()
+        self.assertEqual(counts.ready, 0)
+        self.assertEqual(counts.dead, 1)
+        self.assertEqual(run.state.value, "failed")
+        self.assertEqual(run.error_code, "r2_miss")
+        self.assertEqual(run.error_class, "permanent")
 
-    async def test_clean_upload_failure_is_retried_before_index(self) -> None:
+    async def test_r2_download_exception_is_retried(self) -> None:
+        with (
+            patch("eng_universe.index.pipeline.r2_enabled", return_value=True),
+            patch(
+                "eng_universe.index.pipeline.download_text",
+                side_effect=RuntimeError("timeout"),
+            ),
+            patch(
+                "eng_universe.index.pipeline.index_document",
+                new_callable=AsyncMock,
+            ) as index_document,
+        ):
+            await index_worker()
+
+        index_document.assert_not_awaited()
+        _, run, counts = await self._failed_run()
+        self.assertEqual(counts.ready, 1)
+        self.assertEqual(counts.dead, 0)
+        self.assertEqual(run.state.value, "queued")
+        self.assertEqual(run.error_code, "r2_download_failed")
+        self.assertEqual(run.error_class, "retryable")
+
+    async def test_clean_upload_false_is_retried_before_index(self) -> None:
         with (
             patch("eng_universe.index.pipeline.r2_enabled", return_value=True),
             patch("eng_universe.index.pipeline.download_text", return_value=RAW_HTML),
@@ -161,13 +196,29 @@ class IndexPipelineCleanTests(unittest.IsolatedAsyncioTestCase):
             await index_worker()
 
         index_document.assert_not_awaited()
-        queue = stage_queue(self.redis)
-        run_id = (await self.redis.zrange(queue.keys.ready(INDEX_RAW_STAGE), 0, 0))[
-            0
-        ].decode()
-        run = await queue.get_run(run_id)
-        self.assertIsNotNone(run)
-        assert run is not None
+        _, run, counts = await self._failed_run()
+        self.assertEqual(counts.ready, 1)
+        self.assertEqual(run.state.value, "queued")
+        self.assertEqual(run.error_code, "r2_upload_failed")
+
+    async def test_clean_upload_exception_is_retried_before_index(self) -> None:
+        with (
+            patch("eng_universe.index.pipeline.r2_enabled", return_value=True),
+            patch("eng_universe.index.pipeline.download_text", return_value=RAW_HTML),
+            patch(
+                "eng_universe.index.pipeline.upload_text",
+                side_effect=RuntimeError("put failed"),
+            ),
+            patch(
+                "eng_universe.index.pipeline.index_document",
+                new_callable=AsyncMock,
+            ) as index_document,
+        ):
+            await index_worker()
+
+        index_document.assert_not_awaited()
+        _, run, counts = await self._failed_run()
+        self.assertEqual(counts.ready, 1)
         self.assertEqual(run.state.value, "queued")
         self.assertEqual(run.error_code, "r2_upload_failed")
 
