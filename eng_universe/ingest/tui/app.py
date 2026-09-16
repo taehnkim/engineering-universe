@@ -1,4 +1,4 @@
-"""Textual crawl-monitor application (htop-style bordered panes)."""
+"""Textual stage-queue monitor (htop-style bordered panes)."""
 
 from __future__ import annotations
 
@@ -12,12 +12,17 @@ from textual.reactive import reactive
 from textual.widgets import DataTable, Footer, Header, Static
 
 from eng_universe.config import Settings
-from eng_universe.ingest.queue_models import CRAWL_STAGE, StageQueueKeys
+from eng_universe.ingest.queue_models import (
+    CRAWL_STAGE,
+    INDEX_RAW_STAGE,
+    StageQueueKeys,
+)
 from eng_universe.ingest.tui.snapshot import (
     CrawlMonitorSnapshot,
     collect_snapshot,
     format_flow_boxes,
 )
+from eng_universe.ingest.tui.stages import stage_table_headers, stage_title
 
 REFRESH_HZ = 2.0
 
@@ -70,9 +75,9 @@ class FlowPane(Static):
 
 
 class CrawlMonitorApp(App[None]):
-    """Live crawl stage-queue monitor backed by Redis eu:v1 keys."""
+    """Live stage-queue monitor backed by Redis eu:v1 keys."""
 
-    TITLE = "Eng Universe · Crawl Monitor"
+    TITLE = "Eng Universe · Queue Monitor"
     CSS = """
     Screen {
         background: #020617;
@@ -117,6 +122,7 @@ class CrawlMonitorApp(App[None]):
         self._redis = redis_client
         self._owns_redis = redis_client is None
         self._keys = StageQueueKeys(namespace=self._namespace)
+        self.title = f"Eng Universe · {stage_title(stage)}"
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -134,7 +140,7 @@ class CrawlMonitorApp(App[None]):
 
     async def on_mount(self) -> None:
         table = self.query_one("#runs-table", DataTable)
-        table.add_columns("Run ID", "Domain", "Status", "URL")
+        table.add_columns(*stage_table_headers(self._stage))
         if self._redis is None:
             self._redis = redis.from_url(self._redis_url)
         self.set_interval(1.0 / self._refresh_hz, self._tick)
@@ -173,12 +179,15 @@ class CrawlMonitorApp(App[None]):
         self.query_one("#stat-delay", StatBox).set_value(snap.delayed)
 
         flow = self.query_one("#flow-pane", FlowPane)
+        subtitle = ""
+        if snap.stage == INDEX_RAW_STAGE:
+            subtitle = "  [dim](clean + index via index_raw)[/dim]"
         flow.update(
-            "[b]READY → IN-FLIGHT[/b]\n"
+            f"[b]READY → IN-FLIGHT[/b]{subtitle}\n"
             + format_flow_boxes(snap.ready_run_ids, snap.inflight_run_ids)
         )
 
         table = self.query_one("#runs-table", DataTable)
         table.clear()
         for row in snap.rows:
-            table.add_row(row.run_id, row.domain, row.status, row.url)
+            table.add_row(row.run_id, row.subject, row.status, row.detail)

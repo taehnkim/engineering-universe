@@ -28,9 +28,11 @@ from eng_universe.ingest.sources import all_seed_urls
 from eng_universe.ingest.stage_queue import StageQueue
 from eng_universe.ingest.tui.runner import (
     run_crawl_with_tui,
+    run_index_with_tui,
     run_monitor,
     should_open_tui,
 )
+from eng_universe.ingest.tui.stages import resolve_stage
 from eng_universe.monitoring.logging_utils import get_event_logger
 from eng_universe.monitoring.metrics_server import run_metrics_server
 
@@ -104,17 +106,46 @@ def build_parser() -> argparse.ArgumentParser:
         help="Skip the live crawl monitor TUI (default: open TUI on a TTY)",
     )
     monitor_parser = sub.add_parser(
-        "crawl-monitor",
-        help="Open the crawl queue monitor TUI without starting workers",
+        "monitor",
+        help="Open the stage queue monitor TUI without starting workers",
     )
     monitor_parser.add_argument(
         "--stage",
         default="crawl",
-        help="Stage name to monitor (default: crawl)",
+        help=(
+            "Stage alias to monitor: crawl, index|index_raw|clean "
+            "(clean maps to index_raw; default: crawl)"
+        ),
     )
-    sub.add_parser("index", help="Run indexer workers")
+    # Keep the original name as an alias for scripts and muscle memory.
+    crawl_monitor = sub.add_parser(
+        "crawl-monitor",
+        help="Alias for 'monitor' (default stage: crawl)",
+    )
+    crawl_monitor.add_argument(
+        "--stage",
+        default="crawl",
+        help="Stage alias to monitor (default: crawl)",
+    )
+    index_parser = sub.add_parser(
+        "index",
+        help="Run indexer workers (clean + index via index_raw)",
+    )
+    index_parser.add_argument(
+        "--no-tui",
+        action="store_true",
+        help="Skip the live index/clean monitor TUI (default: open TUI on a TTY)",
+    )
     sub.add_parser("init-index", help="Initialize search index")
-    sub.add_parser("reindex", help="Initialize search index and run indexer")
+    reindex_parser = sub.add_parser(
+        "reindex",
+        help="Initialize search index and run indexer",
+    )
+    reindex_parser.add_argument(
+        "--no-tui",
+        action="store_true",
+        help="Skip the live index/clean monitor TUI (default: open TUI on a TTY)",
+    )
     sub.add_parser("metrics", help="Run Prometheus metrics server")
 
     ingest_parser = sub.add_parser("ingest", help="Use the Redis ingestion queue")
@@ -254,17 +285,32 @@ def main(argv: Sequence[str] | None = None) -> None:
         else:
             asyncio.run(run_crawlers(max_docs=args.max_docs))
         return
-    if args.command == "crawl-monitor":
-        asyncio.run(run_monitor(stage=args.stage))
+    if args.command in {"crawl-monitor", "monitor"}:
+        try:
+            stage = resolve_stage(args.stage)
+        except ValueError as exc:
+            print(str(exc), file=sys.stderr)
+            raise SystemExit(2) from exc
+        asyncio.run(run_monitor(stage=stage))
         return
     if args.command == "index":
-        asyncio.run(index_worker())
+        if should_open_tui(no_tui=args.no_tui):
+            asyncio.run(run_index_with_tui())
+        else:
+            asyncio.run(index_worker())
         return
     if args.command == "init-index":
         asyncio.run(_init_index())
         return
     if args.command == "reindex":
-        asyncio.run(_reindex())
+        async def _reindex_with_optional_tui() -> None:
+            await _init_index()
+            if should_open_tui(no_tui=args.no_tui):
+                await run_index_with_tui()
+            else:
+                await index_worker()
+
+        asyncio.run(_reindex_with_optional_tui())
         return
     if args.command == "metrics":
         run_metrics_server()

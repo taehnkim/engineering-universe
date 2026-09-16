@@ -1,4 +1,4 @@
-"""Maps Redis stage-queue keys into a crawl-monitor view model."""
+"""Maps Redis stage-queue keys into a queue-monitor view model."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from urllib.parse import urlsplit
 
 from eng_universe.ingest.queue_models import (
     CRAWL_STAGE,
+    INDEX_RAW_STAGE,
     StageQueueKeys,
     decode_hash,
 )
@@ -26,17 +27,29 @@ STATUS_BLOCKED = "blocked"
 
 @dataclass(frozen=True, slots=True)
 class RunRow:
-    """One row in the crawl monitor table."""
+    """One row in the stage monitor table."""
 
     run_id: str
-    domain: str
+    subject: str
     status: str
-    url: str
+    detail: str
+
+    @property
+    def domain(self) -> str:
+        """Backward-compatible alias used by crawl-focused callers."""
+
+        return self.subject
+
+    @property
+    def url(self) -> str:
+        """Backward-compatible alias used by crawl-focused callers."""
+
+        return self.detail
 
 
 @dataclass(frozen=True, slots=True)
 class CrawlMonitorSnapshot:
-    """Immutable view of crawl stage queues at one sample time."""
+    """Immutable view of one stage queue at a sample time."""
 
     stage: str
     queued: int
@@ -70,17 +83,26 @@ def _text(value: object | None, default: str = "") -> str:
     return str(value)
 
 
-def _url_from_input_json(raw: str) -> str:
+def _payload(raw: str) -> Mapping[str, object]:
     if not raw:
-        return ""
+        return {}
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError:
-        return ""
+        return {}
     if not isinstance(payload, Mapping):
-        return ""
+        return {}
+    return payload
+
+
+def _url_from_payload(payload: Mapping[str, object]) -> str:
     url = payload.get("url")
     return url if isinstance(url, str) else ""
+
+
+def _doc_id_from_payload(payload: Mapping[str, object]) -> str:
+    doc_id = payload.get("doc_id")
+    return doc_id if isinstance(doc_id, str) else ""
 
 
 def _domain_from_url(url: str, origin: str | None = None) -> str:
@@ -92,6 +114,28 @@ def _domain_from_url(url: str, origin: str | None = None) -> str:
         return ""
     host = urlsplit(url).hostname
     return host or ""
+
+
+def row_fields_for_run(
+    *,
+    stage: str,
+    input_json: str,
+    origin: str | None = None,
+) -> tuple[str, str]:
+    """
+    Returns (subject, detail) for one run row.
+
+    Crawl rows show domain + URL. Index/clean rows show doc_id + clean artifact
+    path, because cleaning runs inside the index_raw worker (no separate queue).
+    """
+
+    payload = _payload(input_json)
+    if stage == INDEX_RAW_STAGE:
+        doc_id = _doc_id_from_payload(payload)
+        detail = f"clean/{doc_id}.txt" if doc_id else ""
+        return doc_id, detail
+    url = _url_from_payload(payload)
+    return _domain_from_url(url, origin), url
 
 
 def _short_id(run_id: str, width: int = 10) -> str:
@@ -163,17 +207,20 @@ def build_snapshot(
             continue
         seen.add(run_id)
         fields = runs.get(run_id, {})
-        url = _url_from_input_json(fields.get("input_json", ""))
-        domain = _domain_from_url(url, fields.get("origin"))
+        subject, detail = row_fields_for_run(
+            stage=stage,
+            input_json=fields.get("input_json", ""),
+            origin=fields.get("origin"),
+        )
         status = membership.get(run_id) or fields.get("state", "?")
         if status == "leased" or status == "running":
             status = STATUS_IN_FLIGHT
         rows.append(
             RunRow(
                 run_id=run_id,
-                domain=domain,
+                subject=subject,
                 status=status,
-                url=url,
+                detail=detail,
             )
         )
         if len(rows) >= row_limit:
@@ -202,7 +249,7 @@ async def collect_snapshot(
     now_ms: int | None = None,
     row_limit: int = 40,
 ) -> CrawlMonitorSnapshot:
-    """Reads eu:v1 stage-queue keys and builds a crawl monitor snapshot."""
+    """Reads eu:v1 stage-queue keys and builds a monitor snapshot."""
 
     queue_keys = keys or StageQueueKeys()
     sample_ms = now_ms if now_ms is not None else int(time.time() * 1000)
@@ -283,4 +330,3 @@ def format_flow_boxes(
         f"            ──────────►\n"
         f"IN-FLIGHT {flight_line}"
     )
-

@@ -1,4 +1,4 @@
-"""Tests Redis → crawl-monitor view-model mapping."""
+"""Tests Redis → stage-monitor view-model mapping."""
 
 from __future__ import annotations
 
@@ -7,7 +7,11 @@ import unittest
 
 import fakeredis.aioredis as fakeredis
 
-from eng_universe.ingest.queue_models import CRAWL_STAGE, StageQueueKeys
+from eng_universe.ingest.queue_models import (
+    CRAWL_STAGE,
+    INDEX_RAW_STAGE,
+    StageQueueKeys,
+)
 from eng_universe.ingest.tui.runner import should_open_tui
 from eng_universe.ingest.tui.snapshot import (
     STATUS_DELAYED,
@@ -18,22 +22,29 @@ from eng_universe.ingest.tui.snapshot import (
     build_snapshot,
     collect_snapshot,
     format_flow_boxes,
+    row_fields_for_run,
 )
+from eng_universe.ingest.tui.stages import resolve_stage, stage_title
 
 
 def _run_fields(
     *,
     run_id: str,
     state: str,
-    url: str,
+    url: str = "",
+    doc_id: str = "",
     stage: str = CRAWL_STAGE,
     origin: str | None = None,
 ) -> dict[str, str]:
+    if stage == INDEX_RAW_STAGE:
+        payload = {"doc_id": doc_id or "doc-1"}
+    else:
+        payload = {"url": url, "source": "seed", "depth": 0}
     fields = {
         "run_id": run_id,
         "stage": stage,
         "state": state,
-        "input_json": json.dumps({"url": url, "source": "seed", "depth": 0}),
+        "input_json": json.dumps(payload),
     }
     if origin is not None:
         fields["origin"] = origin
@@ -107,6 +118,52 @@ class BuildSnapshotTests(unittest.TestCase):
         self.assertEqual(by_id["r_ok"].status, STATUS_SUCCEEDED)
         self.assertEqual(by_id["r_ok"].url, "https://engineering.fb.com/done")
 
+    def test_index_raw_rows_show_doc_id_and_clean_path(self) -> None:
+        now_ms = 1_000_000
+        snap = build_snapshot(
+            stage=INDEX_RAW_STAGE,
+            now_ms=now_ms,
+            ready=[("r_q", float(now_ms))],
+            leased=["r_l"],
+            dead=[],
+            blocked=[],
+            runs={
+                "r_q": _run_fields(
+                    run_id="r_q",
+                    state="queued",
+                    doc_id="42",
+                    stage=INDEX_RAW_STAGE,
+                ),
+                "r_l": _run_fields(
+                    run_id="r_l",
+                    state="running",
+                    doc_id="99",
+                    stage=INDEX_RAW_STAGE,
+                ),
+                "r_ok": _run_fields(
+                    run_id="r_ok",
+                    state="succeeded",
+                    doc_id="7",
+                    stage=INDEX_RAW_STAGE,
+                ),
+            },
+        )
+        self.assertEqual(snap.queued, 1)
+        self.assertEqual(snap.in_flight, 1)
+        self.assertEqual(snap.succeeded, 1)
+        by_id = {row.run_id: row for row in snap.rows}
+        self.assertEqual(by_id["r_l"].subject, "99")
+        self.assertEqual(by_id["r_l"].detail, "clean/99.txt")
+        self.assertEqual(by_id["r_ok"].detail, "clean/7.txt")
+
+    def test_row_fields_for_clean_alias_stage(self) -> None:
+        subject, detail = row_fields_for_run(
+            stage=INDEX_RAW_STAGE,
+            input_json=json.dumps({"doc_id": "abc"}),
+        )
+        self.assertEqual(subject, "abc")
+        self.assertEqual(detail, "clean/abc.txt")
+
     def test_flow_boxes_render_ready_then_inflight(self) -> None:
         text = format_flow_boxes(
             ["r_aaaaaaaaaa", "r_bbbbbbbbbb"],
@@ -123,6 +180,14 @@ class BuildSnapshotTests(unittest.TestCase):
         self.assertFalse(should_open_tui(no_tui=True, stdout_isatty=True))
         self.assertFalse(should_open_tui(no_tui=False, stdout_isatty=False))
         self.assertTrue(should_open_tui(no_tui=False, stdout_isatty=True))
+
+    def test_stage_aliases_map_clean_and_index_to_index_raw(self) -> None:
+        self.assertEqual(resolve_stage("clean"), INDEX_RAW_STAGE)
+        self.assertEqual(resolve_stage("index"), INDEX_RAW_STAGE)
+        self.assertEqual(resolve_stage("crawl"), CRAWL_STAGE)
+        self.assertEqual(stage_title(INDEX_RAW_STAGE), "Index · Clean Monitor")
+        with self.assertRaises(ValueError):
+            resolve_stage("unknown-stage")
 
 
 class CollectSnapshotTests(unittest.IsolatedAsyncioTestCase):
@@ -173,21 +238,68 @@ class CollectSnapshotTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(snap.rows[0].status, STATUS_IN_FLIGHT)
         self.assertEqual(snap.rows[0].domain, "b.example")
 
+    async def test_collect_index_raw_snapshot(self) -> None:
+        now_ms = 3_000_000
+        await self.redis.zadd(
+            self.keys.ready(INDEX_RAW_STAGE), {"r_i1": now_ms}
+        )
+        await self.redis.zadd(
+            self.keys.leased(INDEX_RAW_STAGE), {"r_i2": now_ms + 1}
+        )
+        await self.redis.hset(
+            self.keys.run("r_i1"),
+            mapping=_run_fields(
+                run_id="r_i1",
+                state="queued",
+                doc_id="11",
+                stage=INDEX_RAW_STAGE,
+            ),
+        )
+        await self.redis.hset(
+            self.keys.run("r_i2"),
+            mapping=_run_fields(
+                run_id="r_i2",
+                state="leased",
+                doc_id="22",
+                stage=INDEX_RAW_STAGE,
+            ),
+        )
+        snap = await collect_snapshot(
+            self.redis,
+            keys=self.keys,
+            stage=INDEX_RAW_STAGE,
+            now_ms=now_ms,
+        )
+        self.assertEqual(snap.queued, 1)
+        self.assertEqual(snap.in_flight, 1)
+        self.assertEqual(snap.rows[0].subject, "22")
+        self.assertEqual(snap.rows[0].detail, "clean/22.txt")
+
 
 class CliParserTuiTests(unittest.TestCase):
-    """Ensures crawl exposes --no-tui and crawl-monitor."""
+    """Ensures crawl/index expose --no-tui and monitor stage aliases."""
 
-    def test_crawl_parser_has_no_tui_flag(self) -> None:
+    def test_crawl_and_index_parsers_have_no_tui_flag(self) -> None:
         from eng_universe.cli import build_parser
 
         parser = build_parser()
-        args = parser.parse_args(["crawl", "--no-tui", "--max-docs", "3"])
-        self.assertTrue(args.no_tui)
-        self.assertEqual(args.max_docs, 3)
+        crawl = parser.parse_args(["crawl", "--no-tui", "--max-docs", "3"])
+        self.assertTrue(crawl.no_tui)
+        self.assertEqual(crawl.max_docs, 3)
 
-        monitor = parser.parse_args(["crawl-monitor", "--stage", "crawl"])
-        self.assertEqual(monitor.command, "crawl-monitor")
-        self.assertEqual(monitor.stage, "crawl")
+        index = parser.parse_args(["index", "--no-tui"])
+        self.assertTrue(index.no_tui)
+
+        reindex = parser.parse_args(["reindex", "--no-tui"])
+        self.assertTrue(reindex.no_tui)
+
+        monitor = parser.parse_args(["monitor", "--stage", "clean"])
+        self.assertEqual(monitor.command, "monitor")
+        self.assertEqual(monitor.stage, "clean")
+
+        alias = parser.parse_args(["crawl-monitor", "--stage", "index_raw"])
+        self.assertEqual(alias.command, "crawl-monitor")
+        self.assertEqual(alias.stage, "index_raw")
 
 
 if __name__ == "__main__":
