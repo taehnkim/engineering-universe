@@ -6,7 +6,12 @@ from dataclasses import dataclass
 
 import redis.asyncio as redis
 
-from eng_universe.ingest.contracts import JsonValue, StageIdentity, StageRequest, StageStatus
+from eng_universe.ingest.contracts import (
+    JsonValue,
+    StageIdentity,
+    StageRequest,
+    StageStatus,
+)
 from eng_universe.ingest.queue_models import (
     FETCH_RAW_STAGE,
     FailureKind,
