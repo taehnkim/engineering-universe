@@ -15,6 +15,8 @@ from eng_universe.ingest.contracts import JsonValue, StageStatus
 QUEUE_SCHEMA_VERSION = "2"
 QUEUE_NAMESPACE = "eu:v1"
 FETCH_RAW_STAGE = "fetch_raw"
+CRAWL_STAGE = "crawl"
+INDEX_RAW_STAGE = "index_raw"
 DEFAULT_MAX_ATTEMPTS = 5
 
 

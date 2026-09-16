@@ -223,6 +223,39 @@ return {1, lease_until}
 """
 
 
+DEFER_RUN = r"""
+local state = redis.call("HGET", KEYS[2], "state")
+if (state ~= "leased" and state ~= "running")
+    or redis.call("HGET", KEYS[2], "lease_owner") ~= ARGV[2]
+    or redis.call("HGET", KEYS[2], "lease_token") ~= ARGV[3] then
+    return {0}
+end
+
+local clock = redis.call("TIME")
+local now = (tonumber(clock[1]) * 1000) + math.floor(tonumber(clock[2]) / 1000)
+local due_at = math.max(tonumber(ARGV[4]), now)
+redis.call("ZREM", KEYS[1], ARGV[1])
+redis.call(
+    "HSET",
+    KEYS[2],
+    "state", "queued",
+    "due_at_ms", due_at
+)
+redis.call(
+    "HDEL",
+    KEYS[2],
+    "lease_owner",
+    "lease_token",
+    "lease_until_ms",
+    "error_class",
+    "error_code",
+    "error_message"
+)
+redis.call("ZADD", KEYS[4], due_at, ARGV[1])
+return {1, due_at}
+"""
+
+
 COMPLETE_RUN = r"""
 local function release_origin(now)
     if ARGV[5] == "" then
@@ -280,10 +313,6 @@ redis.call(
     "error_message"
 )
 release_origin(now)
-local ttl_s = tonumber(ARGV[6]) or 0
-if ttl_s > 0 then
-    redis.call("EXPIRE", KEYS[2], ttl_s)
-end
 return {1, now}
 """
 

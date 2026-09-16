@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import hashlib
 import time
 from urllib.parse import urldefrag, urljoin, urlparse
+import uuid
 import xml.etree.ElementTree as ElementTree
 
 import aiohttp
@@ -14,11 +15,15 @@ from eng_universe.monitoring.logging_utils import get_event_logger
 from eng_universe.monitoring.metrics import record_crawl
 from eng_universe.ingest.queue import (
     CrawlItem,
+    acknowledge,
     delay,
     dequeue,
     enqueue,
+    enqueue_raw_index,
     requeue_delayed_items,
+    stage_queue,
 )
+from eng_universe.ingest.queue_models import CRAWL_STAGE, StageLease
 from eng_universe.ingest.robots import (
     can_fetch_path,
     get_or_fetch_robots,
@@ -156,6 +161,7 @@ async def check_robots_txt(
     redis_client: redis.Redis,
     session: aiohttp.ClientSession,
     item: CrawlItem,
+    lease: StageLease,
 ) -> str | None:
     domain = parse_domain(item.url)
     rules = await get_or_fetch_robots(redis_client, session, domain)
@@ -167,7 +173,7 @@ async def check_robots_txt(
         redis_client, domain, min_delay_s
     )
     if not allowed:
-        await delay(redis_client, item, next_allowed)
+        await delay(redis_client, lease, next_allowed)
         log_event("delay", url=item.url, until=next_allowed)
         return None
     return domain
@@ -253,7 +259,7 @@ async def upload_r2(
             "status": result.status,
         },
     )
-    await redis_client.rpush(Settings.raw_queue_key, doc_id)
+    await enqueue_raw_index(redis_client, doc_id)
     log_event(
         "stored",
         id=doc_id,
@@ -272,14 +278,17 @@ async def crawl_worker(
     counter: list[int] | None = None,
     counter_lock: asyncio.Lock | None = None,
 ) -> None:
+    worker_id = f"crawler:{uuid.uuid4().hex}"
     while True:
         if stop_event and stop_event.is_set():
             return
         await requeue_delayed_items(redis_client)
-        item = await dequeue(redis_client)
-        if item is None:
+        await stage_queue(redis_client).reclaim_expired(CRAWL_STAGE)
+        claimed = await dequeue(redis_client, worker_id=worker_id)
+        if claimed is None:
             await asyncio.sleep(0.2)
             continue
+        item, lease = claimed
         log_event(
             "pick",
             url=item.url,
@@ -288,8 +297,11 @@ async def crawl_worker(
         )
 
         # Check robots.txt for rate limit
-        domain = await check_robots_txt(redis_client, session, item)
+        domain = await check_robots_txt(redis_client, session, item, lease)
         if domain is None:
+            run = await stage_queue(redis_client).get_run(lease.run.run_id)
+            if run is not None and run.state.value != "queued":
+                await acknowledge(redis_client, lease)
             continue
 
         # Fetch url
@@ -303,11 +315,13 @@ async def crawl_worker(
                 log_payload["error"] = str(fetch_error)
                 log_payload["error_type"] = type(fetch_error).__name__
             log_event("fail", **log_payload)
+            await acknowledge(redis_client, lease)
             continue
 
         # Parse sitemap
         if is_sitemap_url(result.url):
             await parse_sitemap(redis_client, item, result)
+            await acknowledge(redis_client, lease)
             continue
 
         # Extract links from url n levels deep
@@ -316,6 +330,7 @@ async def crawl_worker(
         # Store raw html to r2
         stored = await upload_r2(redis_client, doc_key_prefix, item, result, domain)
         record_crawl(domain)
+        await acknowledge(redis_client, lease)
 
         # Check if max crawl limit reached
         if (

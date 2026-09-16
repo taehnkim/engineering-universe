@@ -2,11 +2,14 @@ import asyncio
 import time
 from dataclasses import replace
 from pathlib import Path
+import uuid
 
 import redis.asyncio as redis
 
 from eng_universe.config import Settings
 from eng_universe.ingest.etl import parse_html
+from eng_universe.ingest.queue import acknowledge, stage_queue
+from eng_universe.ingest.queue_models import INDEX_RAW_STAGE
 from eng_universe.index.entities import extract_topics
 from eng_universe.index.indexer import index_document, log_event
 from eng_universe.storage.r2 import download_text, r2_enabled, upload_json, upload_text
@@ -42,12 +45,15 @@ def _decode_int(value: object | None) -> int | None:
 
 async def index_worker(doc_key_prefix: str | None = None) -> None:
     redis_client = redis.from_url(Settings.redis_url)
+    queue = stage_queue(redis_client)
+    worker_id = f"indexer:{uuid.uuid4().hex}"
     prefix = doc_key_prefix or Settings.crawl_doc_key_prefix
     last_idle_log = 0.0
     idle_since: float | None = None
     while True:
-        raw_doc_id = await redis_client.lpop(Settings.raw_queue_key)
-        if raw_doc_id is None:
+        await queue.reclaim_expired(INDEX_RAW_STAGE)
+        lease = await queue.claim(INDEX_RAW_STAGE, worker_id=worker_id)
+        if lease is None:
             now = time.time()
             if idle_since is None:
                 idle_since = now
@@ -68,10 +74,13 @@ async def index_worker(doc_key_prefix: str | None = None) -> None:
             await asyncio.sleep(0.2)
             continue
         idle_since = None
-        raw_doc_id = raw_doc_id.decode()
+        raw_doc_id = lease.run.input_payload.get("doc_id")
+        if not isinstance(raw_doc_id, str):
+            raise TypeError("index_raw input must contain a string doc_id")
         crawl_meta = await redis_client.hgetall(f"{prefix}{raw_doc_id}")
         if not crawl_meta:
             log_event("skip", doc_id=raw_doc_id, reason="missing_meta")
+            await acknowledge(redis_client, lease)
             continue
         url = _decode_bytes(crawl_meta.get(b"url"))
         source = _decode_bytes(crawl_meta.get(b"source"))
@@ -139,3 +148,4 @@ async def index_worker(doc_key_prefix: str | None = None) -> None:
             except Exception as exc:
                 log_event("r2_fail", doc_id=raw_doc_id, error=type(exc).__name__)
         await index_document(redis_client, parsed, source=source)
+        await acknowledge(redis_client, lease)

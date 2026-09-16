@@ -36,6 +36,7 @@ from eng_universe.ingest.queue_scripts import (
     CLAIM_RUN,
     COMPLETE_RUN,
     CONFIGURE_ORIGIN,
+    DEFER_RUN,
     ENQUEUE_RUN,
     FAIL_RUN,
     HEARTBEAT_RUN,
@@ -78,6 +79,7 @@ _ENQUEUE = _LuaScript(ENQUEUE_RUN)
 _CLAIM = _LuaScript(CLAIM_RUN)
 _CLAIM_FETCH = _LuaScript(CLAIM_FETCH_RUN)
 _HEARTBEAT = _LuaScript(HEARTBEAT_RUN)
+_DEFER = _LuaScript(DEFER_RUN)
 _COMPLETE = _LuaScript(COMPLETE_RUN)
 _FAIL = _LuaScript(FAIL_RUN)
 _RECLAIM = _LuaScript(RECLAIM_RUN)
@@ -441,7 +443,6 @@ class StageQueue:
                 lease.token,
                 canonical_json(output),
                 origin_id,
-                Settings.stage_succeeded_run_ttl_s,
             ],
         )
         if _first_integer(response) != 1:
@@ -449,6 +450,37 @@ class StageQueue:
         run = await self.get_run(lease.run.run_id)
         if run is None:
             raise RuntimeError("completed stage run disappeared")
+        return run
+
+    async def defer(
+        self,
+        lease: StageLease,
+        *,
+        due_at_ms: int,
+    ) -> StageRunRecord:
+        """Returns owned work to its ready queue at an absolute time."""
+        if due_at_ms < 0:
+            raise ValueError("due_at_ms must not be negative")
+        response = await _DEFER(
+            self.redis,
+            keys=[
+                self.keys.leased(lease.run.stage_name),
+                self.keys.run(lease.run.run_id),
+                self.keys.unused,
+                self.keys.ready(lease.run.stage_name),
+            ],
+            args=[
+                lease.run.run_id,
+                lease.worker_id,
+                lease.token,
+                due_at_ms,
+            ],
+        )
+        if _first_integer(response) != 1:
+            raise LeaseLostError(f"lease for run {lease.run.run_id} is no longer valid")
+        run = await self.get_run(lease.run.run_id)
+        if run is None:
+            raise RuntimeError("deferred stage run disappeared")
         return run
 
     async def fail(

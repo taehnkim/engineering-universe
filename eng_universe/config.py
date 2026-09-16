@@ -86,9 +86,6 @@ class Settings:
     stage_reclaim_interval_ms = int(
         os.getenv("STAGE_RECLAIM_INTERVAL_MS", "1000")
     )
-    stage_succeeded_run_ttl_s = int(
-        os.getenv("STAGE_SUCCEEDED_RUN_TTL_S", str(7 * 24 * 60 * 60))
-    )
     fetch_worker_processes = int(os.getenv("FETCH_WORKER_PROCESSES", "1"))
     fetch_worker_concurrency = int(os.getenv("FETCH_WORKER_CONCURRENCY", "100"))
     fetch_global_connection_limit = int(

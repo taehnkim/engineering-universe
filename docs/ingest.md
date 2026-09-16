@@ -223,7 +223,7 @@ Redirect handlers must call the checker again before each redirected request.
 
 Redis AOF is enabled with `appendfsync everysec`, and the Redis `/data` directory uses a named Docker volume so restarts keep queue state.
 
-Succeeded run hashes receive a TTL (`STAGE_SUCCEEDED_RUN_TTL_S`, default 7 days). Failed, dead, and blocked runs keep no TTL so operators can inspect them.
+Run hashes and their idempotency pointers do not expire. This keeps duplicate enqueue requests attached to a valid canonical run.
 
 New queue records use schema version 2, which removes the separate retry-wait state.
 

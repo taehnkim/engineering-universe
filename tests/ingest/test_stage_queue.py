@@ -2,11 +2,8 @@ import asyncio
 import unittest
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
-from unittest.mock import patch
-
 import fakeredis.aioredis as fakeredis
 
-from eng_universe.config import Settings
 from eng_universe.ingest.contracts import (
     JsonValue,
     StageIdentity,
@@ -536,35 +533,50 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         counts = await self.queue.counts("parse_article")
         self.assertEqual(counts.ready, total)
 
-    async def test_complete_sets_ttl_on_succeeded_runs_only(self) -> None:
-        with patch.object(Settings, "stage_succeeded_run_ttl_s", 3600):
-            enqueued = await self.queue.enqueue(request_for("ttl-ok"))
-            lease = await self.queue.claim(
-                enqueued.run.stage_name,
-                worker_id="worker-1",
-            )
-            self.assertIsNotNone(lease)
-            assert lease is not None
-            await self.queue.complete(lease, output={"ok": True})
-            ttl = await self.redis.ttl(self.queue.keys.run(enqueued.run.run_id))
-            self.assertGreater(ttl, 0)
-            self.assertLessEqual(ttl, 3600)
+    async def test_succeeded_run_and_idempotency_pointer_do_not_expire(self) -> None:
+        request = request_for("ttl-ok")
+        enqueued = await self.queue.enqueue(request)
+        lease = await self.queue.claim(
+            enqueued.run.stage_name,
+            worker_id="worker-1",
+        )
+        self.assertIsNotNone(lease)
+        assert lease is not None
+        await self.queue.complete(lease, output={"ok": True})
+        ttl = await self.redis.ttl(self.queue.keys.run(enqueued.run.run_id))
+        self.assertEqual(ttl, -1)
 
-        failed = await self.queue.enqueue(request_for("ttl-fail"), max_attempts=1)
-        fail_lease = await self.queue.claim(
-            failed.run.stage_name,
+        duplicate = await self.queue.enqueue(request)
+        self.assertFalse(duplicate.created)
+        self.assertEqual(duplicate.run.run_id, enqueued.run.run_id)
+        self.assertEqual(duplicate.run.state, StageStatus.SUCCEEDED)
+
+    async def test_defer_is_token_fenced_and_not_claimable_before_due(self) -> None:
+        result = await self.queue.enqueue(request_for("delayed"))
+        lease = await self.queue.claim(result.run.stage_name, worker_id="worker-1")
+        self.assertIsNotNone(lease)
+        assert lease is not None
+        due_at_ms = await self.queue.server_time_ms() + 50
+
+        stale = replace(lease, token="stale-token")
+        with self.assertRaises(LeaseLostError):
+            await self.queue.defer(stale, due_at_ms=due_at_ms)
+        self.assertIsNone(
+            await self.queue.claim(result.run.stage_name, worker_id="worker-2")
+        )
+
+        deferred = await self.queue.defer(lease, due_at_ms=due_at_ms)
+        self.assertEqual(deferred.state, StageStatus.QUEUED)
+        self.assertGreaterEqual(deferred.due_at_ms, due_at_ms)
+        self.assertIsNone(
+            await self.queue.claim(result.run.stage_name, worker_id="worker-2")
+        )
+        await asyncio.sleep(0.06)
+        recovered = await self.queue.claim(
+            result.run.stage_name,
             worker_id="worker-2",
         )
-        self.assertIsNotNone(fail_lease)
-        assert fail_lease is not None
-        await self.queue.fail(
-            fail_lease,
-            kind=FailureKind.PERMANENT,
-            error_code="boom",
-            error_message="permanent",
-        )
-        fail_ttl = await self.redis.ttl(self.queue.keys.run(failed.run.run_id))
-        self.assertEqual(fail_ttl, -1)
+        self.assertIsNotNone(recovered)
 
 
 if __name__ == "__main__":
