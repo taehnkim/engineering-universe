@@ -1,0 +1,57 @@
+[
+  {
+    "fixture": "stripe_doing_more.html",
+    "url": "https://stripe.dev/blog/doing-more-with-less-reducing-requests-to-the-stripe-api",
+    "status": "ok",
+    "title": "Doing more with less: Reducing requests to the Stripe API",
+    "content_chars": 11493,
+    "marker": "It is important for developers to optimize third-party API usage",
+    "marker_found": true,
+    "content_snippet": "It is important for developers to optimize third-party API usage to reduce costs, improve performance, and enhance user experience. An effective strategy to minimize the number of API calls to Stripe while still obtaining the necessary data involves caching and using the response Expand feature. This article discusses how using the expanding feature helps you retrieve related objects in a single request and tradeoffs of this approach. It also explores the use of caching for additional performance improvements, as well as show you how to inspect requests using tools available in Stripe Workbenc",
+    "has_next_data": true
+  },
+  {
+    "fixture": "notion_article.html",
+    "url": "https://www.notion.com/blog/building-observability-into-notions-dead-letter-queue",
+    "status": "ok",
+    "title": "Building observability into Notion\u2019s dead-letter queue",
+    "content_chars": 6910,
+    "marker": "dead-letter",
+    "marker_found": true,
+    "content_snippet": "All posts \u2190 \u2190 All posts Published June 4, 2026 in Tech Building observability into Notion\u2019s dead-letter queue By Maya Lekhi Engineering, Notion Share this post There\u2019s a background task behind almost every action in Notion. Sending a notification when someone @-mentions you, indexing new pages so they show up in search, generating embeddings for AI, syncing a calendar event, exporting a workspace\u2014all of these run through Notion\u2019s job queue. The queue retries tasks that fail, but some tasks exhaust their retries and end up in a dead-letter queue (DLQ): a holding area for failed work that needs ",
+    "has_next_data": true
+  },
+  {
+    "fixture": "openai_article.html",
+    "url": "https://developers.openai.com/blog/15-lessons-building-chatgpt-apps",
+    "status": "ok",
+    "title": "15 lessons learned building ChatGPT Apps | OpenAI Developers",
+    "content_chars": 18179,
+    "marker": "ChatGPT",
+    "marker_found": true,
+    "content_snippet": "Copy Page Copy Page Feb 4, 2026 Apps SDK 15 lessons learned building ChatGPT Apps And how we incorporated them into a Codex Skill to help you build ChatGPT Apps 10x faster. Author: Nikolay Rodionov (Co-founder, Alpic) At Alpic , we believe the next generation of products and services will be built around AI-first experiences , interfaces where users collaborate with models instead of navigating traditional, predetermined UI workflows. When OpenAI released the Apps SDK , we immediately started building with it. Over the course of three months, we developed two dozen ChatGPT Apps for both intern",
+    "has_next_data": false
+  },
+  {
+    "fixture": "ramp_article.html",
+    "url": "https://builders.ramp.com/post/how-we-built-oca-our-ai-on-call-assistant",
+    "status": "ok",
+    "title": "How we built OCA, our AI on-call assistant",
+    "content_chars": 9258,
+    "marker": "OCA",
+    "marker_found": true,
+    "content_snippet": "How we built OCA, our AI on-call assistant \u2014 Ramp Builders Blog Builders Blog Home Subscribe We're hiring! September 9, 2026 How we built OCA, our AI on-call assistant Richard Marmorstein Austin Ray We built OCA (\"On-Call Assistant\"), an AI agent that helps with incident response at Ramp. OCA investigates likely causes, shares findings in Slack, answers follow-up questions, and prepares code fixes via Inspect . At Ramp, we also use our incident flow for customer escalations that need engineering support. We think any organization with a significant on-call burden should invest in an agent like",
+    "has_next_data": false
+  },
+  {
+    "fixture": "airbnb_medium.html",
+    "url": "https://medium.com/airbnb-engineering/beyond-the-model-engineering-ai-infra-with-scientific-judgement-371316d43261",
+    "status": "ok",
+    "title": "Beyond the model: Engineering AI infra with scientific judgement",
+    "content_chars": 8230,
+    "marker": "scientific",
+    "marker_found": true,
+    "content_snippet": "Beyond the model: Engineering AI infra with scientific judgement | by AirbnbEng | The Airbnb Tech Blog | Sep, 2026 | Medium Medium Sitemap Open in app Sign up Sign in Medium Logo Get app Write Search Sign up Sign in The Airbnb Tech Blog \u00b7 Follow publication Creative engineers and data scientists building a world where you can belong anywhere. http://airbnb.io Follow publication AI AI Agent Data Science Engineering Science Beyond the model: Engineering AI infra with scientific judgement How Airbnb\u2019s agent harness transforms unstructured data exploration by encoding scientific methodology into s",
+    "has_next_data": false
+  }
+]
