@@ -29,7 +29,6 @@ class StageStatus(str, Enum):
     LEASED = "leased"
     RUNNING = "running"
     SUCCEEDED = "succeeded"
-    RETRY_WAIT = "retry_wait"
     FAILED = "failed"
     BLOCKED = "blocked"
     CANCELLED = "cancelled"
@@ -79,7 +78,9 @@ class ArtifactRef:
         if not _VERSION_PATTERN.fullmatch(self.schema_version):
             raise ValueError("artifact schema version contains unsupported characters")
         if not _SHA256_PATTERN.fullmatch(self.content_sha256):
-            raise ValueError("artifact content_sha256 must be a lowercase SHA-256 value")
+            raise ValueError(
+                "artifact content_sha256 must be a lowercase SHA-256 value"
+            )
         if not self.object_key or self.object_key.startswith("/"):
             raise ValueError("artifact object_key must be a non-rooted object key")
         if not self.content_type:
@@ -127,8 +128,6 @@ class StageRequest(Generic[InputT]):
         )
 
 
-
-
 @dataclass(frozen=True, slots=True)
 class StageResult(Generic[OutputT]):
     """
@@ -138,8 +137,6 @@ class StageResult(Generic[OutputT]):
 
     output: OutputT
     artifacts: tuple[ArtifactRef, ...] = ()
-
-
 
 
 def _normalize_json_value(value: object, path: str = "$") -> JsonValue:

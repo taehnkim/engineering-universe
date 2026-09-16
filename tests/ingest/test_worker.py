@@ -151,7 +151,7 @@ class StageWorkerPoolTests(unittest.IsolatedAsyncioTestCase):
         retried = await self.queue.get_run(result.run.run_id)
         self.assertIsNotNone(retried)
         assert retried is not None
-        self.assertEqual(retried.state, StageStatus.RETRY_WAIT)
+        self.assertEqual(retried.state, StageStatus.QUEUED)
 
         self.assertTrue(await pool.run_one(worker_id="worker-1"))
         completed = await self.queue.get_run(result.run.run_id)

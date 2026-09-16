@@ -1,7 +1,6 @@
 import asyncio
-from pathlib import Path
 import sys
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -10,21 +9,23 @@ if str(ROOT) not in sys.path:
 import redis.asyncio as redis
 
 from eng_universe.config import Settings
+from eng_universe.ingest.queue import stage_queue
+from eng_universe.ingest.queue_models import CRAWL_STAGE, INDEX_RAW_STAGE
 
 
 async def main() -> None:
     redis_client = redis.from_url(Settings.redis_url)
     base_keys = [
-        Settings.crawl_queue_key,
-        Settings.crawl_delay_key,
         Settings.crawl_seen_key,
         Settings.crawl_doc_seq_key,
-        Settings.raw_queue_key,
     ]
     pipe = redis_client.pipeline()
     for key in base_keys:
         pipe.delete(key)
     await pipe.execute()
+    queue = stage_queue(redis_client)
+    await queue.clear_stage(CRAWL_STAGE)
+    await queue.clear_stage(INDEX_RAW_STAGE)
 
     patterns = [
         f"{Settings.crawl_doc_key_prefix}*",

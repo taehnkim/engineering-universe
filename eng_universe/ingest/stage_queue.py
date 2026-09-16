@@ -9,7 +9,6 @@ from typing import Any
 import redis.asyncio as redis
 from redis.exceptions import NoScriptError
 
-from eng_universe.config import Settings
 from eng_universe.ingest.contracts import (
     JsonValue,
     StageInput,
@@ -17,6 +16,7 @@ from eng_universe.ingest.contracts import (
     canonical_json,
 )
 from eng_universe.ingest.queue_models import (
+    DEFAULT_MAX_ATTEMPTS,
     FETCH_RAW_STAGE,
     QUEUE_SCHEMA_VERSION,
     EnqueueResult,
@@ -35,6 +35,7 @@ from eng_universe.ingest.queue_scripts import (
     CLAIM_RUN,
     COMPLETE_RUN,
     CONFIGURE_ORIGIN,
+    DEFER_RUN,
     ENQUEUE_RUN,
     FAIL_RUN,
     HEARTBEAT_RUN,
@@ -77,6 +78,7 @@ _ENQUEUE = _LuaScript(ENQUEUE_RUN)
 _CLAIM = _LuaScript(CLAIM_RUN)
 _CLAIM_FETCH = _LuaScript(CLAIM_FETCH_RUN)
 _HEARTBEAT = _LuaScript(HEARTBEAT_RUN)
+_DEFER = _LuaScript(DEFER_RUN)
 _COMPLETE = _LuaScript(COMPLETE_RUN)
 _FAIL = _LuaScript(FAIL_RUN)
 _RECLAIM = _LuaScript(RECLAIM_RUN)
@@ -145,7 +147,7 @@ class StageQueue:
         *,
         run_id: str | None = None,
         due_at_ms: int = 0,
-        max_attempts: int = 5,
+        max_attempts: int = DEFAULT_MAX_ATTEMPTS,
         origin: Origin | None = None,
         origin_max_inflight: int = 1,
         origin_interval_ms: int = 0,
@@ -311,7 +313,6 @@ class StageQueue:
                 token,
                 lease_ms,
                 attempt_id,
-                QUEUE_SCHEMA_VERSION,
             ],
         )
         if _first_integer(response) == 0:
@@ -370,7 +371,6 @@ class StageQueue:
                             token,
                             lease_ms,
                             attempt_id,
-                            QUEUE_SCHEMA_VERSION,
                             self.origin_busy_delay_ms,
                         ],
                     )
@@ -442,7 +442,6 @@ class StageQueue:
                 lease.token,
                 canonical_json(output),
                 origin_id,
-                Settings.stage_succeeded_run_ttl_s,
             ],
         )
         if _first_integer(response) != 1:
@@ -450,6 +449,37 @@ class StageQueue:
         run = await self.get_run(lease.run.run_id)
         if run is None:
             raise RuntimeError("completed stage run disappeared")
+        return run
+
+    async def defer(
+        self,
+        lease: StageLease,
+        *,
+        due_at_ms: int,
+    ) -> StageRunRecord:
+        """Returns owned work to its ready queue at an absolute time."""
+        if due_at_ms < 0:
+            raise ValueError("due_at_ms must not be negative")
+        response = await _DEFER(
+            self.redis,
+            keys=[
+                self.keys.leased(lease.run.stage_name),
+                self.keys.run(lease.run.run_id),
+                self.keys.unused,
+                self.keys.ready(lease.run.stage_name),
+            ],
+            args=[
+                lease.run.run_id,
+                lease.worker_id,
+                lease.token,
+                due_at_ms,
+            ],
+        )
+        if _first_integer(response) != 1:
+            raise LeaseLostError(f"lease for run {lease.run.run_id} is no longer valid")
+        run = await self.get_run(lease.run.run_id)
+        if run is None:
+            raise RuntimeError("deferred stage run disappeared")
         return run
 
     async def fail(
@@ -494,8 +524,6 @@ class StageQueue:
                 error_code[:128],
                 error_message[:2048],
                 delay,
-                QUEUE_SCHEMA_VERSION,
-                lease.run.attempt_id or "",
                 origin_id,
                 origin_backoff_ms,
             ],
@@ -564,7 +592,6 @@ class StageQueue:
                     run.lease_owner or "",
                     run.lease_token or "",
                     retry_delay_ms,
-                    QUEUE_SCHEMA_VERSION,
                     run.attempt_id,
                     origin_id,
                 ],
@@ -639,3 +666,32 @@ class StageQueue:
             dead=int(dead),
             blocked=int(blocked),
         )
+
+    async def clear_stage(self, stage_name: str) -> int:
+        """Deletes one stage's queue records and idempotency pointers."""
+        deleted_runs = 0
+        async for raw_key in self.redis.scan_iter(
+            match=f"{self.keys.namespace}:run:*",
+            count=1000,
+        ):
+            key = _decoded(raw_key)
+            stage, execution_key = await self.redis.hmget(
+                key,
+                "stage",
+                "execution_idempotency_key",
+            )
+            if stage is None or _decoded(stage) != stage_name:
+                continue
+            pipe = self.redis.pipeline()
+            pipe.delete(key)
+            if execution_key is not None:
+                pipe.delete(self.keys.idempotency(_decoded(execution_key)))
+            await pipe.execute()
+            deleted_runs += 1
+        await self.redis.delete(
+            self.keys.ready(stage_name),
+            self.keys.leased(stage_name),
+            self.keys.dead(stage_name),
+            self.keys.blocked(stage_name),
+        )
+        return deleted_runs

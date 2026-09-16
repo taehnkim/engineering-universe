@@ -57,9 +57,10 @@ if ARGV[12] ~= "" then
     redis.call("HSETNX", KEYS[7], "inflight", 0)
     redis.call("ZADD", KEYS[5], due_at, ARGV[2])
 
+    local next_item = redis.call("ZRANGE", KEYS[5], 0, 0, "WITHSCORES")
     local next_allowed = tonumber(redis.call("HGET", KEYS[6], "next_allowed_ms") or "0")
     local backoff_until = tonumber(redis.call("HGET", KEYS[6], "backoff_until_ms") or "0")
-    local origin_due = math.max(due_at, next_allowed, backoff_until)
+    local origin_due = math.max(tonumber(next_item[2]), next_allowed, backoff_until)
     redis.call("ZADD", KEYS[4], origin_due, ARGV[12])
 end
 
@@ -86,7 +87,7 @@ local score = redis.call("ZSCORE", KEYS[1], ARGV[1])
 if not score or tonumber(score) > now then
     return {0}
 end
-if state ~= "queued" and state ~= "retry_wait" then
+if state ~= "queued" then
     redis.call("ZREM", KEYS[1], ARGV[1])
     return {0}
 end
@@ -147,7 +148,7 @@ local run_score = redis.call("ZSCORE", KEYS[2], ARGV[2])
 if not origin_score or tonumber(origin_score) > now or not run_score or tonumber(run_score) > now then
     return {0}
 end
-if state ~= "queued" and state ~= "retry_wait" then
+if state ~= "queued" then
     redis.call("ZREM", KEYS[2], ARGV[2])
     redis.call("ZREM", KEYS[3], ARGV[2])
     schedule_origin(now)
@@ -166,7 +167,7 @@ local global_max_inflight = tonumber(
 local next_allowed = tonumber(redis.call("HGET", KEYS[7], "next_allowed_ms") or "0")
 local backoff_until = tonumber(redis.call("HGET", KEYS[7], "backoff_until_ms") or "0")
 if inflight >= max_inflight or global_inflight >= global_max_inflight then
-    schedule_origin(now + tonumber(ARGV[8]))
+    schedule_origin(now + tonumber(ARGV[7]))
     return {0}
 end
 if next_allowed > now or backoff_until > now then
@@ -228,6 +229,40 @@ redis.call("ZADD", KEYS[2], lease_until, ARGV[1])
 return {1, lease_until}
 """
 
+# DEFER_RUN — return a leased run to queued with a future due time.
+DEFER_RUN = r"""
+-- Return a leased run to queued with a future due time.
+local state = redis.call("HGET", KEYS[2], "state")
+if (state ~= "leased" and state ~= "running")
+    or redis.call("HGET", KEYS[2], "lease_owner") ~= ARGV[2]
+    or redis.call("HGET", KEYS[2], "lease_token") ~= ARGV[3] then
+    return {0}
+end
+
+local clock = redis.call("TIME")
+local now = (tonumber(clock[1]) * 1000) + math.floor(tonumber(clock[2]) / 1000)
+local due_at = math.max(tonumber(ARGV[4]), now)
+redis.call("ZREM", KEYS[1], ARGV[1])
+redis.call(
+    "HSET",
+    KEYS[2],
+    "state", "queued",
+    "due_at_ms", due_at
+)
+redis.call(
+    "HDEL",
+    KEYS[2],
+    "lease_owner",
+    "lease_token",
+    "lease_until_ms",
+    "error_class",
+    "error_code",
+    "error_message"
+)
+redis.call("ZADD", KEYS[4], due_at, ARGV[1])
+return {1, due_at}
+"""
+
 # COMPLETE_RUN — mark success, release origin slots, optional run TTL.
 COMPLETE_RUN = r"""
 -- Mark a leased run succeeded and release any reserved origin capacity.
@@ -287,10 +322,6 @@ redis.call(
     "error_message"
 )
 release_origin(now)
-local ttl_s = tonumber(ARGV[6]) or 0
-if ttl_s > 0 then
-    redis.call("EXPIRE", KEYS[2], ttl_s)
-end
 return {1, now}
 """
 
@@ -298,7 +329,7 @@ return {1, now}
 FAIL_RUN = r"""
 -- Record failure and retry, dead-letter, or block the run.
 local function schedule_origin(now)
-    if ARGV[10] == "" then
+    if ARGV[8] == "" then
         return
     end
     local inflight = tonumber(redis.call("HGET", KEYS[9], "inflight") or "0")
@@ -310,8 +341,8 @@ local function schedule_origin(now)
         redis.call("HSET", KEYS[10], "inflight", global_inflight - 1)
     end
     local backoff_until = tonumber(redis.call("HGET", KEYS[9], "backoff_until_ms") or "0")
-    if tonumber(ARGV[11]) > 0 then
-        backoff_until = math.max(backoff_until, now + tonumber(ARGV[11]))
+    if tonumber(ARGV[9]) > 0 then
+        backoff_until = math.max(backoff_until, now + tonumber(ARGV[9]))
     end
     redis.call(
         "HSET",
@@ -322,7 +353,7 @@ local function schedule_origin(now)
     )
     local next_item = redis.call("ZRANGE", KEYS[8], 0, 0, "WITHSCORES")
     if #next_item == 0 then
-        redis.call("ZREM", KEYS[7], ARGV[10])
+        redis.call("ZREM", KEYS[7], ARGV[8])
         return
     end
     local next_allowed = tonumber(redis.call("HGET", KEYS[9], "next_allowed_ms") or "0")
@@ -330,7 +361,7 @@ local function schedule_origin(now)
         "ZADD",
         KEYS[7],
         math.max(tonumber(next_item[2]), next_allowed, backoff_until),
-        ARGV[10]
+        ARGV[8]
     )
 end
 
@@ -345,7 +376,6 @@ local clock = redis.call("TIME")
 local now = (tonumber(clock[1]) * 1000) + math.floor(tonumber(clock[2]) / 1000)
 redis.call("ZREM", KEYS[1], ARGV[1])
 redis.call("HDEL", KEYS[2], "lease_owner", "lease_token", "lease_until_ms")
-schedule_origin(now)
 
 local attempt_count = tonumber(redis.call("HGET", KEYS[2], "attempt_count") or "0")
 local max_attempts = tonumber(redis.call("HGET", KEYS[2], "max_attempts") or "1")
@@ -354,27 +384,21 @@ if ARGV[4] == "retryable" and attempt_count < max_attempts then
     redis.call(
         "HSET",
         KEYS[2],
-        "state", "retry_wait",
+        "state", "queued",
         "due_at_ms", retry_at,
         "error_class", ARGV[4],
         "error_code", ARGV[5],
         "error_message", ARGV[6]
     )
     redis.call("ZADD", KEYS[4], retry_at, ARGV[1])
-    if ARGV[10] ~= "" then
+    if ARGV[8] ~= "" then
         redis.call("ZADD", KEYS[8], retry_at, ARGV[1])
-        local next_allowed = tonumber(redis.call("HGET", KEYS[9], "next_allowed_ms") or "0")
-        local backoff_until = tonumber(redis.call("HGET", KEYS[9], "backoff_until_ms") or "0")
-        redis.call(
-            "ZADD",
-            KEYS[7],
-            math.max(retry_at, next_allowed, backoff_until),
-            ARGV[10]
-        )
     end
-    return {1, "retry_wait", retry_at}
+    schedule_origin(now)
+    return {1, "queued", retry_at}
 end
 
+schedule_origin(now)
 local terminal_state = "failed"
 local terminal_key = KEYS[5]
 if ARGV[4] == "blocked" then
@@ -398,7 +422,7 @@ return {1, terminal_state, now}
 RECLAIM_RUN = r"""
 -- Reclaim an expired lease and requeue or fail the run.
 local function schedule_origin(now)
-    if ARGV[7] == "" then
+    if ARGV[6] == "" then
         return
     end
     local inflight = tonumber(redis.call("HGET", KEYS[9], "inflight") or "0")
@@ -410,6 +434,19 @@ local function schedule_origin(now)
         redis.call("HSET", KEYS[10], "inflight", global_inflight - 1)
     end
     redis.call("HSET", KEYS[9], "inflight", inflight, "last_released_at_ms", now)
+    local next_item = redis.call("ZRANGE", KEYS[8], 0, 0, "WITHSCORES")
+    if #next_item == 0 then
+        redis.call("ZREM", KEYS[7], ARGV[6])
+        return
+    end
+    local next_allowed = tonumber(redis.call("HGET", KEYS[9], "next_allowed_ms") or "0")
+    local backoff_until = tonumber(redis.call("HGET", KEYS[9], "backoff_until_ms") or "0")
+    redis.call(
+        "ZADD",
+        KEYS[7],
+        math.max(tonumber(next_item[2]), next_allowed, backoff_until),
+        ARGV[6]
+    )
 end
 
 local state = redis.call("HGET", KEYS[2], "state")
@@ -419,7 +456,7 @@ if state ~= "leased" and state ~= "running" then
 end
 if redis.call("HGET", KEYS[2], "lease_owner") ~= ARGV[2]
     or redis.call("HGET", KEYS[2], "lease_token") ~= ARGV[3]
-    or redis.call("HGET", KEYS[2], "attempt_id") ~= ARGV[6] then
+    or redis.call("HGET", KEYS[2], "attempt_id") ~= ARGV[5] then
     return {0}
 end
 
@@ -432,7 +469,6 @@ end
 
 redis.call("ZREM", KEYS[1], ARGV[1])
 redis.call("HDEL", KEYS[2], "lease_owner", "lease_token", "lease_until_ms")
-schedule_origin(now)
 
 local attempt_count = tonumber(redis.call("HGET", KEYS[2], "attempt_count") or "0")
 local max_attempts = tonumber(redis.call("HGET", KEYS[2], "max_attempts") or "1")
@@ -441,27 +477,21 @@ if attempt_count < max_attempts then
     redis.call(
         "HSET",
         KEYS[2],
-        "state", "retry_wait",
+        "state", "queued",
         "due_at_ms", retry_at,
         "error_class", "retryable",
         "error_code", "lease_expired",
         "error_message", "worker lease expired"
     )
     redis.call("ZADD", KEYS[4], retry_at, ARGV[1])
-    if ARGV[7] ~= "" then
+    if ARGV[6] ~= "" then
         redis.call("ZADD", KEYS[8], retry_at, ARGV[1])
-        local next_allowed = tonumber(redis.call("HGET", KEYS[9], "next_allowed_ms") or "0")
-        local backoff_until = tonumber(redis.call("HGET", KEYS[9], "backoff_until_ms") or "0")
-        redis.call(
-            "ZADD",
-            KEYS[7],
-            math.max(retry_at, next_allowed, backoff_until),
-            ARGV[7]
-        )
     end
-    return {1, "retry_wait", retry_at}
+    schedule_origin(now)
+    return {1, "queued", retry_at}
 end
 
+schedule_origin(now)
 redis.call(
     "HSET",
     KEYS[2],

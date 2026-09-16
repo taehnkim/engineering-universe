@@ -60,31 +60,30 @@ uv run python main.py crawl --max-docs 20 --concurrency 4
 Already-seen URLs are skipped via Redis set `crawl:seen`.
 See `docs/seeding.md` for listing vs article rules and Medium publication scope.
 
-The leased Redis stage queue (`fetch_raw`) still expects exact article URLs as
-inputs. Connecting `source_catalog` discovery into that queue remains a later
-step; until then, the legacy `seed` / `crawl` path uses the catalog above.
+The live crawl and raw-index paths use the leased Redis stage queue. The
+separate `fetch_raw` worker still expects exact article URLs as inputs.
 
-## Legacy crawl worker loop
+## Crawl worker loop
 
 `python main.py crawl` runs `run_crawlers()` with `max_workers` asyncio
 workers and one shared `aiohttp` session. Per queue item:
 
-1. **Promote delays** — `requeue_delayed_items()` moves due work from
-   `crawl:delay` → `crawl:queue`.
-2. **Dequeue** — `dequeue()` pops one `CrawlItem(url, source, depth)`.
-3. **Robots** — `get_or_fetch_robots()` + `can_fetch()`; if denied, drop.
+1. **Claim** — `dequeue()` leases one `CrawlItem(url, source, depth)`.
+   One process-level task reclaims expired leases.
+2. **Robots** — `get_or_fetch_robots()` + `can_fetch()`; if denied, block.
    `reserve_next_allowed()` enforces crawl-delay / request-rate; if too soon,
-   `delay()` requeues to `crawl:delay`.
-4. **Fetch** — `fetch_html()`; non-200 or transport failure drops the URL.
-5. **Discover** — sitemaps parse `<loc>` values; HTML pages extract `<a href>`
+   `delay()` atomically returns the lease to its ready set with a future score.
+3. **Fetch** — `fetch_html()`; transport errors, HTTP 429, and 5xx responses
+   retry. Other 4xx responses fail permanently.
+4. **Discover** — sitemaps parse `<loc>` values; HTML pages extract `<a href>`
    links, keep same-host when `CRAWL_ALLOW_EXTERNAL=false`, keep only paths
    that pass `classify_url()`, and enqueue at `depth + 1` while under
    `CRAWL_DEPTH_LIMIT`.
-6. **Store** — only `UrlKind.ARTICLE` pages are stored. Listings and sitemaps
+5. **Store** — only `UrlKind.ARTICLE` pages are stored. Listings and sitemaps
    are discovery-only. `_clean_container()` keeps article → main → body
    (removes nav/footer/aside/script/style/noscript). `doc_id = INCR
    crawl:doc_seq`; raw/clean artifacts write when storage is enabled.
-7. **Metadata** — Redis `crawl:doc:{doc_id}` stores url, domain, source,
+6. **Metadata** — Redis `crawl:doc:{doc_id}` stores url, domain, source,
    depth, paths, url_hash, fetched_at, status.
 
 ## Main design
@@ -135,6 +134,8 @@ The hash verifies content identity and supports immutable, content-addressed sto
 `stage_queue.py` stores versioned run hashes under `eu:v1:`.
 Ready and leased work use sorted sets, so due work and expired leases stay bounded.
 Lua scripts make enqueue, claim, heartbeat, completion, retry, and reclaim atomic.
+Readiness means `state=queued` and `due_at_ms` is not later than Redis server time.
+The ready sorted-set score is the same `due_at_ms` value.
 
 `fetch_raw` has one sorted set per origin and a global origin schedule.
 The scheduler rotates ready origins, applies request spacing, and limits in-flight work.
@@ -143,6 +144,7 @@ A lease token must match before a completion or failure releases an origin slot.
 `worker.py` runs asynchronous handler pools and heartbeats active leases.
 Handlers are plain async functions. `StageError(kind=...)` selects retryable, permanent, or blocked outcomes.
 `fetch_worker.py` exposes `run_fetch_worker()` as the single fetch composition root.
+`eng_universe.cli` exposes it through the installed `eng-universe` command.
 
 ```text
 Settings (env)
@@ -159,13 +161,13 @@ run_fetch_worker(queue, stop)        fn: lease + session + pool
 `StageStatus` values that the queue scripts drive:
 
 ```text
-enqueue → queued ──claim──► leased ──heartbeat──► running ──complete──► succeeded
-                              │                      │
-                              └──────── fail / reclaim ────────┐
-                                                               ▼
-                                              retryable+attempts → retry_wait ──claim──► leased
-                                              permanent/exhausted → failed (dead)
-                                              blocked             → blocked
+enqueue → queued + due_at_ms ──due claim──► leased ──heartbeat──► running
+              ▲                                │                     │
+              └──────── retryable/reclaim ─────┴─────────────────────┘
+
+leased/running ──complete──────────────► succeeded
+leased/running ──permanent/exhausted───► failed (dead)
+leased/running ──blocked───────────────► blocked
 ```
 
 Lease expiry (watchdog reclaim):
@@ -173,7 +175,7 @@ Lease expiry (watchdog reclaim):
 ```text
 leased/running ──lease expired──► attempt=expired
                      │
-         attempts left → retry_wait
+         attempts left → queued + new due_at_ms
          none left     → failed
 ```
 
@@ -191,11 +193,12 @@ retryable   permanent           blocked
  |      state=failed        state=blocked
  |      → dead ZSET        → blocked ZSET
  |
- +-- attempts left → retry_wait → ready again
+ +-- attempts left → queued + future due_at_ms
  +-- exhausted     → failed     → dead ZSET
 ```
 
 Default `max_attempts` is 5. Retry delay uses exponential backoff with full jitter.
+Queued work is claimable only when its ready sorted-set score is due.
 `cancelled` and `skipped` exist on `StageStatus` but have no queue transition yet.
 
 `fetch_boundary.py` applies the existing robots parser to the exact request path.
@@ -219,11 +222,12 @@ Redirect handlers must call the checker again before each redirected request.
 
 Redis AOF is enabled with `appendfsync everysec`, and the Redis `/data` directory uses a named Docker volume so restarts keep queue state.
 
-Succeeded run hashes receive a TTL (`STAGE_SUCCEEDED_RUN_TTL_S`, default 7 days). Failed, dead, and blocked runs keep no TTL so operators can inspect them.
+Run hashes and their idempotency pointers do not expire. This keeps duplicate enqueue requests attached to a valid canonical run.
+
+New queue records use schema version 2, which removes the separate retry-wait state.
 
 ## Boundaries
 
 The contract module has no Redis, HTTP, R2, database, or model client.
 Tests can use it without infrastructure.
-The queue is Redis-only and stores no raw artifact body.
-Artifact publication and downstream stage scheduling remain separate concerns.
+The queue stores run state in Redis and passes large content through artifact references.

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 from dotenv import load_dotenv
 
-
 load_dotenv("secrets.env", override=False)
 
 
@@ -51,9 +50,6 @@ class Settings:
 
     user_agent = os.getenv("EU_USER_AGENT", "EngUniverseBot/0.1")
     redis_url = env("REDIS_URL", "redis://default:devpass@localhost:6379/0")
-    crawl_queue_key = os.getenv("CRAWL_QUEUE_KEY", "crawl:queue")
-    crawl_delay_key = os.getenv("CRAWL_DELAY_KEY", "crawl:delay")
-    raw_queue_key = os.getenv("RAW_QUEUE_KEY", "raw:queue")
     robots_key_prefix = os.getenv("ROBOTS_KEY_PREFIX", "robots:")
     robots_next_allowed_prefix = os.getenv(
         "ROBOTS_NEXT_ALLOWED_PREFIX", "robots:next_allowed:"
@@ -85,9 +81,6 @@ class Settings:
     stage_heartbeat_ms = int(os.getenv("STAGE_HEARTBEAT_MS", "10000"))
     stage_reclaim_interval_ms = int(
         os.getenv("STAGE_RECLAIM_INTERVAL_MS", "1000")
-    )
-    stage_succeeded_run_ttl_s = int(
-        os.getenv("STAGE_SUCCEEDED_RUN_TTL_S", str(7 * 24 * 60 * 60))
     )
     fetch_worker_processes = int(os.getenv("FETCH_WORKER_PROCESSES", "1"))
     fetch_worker_concurrency = int(os.getenv("FETCH_WORKER_CONCURRENCY", "100"))

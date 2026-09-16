@@ -19,7 +19,6 @@ from eng_universe.ingest.queue import (
     delay,
     dequeue,
     enqueue,
-    requeue_delayed_items,
 )
 from eng_universe.ingest.robots import (
     RobotsRules,
@@ -87,7 +86,6 @@ __all__ = [
     "delay",
     "dequeue",
     "enqueue",
-    "requeue_delayed_items",
     # Ingest - robots
     "RobotsRules",
     "get_or_fetch_robots",
