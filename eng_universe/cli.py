@@ -26,18 +26,23 @@ from eng_universe.ingest.queue_models import (
 )
 from eng_universe.ingest.sources import all_seed_urls
 from eng_universe.ingest.stage_queue import StageQueue
-from eng_universe.ingest.tui.runner import (
+from eng_universe.ingest.tui.app import (
     run_crawl_with_tui,
     run_index_with_tui,
     run_monitor,
-    should_open_tui,
 )
-from eng_universe.ingest.tui.stages import resolve_stage
+from eng_universe.ingest.tui.stages import MONITOR_STAGE_CHOICES, resolve_stage
 from eng_universe.monitoring.logging_utils import get_event_logger
 from eng_universe.monitoring.metrics_server import run_metrics_server
 
 log_event = get_event_logger("main")
 FETCH_RAW_IDENTITY = StageIdentity(name=FETCH_RAW_STAGE, version="1.0.0")
+
+
+def _should_open_tui(*, no_tui: bool) -> bool:
+    """Returns True when a worker command should open the monitor TUI."""
+
+    return (not no_tui) and sys.stdout.isatty()
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,20 +117,11 @@ def build_parser() -> argparse.ArgumentParser:
     monitor_parser.add_argument(
         "--stage",
         default="crawl",
+        choices=MONITOR_STAGE_CHOICES,
         help=(
-            "Stage alias to monitor: crawl, index|index_raw|clean "
+            "Stage to monitor: crawl, or index|index_raw|clean "
             "(clean maps to index_raw; default: crawl)"
         ),
-    )
-    # Keep the original name as an alias for scripts and muscle memory.
-    crawl_monitor = sub.add_parser(
-        "crawl-monitor",
-        help="Alias for 'monitor' (default stage: crawl)",
-    )
-    crawl_monitor.add_argument(
-        "--stage",
-        default="crawl",
-        help="Stage alias to monitor (default: crawl)",
     )
     index_parser = sub.add_parser(
         "index",
@@ -280,21 +276,16 @@ def main(argv: Sequence[str] | None = None) -> None:
     if args.command == "crawl":
         if args.concurrency is not None:
             Settings.max_workers = max(1, args.concurrency)
-        if should_open_tui(no_tui=args.no_tui):
+        if _should_open_tui(no_tui=args.no_tui):
             asyncio.run(run_crawl_with_tui(max_docs=args.max_docs))
         else:
             asyncio.run(run_crawlers(max_docs=args.max_docs))
         return
-    if args.command in {"crawl-monitor", "monitor"}:
-        try:
-            stage = resolve_stage(args.stage)
-        except ValueError as exc:
-            print(str(exc), file=sys.stderr)
-            raise SystemExit(2) from exc
-        asyncio.run(run_monitor(stage=stage))
+    if args.command == "monitor":
+        asyncio.run(run_monitor(stage=resolve_stage(args.stage)))
         return
     if args.command == "index":
-        if should_open_tui(no_tui=args.no_tui):
+        if _should_open_tui(no_tui=args.no_tui):
             asyncio.run(run_index_with_tui())
         else:
             asyncio.run(index_worker())
@@ -305,7 +296,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     if args.command == "reindex":
         async def _reindex_with_optional_tui() -> None:
             await _init_index()
-            if should_open_tui(no_tui=args.no_tui):
+            if _should_open_tui(no_tui=args.no_tui):
                 await run_index_with_tui()
             else:
                 await index_worker()

@@ -6,6 +6,7 @@ from eng_universe.ingest.queue_models import CRAWL_STAGE, INDEX_RAW_STAGE
 
 # Operator-facing aliases map onto the Redis stage name that owns the work.
 # Cleaning has no separate queue: it runs inside the index_raw worker path.
+# fetch_raw is intentionally omitted: its ready work lives in per-origin ZSETs.
 STAGE_ALIASES: dict[str, str] = {
     "crawl": CRAWL_STAGE,
     CRAWL_STAGE: CRAWL_STAGE,
@@ -13,9 +14,10 @@ STAGE_ALIASES: dict[str, str] = {
     "index_raw": INDEX_RAW_STAGE,
     INDEX_RAW_STAGE: INDEX_RAW_STAGE,
     "clean": INDEX_RAW_STAGE,
-    "cleaning": INDEX_RAW_STAGE,
-    "clean_parse": INDEX_RAW_STAGE,
 }
+
+MONITOR_STAGE_CHOICES = ("crawl", "index", "index_raw", "clean")
+
 
 STAGE_TITLES: dict[str, str] = {
     CRAWL_STAGE: "Crawl Monitor",

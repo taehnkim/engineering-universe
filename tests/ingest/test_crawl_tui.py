@@ -2,23 +2,24 @@
 
 from __future__ import annotations
 
+import io
 import json
 import unittest
+from contextlib import redirect_stderr
 
 import fakeredis.aioredis as fakeredis
 
+from eng_universe.cli import _should_open_tui, build_parser
 from eng_universe.ingest.queue_models import (
     CRAWL_STAGE,
     INDEX_RAW_STAGE,
     StageQueueKeys,
 )
-from eng_universe.ingest.tui.runner import should_open_tui
 from eng_universe.ingest.tui.snapshot import (
     STATUS_DELAYED,
     STATUS_FAILED,
     STATUS_IN_FLIGHT,
     STATUS_QUEUED,
-    STATUS_SUCCEEDED,
     build_snapshot,
     collect_snapshot,
     format_flow_boxes,
@@ -59,13 +60,18 @@ class BuildSnapshotTests(unittest.TestCase):
         snap = build_snapshot(
             stage=CRAWL_STAGE,
             now_ms=now_ms,
-            ready=[
+            queued=1,
+            delayed=1,
+            in_flight=1,
+            failed=1,
+            blocked=1,
+            ready_sample=[
                 ("r_ready", float(now_ms - 10)),
                 ("r_delayed", float(now_ms + 5_000)),
             ],
             leased=["r_leased"],
             dead=["r_dead"],
-            blocked=["r_blocked"],
+            blocked_ids=["r_blocked"],
             runs={
                 "r_ready": _run_fields(
                     run_id="r_ready",
@@ -92,11 +98,6 @@ class BuildSnapshotTests(unittest.TestCase):
                     state="blocked",
                     url="https://example.com/y",
                 ),
-                "r_ok": _run_fields(
-                    run_id="r_ok",
-                    state="succeeded",
-                    url="https://engineering.fb.com/done",
-                ),
             },
         )
 
@@ -105,7 +106,6 @@ class BuildSnapshotTests(unittest.TestCase):
         self.assertEqual(snap.in_flight, 1)
         self.assertEqual(snap.failed, 1)
         self.assertEqual(snap.blocked, 1)
-        self.assertEqual(snap.succeeded, 1)
         self.assertEqual(snap.ready_run_ids, ("r_ready", "r_delayed"))
         self.assertEqual(snap.inflight_run_ids, ("r_leased",))
 
@@ -113,20 +113,24 @@ class BuildSnapshotTests(unittest.TestCase):
         self.assertEqual(by_id["r_ready"].status, STATUS_QUEUED)
         self.assertEqual(by_id["r_delayed"].status, STATUS_DELAYED)
         self.assertEqual(by_id["r_leased"].status, STATUS_IN_FLIGHT)
-        self.assertEqual(by_id["r_leased"].domain, "netflixtechblog.com")
+        self.assertEqual(by_id["r_leased"].subject, "netflixtechblog.com")
         self.assertEqual(by_id["r_dead"].status, STATUS_FAILED)
-        self.assertEqual(by_id["r_ok"].status, STATUS_SUCCEEDED)
-        self.assertEqual(by_id["r_ok"].url, "https://engineering.fb.com/done")
+        self.assertNotIn("r_ok", by_id)
 
     def test_index_raw_rows_show_doc_id_and_clean_path(self) -> None:
         now_ms = 1_000_000
         snap = build_snapshot(
             stage=INDEX_RAW_STAGE,
             now_ms=now_ms,
-            ready=[("r_q", float(now_ms))],
+            queued=1,
+            delayed=0,
+            in_flight=1,
+            failed=0,
+            blocked=0,
+            ready_sample=[("r_q", float(now_ms))],
             leased=["r_l"],
             dead=[],
-            blocked=[],
+            blocked_ids=[],
             runs={
                 "r_q": _run_fields(
                     run_id="r_q",
@@ -140,21 +144,13 @@ class BuildSnapshotTests(unittest.TestCase):
                     doc_id="99",
                     stage=INDEX_RAW_STAGE,
                 ),
-                "r_ok": _run_fields(
-                    run_id="r_ok",
-                    state="succeeded",
-                    doc_id="7",
-                    stage=INDEX_RAW_STAGE,
-                ),
             },
         )
         self.assertEqual(snap.queued, 1)
         self.assertEqual(snap.in_flight, 1)
-        self.assertEqual(snap.succeeded, 1)
         by_id = {row.run_id: row for row in snap.rows}
         self.assertEqual(by_id["r_l"].subject, "99")
         self.assertEqual(by_id["r_l"].detail, "clean/99.txt")
-        self.assertEqual(by_id["r_ok"].detail, "clean/7.txt")
 
     def test_row_fields_for_clean_alias_stage(self) -> None:
         subject, detail = row_fields_for_run(
@@ -176,16 +172,16 @@ class BuildSnapshotTests(unittest.TestCase):
         self.assertIn("──►", text)
         self.assertIn("r_ccccc", text)
 
-    def test_should_open_tui_respects_no_tui_and_tty(self) -> None:
-        self.assertFalse(should_open_tui(no_tui=True, stdout_isatty=True))
-        self.assertFalse(should_open_tui(no_tui=False, stdout_isatty=False))
-        self.assertTrue(should_open_tui(no_tui=False, stdout_isatty=True))
+    def test_should_open_tui_respects_no_tui(self) -> None:
+        self.assertFalse(_should_open_tui(no_tui=True))
 
     def test_stage_aliases_map_clean_and_index_to_index_raw(self) -> None:
         self.assertEqual(resolve_stage("clean"), INDEX_RAW_STAGE)
         self.assertEqual(resolve_stage("index"), INDEX_RAW_STAGE)
         self.assertEqual(resolve_stage("crawl"), CRAWL_STAGE)
         self.assertEqual(stage_title(INDEX_RAW_STAGE), "Index · Clean Monitor")
+        with self.assertRaises(ValueError):
+            resolve_stage("fetch_raw")
         with self.assertRaises(ValueError):
             resolve_stage("unknown-stage")
 
@@ -206,7 +202,9 @@ class CollectSnapshotTests(unittest.IsolatedAsyncioTestCase):
         leased_key = self.keys.leased(CRAWL_STAGE)
         dead_key = self.keys.dead(CRAWL_STAGE)
 
-        await self.redis.zadd(ready_key, {"r_q1": now_ms - 1, "r_d1": now_ms + 10_000})
+        await self.redis.zadd(
+            ready_key, {"r_q1": now_ms - 1, "r_d1": now_ms + 10_000}
+        )
         await self.redis.zadd(leased_key, {"r_l1": now_ms + 30_000})
         await self.redis.zadd(dead_key, {"r_f1": now_ms})
 
@@ -233,10 +231,11 @@ class CollectSnapshotTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(snap.delayed, 1)
         self.assertEqual(snap.in_flight, 1)
         self.assertEqual(snap.failed, 1)
-        self.assertEqual(snap.succeeded, 1)
         self.assertEqual(snap.rows[0].run_id, "r_l1")
         self.assertEqual(snap.rows[0].status, STATUS_IN_FLIGHT)
-        self.assertEqual(snap.rows[0].domain, "b.example")
+        self.assertEqual(snap.rows[0].subject, "b.example")
+        # Succeeded runs are not scanned from the keyspace.
+        self.assertTrue(all(row.run_id != "r_s1" for row in snap.rows))
 
     async def test_collect_index_raw_snapshot(self) -> None:
         now_ms = 3_000_000
@@ -277,11 +276,9 @@ class CollectSnapshotTests(unittest.IsolatedAsyncioTestCase):
 
 
 class CliParserTuiTests(unittest.TestCase):
-    """Ensures crawl/index expose --no-tui and monitor stage aliases."""
+    """Ensures crawl/index expose --no-tui and monitor stage choices."""
 
     def test_crawl_and_index_parsers_have_no_tui_flag(self) -> None:
-        from eng_universe.cli import build_parser
-
         parser = build_parser()
         crawl = parser.parse_args(["crawl", "--no-tui", "--max-docs", "3"])
         self.assertTrue(crawl.no_tui)
@@ -297,9 +294,8 @@ class CliParserTuiTests(unittest.TestCase):
         self.assertEqual(monitor.command, "monitor")
         self.assertEqual(monitor.stage, "clean")
 
-        alias = parser.parse_args(["crawl-monitor", "--stage", "index_raw"])
-        self.assertEqual(alias.command, "crawl-monitor")
-        self.assertEqual(alias.stage, "index_raw")
+        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            parser.parse_args(["monitor", "--stage", "fetch_raw"])
 
 
 if __name__ == "__main__":

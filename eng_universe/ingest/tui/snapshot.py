@@ -13,6 +13,7 @@ from eng_universe.ingest.queue_models import (
     CRAWL_STAGE,
     INDEX_RAW_STAGE,
     StageQueueKeys,
+    _text,
     decode_hash,
 )
 
@@ -20,9 +21,10 @@ from eng_universe.ingest.queue_models import (
 STATUS_QUEUED = "queued"
 STATUS_DELAYED = "delayed"
 STATUS_IN_FLIGHT = "in_flight"
-STATUS_SUCCEEDED = "succeeded"
 STATUS_FAILED = "failed"
 STATUS_BLOCKED = "blocked"
+
+FLOW_BOX_LIMIT = 12
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,53 +36,19 @@ class RunRow:
     status: str
     detail: str
 
-    @property
-    def domain(self) -> str:
-        """Backward-compatible alias used by crawl-focused callers."""
-
-        return self.subject
-
-    @property
-    def url(self) -> str:
-        """Backward-compatible alias used by crawl-focused callers."""
-
-        return self.detail
-
 
 @dataclass(frozen=True, slots=True)
 class CrawlMonitorSnapshot:
     """Immutable view of one stage queue at a sample time."""
 
-    stage: str
     queued: int
     delayed: int
     in_flight: int
-    succeeded: int
     failed: int
     blocked: int
     ready_run_ids: tuple[str, ...]
     inflight_run_ids: tuple[str, ...]
     rows: tuple[RunRow, ...]
-    collected_at_ms: int
-
-    @property
-    def total(self) -> int:
-        return (
-            self.queued
-            + self.delayed
-            + self.in_flight
-            + self.succeeded
-            + self.failed
-            + self.blocked
-        )
-
-
-def _text(value: object | None, default: str = "") -> str:
-    if value is None:
-        return default
-    if isinstance(value, bytes):
-        return value.decode("utf-8")
-    return str(value)
 
 
 def _payload(raw: str) -> Mapping[str, object]:
@@ -148,58 +116,55 @@ def build_snapshot(
     *,
     stage: str,
     now_ms: int,
-    ready: Sequence[tuple[str, float]],
+    queued: int,
+    delayed: int,
+    in_flight: int,
+    failed: int,
+    blocked: int,
+    ready_sample: Sequence[tuple[str, float]],
     leased: Sequence[str],
     dead: Sequence[str],
-    blocked: Sequence[str],
+    blocked_ids: Sequence[str],
     runs: Mapping[str, Mapping[str, str]],
     row_limit: int = 40,
 ) -> CrawlMonitorSnapshot:
     """
-    Builds a monitor snapshot from already-decoded Redis membership.
+    Builds a monitor snapshot from decoded Redis membership.
 
-    This function is pure so unit tests can cover Redis→view mapping without I/O.
+    Counts are authoritative (from ZCOUNT/ZCARD). Ready/leased/dead/blocked ID
+    lists are display samples only. Succeeded runs are not scanned — that would
+    require walking every eu:v1:run:* hash.
     """
 
-    ready_ids = tuple(run_id for run_id, _ in ready)
-    due_ids = tuple(run_id for run_id, score in ready if score <= now_ms)
-    delayed_ids = tuple(run_id for run_id, score in ready if score > now_ms)
+    due_ids = tuple(run_id for run_id, score in ready_sample if score <= now_ms)
+    delayed_sample = tuple(
+        run_id for run_id, score in ready_sample if score > now_ms
+    )
     leased_ids = tuple(leased)
     dead_ids = tuple(dead)
-    blocked_ids = tuple(blocked)
+    blocked_sample = tuple(blocked_ids)
+    ready_run_ids = tuple(run_id for run_id, _ in ready_sample)
 
     membership: dict[str, str] = {}
     for run_id in due_ids:
         membership[run_id] = STATUS_QUEUED
-    for run_id in delayed_ids:
+    for run_id in delayed_sample:
         membership[run_id] = STATUS_DELAYED
     for run_id in leased_ids:
         membership[run_id] = STATUS_IN_FLIGHT
     for run_id in dead_ids:
         membership[run_id] = STATUS_FAILED
-    for run_id in blocked_ids:
+    for run_id in blocked_sample:
         membership[run_id] = STATUS_BLOCKED
 
-    succeeded_ids: list[str] = []
-    for run_id, fields in runs.items():
-        if fields.get("stage") and fields.get("stage") != stage:
-            continue
-        if fields.get("state") != STATUS_SUCCEEDED:
-            continue
-        if run_id in membership:
-            continue
-        membership[run_id] = STATUS_SUCCEEDED
-        succeeded_ids.append(run_id)
-
     rows: list[RunRow] = []
-    # Prefer active work first, then delayed, then terminal.
+    # Prefer active work first, then delayed, then terminal samples.
     ordered_ids = (
         list(leased_ids)
         + list(due_ids)
-        + list(delayed_ids)
+        + list(delayed_sample)
         + list(dead_ids)
-        + list(blocked_ids)
-        + succeeded_ids
+        + list(blocked_sample)
     )
     seen: set[str] = set()
     for run_id in ordered_ids:
@@ -212,14 +177,11 @@ def build_snapshot(
             input_json=fields.get("input_json", ""),
             origin=fields.get("origin"),
         )
-        status = membership.get(run_id) or fields.get("state", "?")
-        if status == "leased" or status == "running":
-            status = STATUS_IN_FLIGHT
         rows.append(
             RunRow(
                 run_id=run_id,
                 subject=subject,
-                status=status,
+                status=membership[run_id],
                 detail=detail,
             )
         )
@@ -227,17 +189,14 @@ def build_snapshot(
             break
 
     return CrawlMonitorSnapshot(
-        stage=stage,
-        queued=len(due_ids),
-        delayed=len(delayed_ids),
-        in_flight=len(leased_ids),
-        succeeded=len(succeeded_ids),
-        failed=len(dead_ids),
-        blocked=len(blocked_ids),
-        ready_run_ids=ready_ids,
-        inflight_run_ids=leased_ids,
+        queued=queued,
+        delayed=delayed,
+        in_flight=in_flight,
+        failed=failed,
+        blocked=blocked,
+        ready_run_ids=ready_run_ids[:FLOW_BOX_LIMIT],
+        inflight_run_ids=leased_ids[:FLOW_BOX_LIMIT],
         rows=tuple(rows),
-        collected_at_ms=now_ms,
     )
 
 
@@ -249,56 +208,87 @@ async def collect_snapshot(
     now_ms: int | None = None,
     row_limit: int = 40,
 ) -> CrawlMonitorSnapshot:
-    """Reads eu:v1 stage-queue keys and builds a monitor snapshot."""
+    """
+    Reads eu:v1 stage-queue keys and builds a monitor snapshot.
+
+    Uses ZCOUNT/ZCARD for totals and bounded ZRANGE samples for the table and
+    flow panes. Does not SCAN run hashes for succeeded counts.
+    """
 
     queue_keys = keys or StageQueueKeys()
     sample_ms = now_ms if now_ms is not None else int(time.time() * 1000)
+    ready_key = queue_keys.ready(stage)
+    leased_key = queue_keys.leased(stage)
+    dead_key = queue_keys.dead(stage)
+    blocked_key = queue_keys.blocked(stage)
+    sample_end = max(row_limit, FLOW_BOX_LIMIT) - 1
 
-    ready_raw = await redis_client.zrange(
-        queue_keys.ready(stage), 0, -1, withscores=True
+    pipe = redis_client.pipeline()
+    pipe.zcount(ready_key, "-inf", sample_ms)
+    pipe.zcard(ready_key)
+    pipe.zcard(leased_key)
+    pipe.zcard(dead_key)
+    pipe.zcard(blocked_key)
+    pipe.zrangebyscore(
+        ready_key, "-inf", sample_ms, start=0, num=sample_end + 1, withscores=True
     )
-    leased_raw = await redis_client.zrange(queue_keys.leased(stage), 0, -1)
-    dead_raw = await redis_client.zrange(queue_keys.dead(stage), 0, -1)
-    blocked_raw = await redis_client.zrange(queue_keys.blocked(stage), 0, -1)
+    pipe.zrangebyscore(
+        ready_key,
+        f"({sample_ms}",
+        "+inf",
+        start=0,
+        num=sample_end + 1,
+        withscores=True,
+    )
+    pipe.zrange(leased_key, 0, sample_end)
+    pipe.zrange(dead_key, 0, sample_end)
+    pipe.zrange(blocked_key, 0, sample_end)
+    (
+        queued,
+        ready_total,
+        in_flight,
+        failed,
+        blocked,
+        due_raw,
+        delayed_raw,
+        leased_raw,
+        dead_raw,
+        blocked_raw,
+    ) = await pipe.execute()
 
-    ready = [(_text(run_id), float(score)) for run_id, score in ready_raw]
+    due_pairs = [(_text(run_id), float(score)) for run_id, score in due_raw]
+    delayed_pairs = [(_text(run_id), float(score)) for run_id, score in delayed_raw]
+    ready_sample = due_pairs + delayed_pairs
     leased = [_text(run_id) for run_id in leased_raw]
     dead = [_text(run_id) for run_id in dead_raw]
-    blocked = [_text(run_id) for run_id in blocked_raw]
+    blocked_ids = [_text(run_id) for run_id in blocked_raw]
+    delayed = max(int(ready_total) - int(queued), 0)
 
-    interest = {run_id for run_id, _ in ready} | set(leased) | set(dead) | set(blocked)
+    # Only hydrate hashes for the bounded display sample.
+    interest = (
+        [run_id for run_id, _ in ready_sample] + leased + dead + blocked_ids
+    )[: row_limit * 2]
     runs: dict[str, dict[str, str]] = {}
-
-    # Load queued/active members first so the table stays accurate under load.
-    for run_id in interest:
-        values = await redis_client.hgetall(queue_keys.run(run_id))
-        if values:
-            runs[run_id] = decode_hash(values)
-
-    # Scan remaining run hashes for succeeded (and any stage peers).
-    async for raw_key in redis_client.scan_iter(
-        match=f"{queue_keys.namespace}:run:*",
-        count=200,
-    ):
-        key = _text(raw_key)
-        run_id = key.rsplit(":", 1)[-1]
-        if run_id in runs:
-            continue
-        values = await redis_client.hgetall(key)
-        if not values:
-            continue
-        decoded = decode_hash(values)
-        if decoded.get("stage") != stage:
-            continue
-        runs[run_id] = decoded
+    if interest:
+        hash_pipe = redis_client.pipeline()
+        for run_id in interest:
+            hash_pipe.hgetall(queue_keys.run(run_id))
+        for run_id, values in zip(interest, await hash_pipe.execute(), strict=True):
+            if values:
+                runs[run_id] = decode_hash(values)
 
     return build_snapshot(
         stage=stage,
         now_ms=sample_ms,
-        ready=ready,
+        queued=int(queued),
+        delayed=delayed,
+        in_flight=int(in_flight),
+        failed=int(failed),
+        blocked=int(blocked),
+        ready_sample=ready_sample,
         leased=leased,
         dead=dead,
-        blocked=blocked,
+        blocked_ids=blocked_ids,
         runs=runs,
         row_limit=row_limit,
     )
@@ -308,7 +298,7 @@ def format_flow_boxes(
     ready_ids: Sequence[str],
     inflight_ids: Sequence[str],
     *,
-    max_boxes: int = 12,
+    max_boxes: int = FLOW_BOX_LIMIT,
     id_width: int = 10,
 ) -> str:
     """Renders ready → in-flight ASCII boxes for the middle pane."""
