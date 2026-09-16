@@ -80,11 +80,14 @@ workers and one shared `aiohttp` session. Per queue item:
    that pass `classify_url()`, and enqueue at `depth + 1` while under
    `CRAWL_DEPTH_LIMIT`.
 5. **Store** — only `UrlKind.ARTICLE` pages are stored. Listings and sitemaps
-   are discovery-only. `_clean_container()` keeps article → main → body
-   (removes nav/footer/aside/script/style/noscript). `doc_id = INCR
-   crawl:doc_seq`; raw/clean artifacts write when storage is enabled.
+   are discovery-only. `doc_id = INCR crawl:doc_seq`; when R2 is enabled the
+   crawler writes `raw/{doc_id}.html` only and enqueues `index_raw`.
 6. **Metadata** — Redis `crawl:doc:{doc_id}` stores url, domain, source,
-   depth, paths, url_hash, fetched_at, status.
+   depth, raw_key, clean_key, url_hash, fetched_at, status.
+7. **Index (parse/clean)** — `main.py index` downloads raw HTML from R2,
+   parses with BeautifulSoup (`article` → `main` → `body`), uploads
+   `clean/{doc_id}.txt` and `index/{doc_id}.json`, then writes Redis
+   `doc:{url}`.
 
 ## Main design
 

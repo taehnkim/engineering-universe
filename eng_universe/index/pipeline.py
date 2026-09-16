@@ -112,7 +112,11 @@ async def index_worker(doc_key_prefix: str | None = None) -> None:
         raw_html = ""
         if r2_enabled():
             try:
-                raw_html = await asyncio.to_thread(download_text, raw_key)
+                downloaded = await asyncio.to_thread(download_text, raw_key)
+                if downloaded is None:
+                    log_event("r2_miss", doc_id=raw_doc_id, raw_key=raw_key)
+                else:
+                    raw_html = downloaded
             except Exception as exc:
                 log_event("r2_fail", doc_id=raw_doc_id, error=type(exc).__name__)
                 raw_html = ""
@@ -129,6 +133,7 @@ async def index_worker(doc_key_prefix: str | None = None) -> None:
                 error_message=f"crawl HTML is missing for {raw_doc_id}",
             )
             continue
+        # Parse/clean: flatten body text from raw HTML (or local cleaned override).
         base_html = raw_html or cleaned_html
         parsed = parse_html(url, base_html)
         if cleaned_html:
@@ -155,17 +160,41 @@ async def index_worker(doc_key_prefix: str | None = None) -> None:
                 "clean_key": clean_key,
             }
             try:
-                await asyncio.to_thread(
+                clean_ok = await asyncio.to_thread(
                     upload_text,
                     parsed.content,
                     clean_key,
                 )
-                await asyncio.to_thread(
+                index_ok = await asyncio.to_thread(
                     upload_json,
                     index_payload,
                     f"index/{raw_doc_id}.json",
                 )
             except Exception as exc:
                 log_event("r2_fail", doc_id=raw_doc_id, error=type(exc).__name__)
+                await fail(
+                    redis_client,
+                    lease,
+                    kind=FailureKind.RETRYABLE,
+                    error_code="r2_upload_failed",
+                    error_message=f"R2 clean/index upload failed for {raw_doc_id}",
+                )
+                continue
+            if not clean_ok or not index_ok:
+                log_event(
+                    "r2_fail",
+                    doc_id=raw_doc_id,
+                    error="upload_false",
+                    clean_ok=clean_ok,
+                    index_ok=index_ok,
+                )
+                await fail(
+                    redis_client,
+                    lease,
+                    kind=FailureKind.RETRYABLE,
+                    error_code="r2_upload_failed",
+                    error_message=f"R2 clean/index upload returned false for {raw_doc_id}",
+                )
+                continue
         await index_document(redis_client, parsed, source=source)
         await acknowledge(redis_client, lease)
