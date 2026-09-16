@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Trafilatura eval — stripe_blog_index.html</title>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --ink: #1c1a16;
+      --muted: #5c564c;
+      --panel: #fffdf8;
+      --accent: #0b6e4f;
+      --warn: #8a3b12;
+      --line: #d7d0c2;
+    }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, #e7f0ea 0%, transparent 45%),
+        linear-gradient(180deg, #efe8d8, var(--bg));
+    }
+    header {
+      padding: 1.25rem 1.5rem 0.5rem;
+      border-bottom: 1px solid var(--line);
+    }
+    h1 { margin: 0 0 0.35rem; font-size: 1.35rem; }
+    .meta { color: var(--muted); font-size: 0.92rem; }
+    .badge {
+      display: inline-block;
+      margin-right: 0.4rem;
+      padding: 0.15rem 0.45rem;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--panel);
+      font-size: 0.8rem;
+    }
+    .warn { color: var(--warn); border-color: #e2b08f; }
+    .ok { color: var(--accent); border-color: #9dceb8; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem 1.5rem;
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      overflow: hidden;
+      min-height: 18rem;
+    }
+    section h2 {
+      margin: 0;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.95rem;
+      border-bottom: 1px solid var(--line);
+      background: #f7f2e8;
+    }
+    pre {
+      margin: 0;
+      padding: 0.75rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.78rem;
+      line-height: 1.35;
+      max-height: 28rem;
+      overflow: auto;
+    }
+    .rendered {
+      padding: 0.85rem 1rem;
+      max-height: 28rem;
+      overflow: auto;
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Trafilatura raw → cleaned HTML</h1>
+    <div class="meta">
+      <div><strong>Fixture:</strong> stripe_blog_index.html</div>
+      <div><strong>URL:</strong> https://stripe.dev/blog</div>
+      <div style="margin-top:0.45rem">
+        <span class="badge">input 505,744 B</span>
+        <span class="badge ok">__NEXT_DATA__</span>
+        <span class="badge ">no embedded content field</span>
+        <span class="badge ">articleBody DOM text=-1</span>
+        <span class="badge">html tags: a, p</span>
+        <span class="badge ok">NEXT prose NOT in output</span>
+      </div>
+    </div>
+  </header>
+  <div class="grid">
+    <section>
+      <h2>Input HTML snippet (raw)</h2>
+      <pre>&lt;!DOCTYPE html&gt;&lt;html lang="en"&gt;&lt;head&gt;&lt;meta charSet="utf-8" data-next-head=""/&gt;&lt;meta name="viewport" content="width=device-width, initial-scale=1" data-next-head=""/&gt;&lt;title data-next-head=""&gt;Stripe | Dev Blog&lt;/title&gt;&lt;meta property="og:title" content="Stripe Dot Dev Blog" data-next-head=""/&gt;&lt;meta name="description" content="Learn how to build web and mobile applications to accept payments, send payouts, and manage your business online with Stripe." data-next-head=""/&gt;&lt;meta property="og:description" content="Learn how to build web and mobile applications to accept payments, send payouts, and manage your business online with Stripe." data-next-head=""/&gt;&lt;meta property="og:image" content="https://stripe.dev/dev_social.jpeg" data-next-head=""/&gt;&lt;meta name="twitter:card" content="summary_large_image" data-next-head=""/&gt;&lt;meta name="twitter:site" content="@stripepress" data-next-head=""/&gt;&lt;meta name="twitter:creator" content="@stripepress" data-next-head=""/&gt;&lt;meta name="twitter:title" content="Stripe Dot Dev Blog" data-next-head=""/&gt;&lt;meta name="twitter:description" content="Learn how to build web and mobile applications to accept payments, send payouts, and manage your business online with Stripe." data-next-head=""/&gt;&lt;meta name="twitter:image" content="https://stripe.dev/dev_social.jpeg" data-next-head=""/&gt;&lt;link rel="icon" href="../favicon.ico" sizes="16x16" type="image/x-icon" data-next-head=""/&gt;&lt;link rel="alternate" type="application/rss+xml" title="Stripe Dot Dev Blog RSS Feed" href="/blog/feed" data-next-head=""/&gt;&lt;link rel="preload" href="/_next/static/immutable/chunks/26mgwr_fts6qf.css" as="style"/&gt;&lt;link rel="preload" href="/_next/static/immutable/chunks/39yaqcxegdfb6.css" as="style"/&gt;&lt;link rel="preload" href="/_next/static/immutable/chunks/00ox9228fvyp0.css" as="style"/&gt;&lt;link rel="stylesheet" href="/_next/static/immutable/chunks/26mgwr_fts6qf.css" data-n-g=""/&gt;&lt;link rel="stylesheet" href="/_next/static/immutable/chunks/39yaqcxegdfb6.css" data-n-p=""/&gt;&lt;link rel="stylesheet" href="/_next/static/immutable/chunks/00ox9228fvyp0.css" data-n-p=""/&gt;&lt;noscript data-n-css=""&gt;&lt;/noscript&gt;&lt;script src="/_next/static/immutable/chunks/1cob6x-fi4i-4.js" defer=""&gt;&lt;/script&gt;&lt;script src="/_next/static/immutable/chunks/3gsov9ct577rw.js" defer=""&gt;&lt;/script&gt;&lt;script src="/_next/static/immutable/chunks/0k-8zaliyqs4r.js" defer=""&gt;&lt;/script&gt;&lt;script src="/_next/static/immutable/chunks/3xifnu-wkzwxk.js" defer=""&gt;&lt;/script&gt;&lt;script src="/_next/static/immutable/chunks/24yokreqzh33m.js" defer=""&gt;&lt;/s</pre>
+    </section>
+    <section>
+      <h2>Output HTML (trafilatura output_format=&quot;html&quot;)</h2>
+      <pre>&lt;html&gt;
+  &lt;head&gt;
+    &lt;meta name="sitename" content="Stripepress"/&gt;
+    &lt;meta name="title" content="Stripe Dot Dev Blog"/&gt;
+    &lt;meta name="author" content="Authors"/&gt;
+    &lt;meta name="date" content="2026-09-14"/&gt;
+    &lt;meta name="url" content="https://stripe.dev/blog"/&gt;
+    &lt;meta name="hostname" content="stripe.dev"/&gt;
+    &lt;meta name="description" content="Learn how to build web and mobile applications to accept payments, send payouts, and manage your business online with Stripe."/&gt;
+    &lt;meta name="fingerprint" content="3adfc08143e598a8"/&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div class="BlogListItem-module__QCnjCG__inner" aria-hidden="true" id="collapsible"&gt;Summary:&lt;p class="text-sm PostDetails-module__6PpOaq__summary"&gt;Today, Stripe launches Stripe Workflows, a powerful new way to automate your payment operations and orchestrate Stripe products with ease—right from the Dashboard. Whether you are looking to streamline invoicing, manage fraud detection, automate subscription logic, or build custom quote-to-cash flows, Stripe Workflows helps developers move faster with fewer lines of code. With built-in support for real-time triggers, conditional logic, and seamless integration across Stripe’s ecosystem, Workflows eliminates the need for managing infrastructure or writing boilerplate logic. Instead, you get a visual, event-driven automation engine designed for high-performance financial operations at scale. In this post, we’ll explore how Stripe Workflows can help you simplify complexity, boost developer productivity, and unlock new use cases—all with low latency and high reliability.&lt;/p&gt;Author:&lt;p class="PostDetails-module__6PpOaq__authors"&gt;Ben Smith&lt;/p&gt;&lt;p class="text-smallcaps PostDetails-module__6PpOaq__topicsLabel"&gt;Topic:&lt;/p&gt;&lt;a href="https://stripe.dev/blog/introducing-stripe-workflows"&gt;Read&lt;/a&gt;&lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+    </section>
+    <section>
+      <h2>Output XML (structure-preserving)</h2>
+      <pre>&lt;doc sitename="Stripepress" title="Stripe Dot Dev Blog" author="Authors" date="2026-09-14" url="https://stripe.dev/blog" hostname="stripe.dev" description="Learn how to build web and mobile applications to accept payments, send payouts, and manage your business online with Stripe." fingerprint="3adfc08143e598a8"&gt;
+  &lt;main&gt;
+    &lt;div&gt;Summary:&lt;p&gt;Today, Stripe launches Stripe Workflows, a powerful new way to automate your payment operations and orchestrate Stripe products with ease—right from the Dashboard. Whether you are looking to streamline invoicing, manage fraud detection, automate subscription logic, or build custom quote-to-cash flows, Stripe Workflows helps developers move faster with fewer lines of code. With built-in support for real-time triggers, conditional logic, and seamless integration across Stripe’s ecosystem, Workflows eliminates the need for managing infrastructure or writing boilerplate logic. Instead, you get a visual, event-driven automation engine designed for high-performance financial operations at scale. In this post, we’ll explore how Stripe Workflows can help you simplify complexity, boost developer productivity, and unlock new use cases—all with low latency and high reliability.&lt;/p&gt;Author:&lt;p&gt;Ben Smith&lt;/p&gt;&lt;p&gt;Topic:&lt;/p&gt;&lt;ref target="https://stripe.dev/blog/introducing-stripe-workflows"&gt;Read&lt;/ref&gt;&lt;/div&gt;
+  &lt;/main&gt;
+  &lt;comments/&gt;
+&lt;/doc&gt;</pre>
+    </section>
+    <section>
+      <h2>Output text (baseline)</h2>
+      <pre>---
+title: Stripe Dot Dev Blog
+author: Authors
+url: https://stripe.dev/blog
+hostname: stripe.dev
+description: Learn how to build web and mobile applications to accept payments, send payouts, and manage your business online with Stripe.
+sitename: Stripepress
+date: "2026-09-14"
+---
+Summary:
+Today, Stripe launches Stripe Workflows, a powerful new way to automate your payment operations and orchestrate Stripe products with ease—right from the Dashboard. Whether you are looking to streamline invoicing, manage fraud detection, automate subscription logic, or build custom quote-to-cash flows, Stripe Workflows helps developers move faster with fewer lines of code. With built-in support for real-time triggers, conditional logic, and seamless integration across Stripe’s ecosystem, Workflows eliminates the need for managing infrastructure or writing boilerplate logic. Instead, you get a visual, event-driven automation engine designed for high-performance financial operations at scale. In this post, we’ll explore how Stripe Workflows can help you simplify complexity, boost developer productivity, and unlock new use cases—all with low latency and high reliability.
+
+Author:
+Ben Smith
+
+Topic:
+
+[Read](https://stripe.dev/blog/introducing-stripe-workflows)</pre>
+    </section>
+    <section style="grid-column: 1 / -1">
+      <h2>Rendered cleaned HTML (browser view)</h2>
+      <div class="rendered"><html>
+  <head>
+    <meta name="sitename" content="Stripepress"/>
+    <meta name="title" content="Stripe Dot Dev Blog"/>
+    <meta name="author" content="Authors"/>
+    <meta name="date" content="2026-09-14"/>
+    <meta name="url" content="https://stripe.dev/blog"/>
+    <meta name="hostname" content="stripe.dev"/>
+    <meta name="description" content="Learn how to build web and mobile applications to accept payments, send payouts, and manage your business online with Stripe."/>
+    <meta name="fingerprint" content="3adfc08143e598a8"/>
+  </head>
+  <body>
+    <div class="BlogListItem-module__QCnjCG__inner" aria-hidden="true" id="collapsible">Summary:<p class="text-sm PostDetails-module__6PpOaq__summary">Today, Stripe launches Stripe Workflows, a powerful new way to automate your payment operations and orchestrate Stripe products with ease—right from the Dashboard. Whether you are looking to streamline invoicing, manage fraud detection, automate subscription logic, or build custom quote-to-cash flows, Stripe Workflows helps developers move faster with fewer lines of code. With built-in support for real-time triggers, conditional logic, and seamless integration across Stripe’s ecosystem, Workflows eliminates the need for managing infrastructure or writing boilerplate logic. Instead, you get a visual, event-driven automation engine designed for high-performance financial operations at scale. In this post, we’ll explore how Stripe Workflows can help you simplify complexity, boost developer productivity, and unlock new use cases—all with low latency and high reliability.</p>Author:<p class="PostDetails-module__6PpOaq__authors">Ben Smith</p><p class="text-smallcaps PostDetails-module__6PpOaq__topicsLabel">Topic:</p><a href="https://stripe.dev/blog/introducing-stripe-workflows">Read</a></div>
+  </body>
+</html></div>
+    </section>
+  </div>
+</body>
+</html>

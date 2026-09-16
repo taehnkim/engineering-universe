@@ -1,0 +1,6 @@
+<doc sitename="Stripepress" title="Doing more with less: Reducing requests to the Stripe API" author="About the author" date="2024-08-19" url="https://stripe.dev/blog/doing-more-with-less-reducing-requests-to-the-stripe-api" hostname="stripe.dev" description="The performance of an application can directly affect the customer experience. Using the expand feature along with caching techniques, developers can improve the performance of their application by reducing the number of API calls to Stripe." fingerprint="31cb9a060aadcaf9">
+  <main>
+    <p>Cecil Phillip is a part of the Developer Relations team at Stripe. He is originally from St. John’s, Antigua and has over a decade of experience in building software for various industries. He’s a huge fan of .NET and loves learning about patterns for building distributed systems. Feel free to reach out to him on social media, and check out some of his videos on the Stripe Developer channel.</p>
+  </main>
+  <comments/>
+</doc>

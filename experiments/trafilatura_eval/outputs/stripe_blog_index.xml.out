@@ -1,0 +1,6 @@
+<doc sitename="Stripepress" title="Stripe Dot Dev Blog" author="Authors" date="2026-09-14" url="https://stripe.dev/blog" hostname="stripe.dev" description="Learn how to build web and mobile applications to accept payments, send payouts, and manage your business online with Stripe." fingerprint="3adfc08143e598a8">
+  <main>
+    <div>Summary:<p>Today, Stripe launches Stripe Workflows, a powerful new way to automate your payment operations and orchestrate Stripe products with ease—right from the Dashboard. Whether you are looking to streamline invoicing, manage fraud detection, automate subscription logic, or build custom quote-to-cash flows, Stripe Workflows helps developers move faster with fewer lines of code. With built-in support for real-time triggers, conditional logic, and seamless integration across Stripe’s ecosystem, Workflows eliminates the need for managing infrastructure or writing boilerplate logic. Instead, you get a visual, event-driven automation engine designed for high-performance financial operations at scale. In this post, we’ll explore how Stripe Workflows can help you simplify complexity, boost developer productivity, and unlock new use cases—all with low latency and high reliability.</p>Author:<p>Ben Smith</p><p>Topic:</p><ref target="https://stripe.dev/blog/introducing-stripe-workflows">Read</ref></div>
+  </main>
+  <comments/>
+</doc>

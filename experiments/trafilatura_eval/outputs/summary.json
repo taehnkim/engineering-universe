@@ -1,0 +1,261 @@
+{
+  "library": "trafilatura",
+  "formats_tested": [
+    "txt",
+    "html",
+    "xml",
+    "markdown"
+  ],
+  "notes": [
+    "output_format=html|xml preserves semantic tags when body is in the DOM.",
+    "Stripe.dev article pages store body in __NEXT_DATA__; articleBody DOM is empty.",
+    "R2 raw fixtures were not available in this environment; live fetches used."
+  ],
+  "fixtures": [
+    {
+      "fixture": "stripe_blog_index.html",
+      "url": "https://stripe.dev/blog",
+      "input_bytes": 505744,
+      "has_next_data": true,
+      "next_data_content_chars": 0,
+      "next_data_content_snippet": "",
+      "article_body_dom_text_chars": -1,
+      "outputs": {
+        "txt": {
+          "file": "stripe_blog_index.txt.out",
+          "chars": 1258,
+          "semantic_tag_hits": 0,
+          "semantic_tags_sample": [],
+          "contains_next_data_prose": false,
+          "snippet": "---\ntitle: Stripe Dot Dev Blog\nauthor: Authors\nurl: https://stripe.dev/blog\nhostname: stripe.dev\ndescription: Learn how to build web and mobile applications to accept payments, send payouts, and manage your business online with Stripe.\nsitename: Stripepress\ndate: \"2026-09-14\"\n---\nSummary:\nToday, Stripe launches Stripe Workflows, a powerful new way to automate your payment operations and orchestrate Stripe products with ease\u2014right from the Dashboard. Whether you are looking to streamline invoicin"
+        },
+        "html": {
+          "file": "stripe_blog_index.html.out",
+          "chars": 1832,
+          "semantic_tag_hits": 4,
+          "semantic_tags_sample": [
+            "a",
+            "p"
+          ],
+          "contains_next_data_prose": false,
+          "snippet": "<html>\n  <head>\n    <meta name=\"sitename\" content=\"Stripepress\"/>\n    <meta name=\"title\" content=\"Stripe Dot Dev Blog\"/>\n    <meta name=\"author\" content=\"Authors\"/>\n    <meta name=\"date\" content=\"2026-09-14\"/>\n    <meta name=\"url\" content=\"https://stripe.dev/blog\"/>\n    <meta name=\"hostname\" content=\"stripe.dev\"/>\n    <meta name=\"description\" content=\"Learn how to build web and mobile applications to accept payments, send payouts, and manage your business online with Stripe.\"/>\n    <meta name=\"f"
+        },
+        "xml": {
+          "file": "stripe_blog_index.xml.out",
+          "chars": 1377,
+          "semantic_tag_hits": 3,
+          "semantic_tags_sample": [
+            "p"
+          ],
+          "contains_next_data_prose": false,
+          "snippet": "<doc sitename=\"Stripepress\" title=\"Stripe Dot Dev Blog\" author=\"Authors\" date=\"2026-09-14\" url=\"https://stripe.dev/blog\" hostname=\"stripe.dev\" description=\"Learn how to build web and mobile applications to accept payments, send payouts, and manage your business online with Stripe.\" fingerprint=\"3adfc08143e598a8\">\n  <main>\n    <div>Summary:<p>Today, Stripe launches Stripe Workflows, a powerful new way to automate your payment operations and orchestrate Stripe products with ease\u2014right from the Das"
+        },
+        "markdown": {
+          "file": "stripe_blog_index.markdown.out",
+          "chars": 1258,
+          "semantic_tag_hits": 0,
+          "semantic_tags_sample": [],
+          "contains_next_data_prose": false,
+          "snippet": "---\ntitle: Stripe Dot Dev Blog\nauthor: Authors\nurl: https://stripe.dev/blog\nhostname: stripe.dev\ndescription: Learn how to build web and mobile applications to accept payments, send payouts, and manage your business online with Stripe.\nsitename: Stripepress\ndate: \"2026-09-14\"\n---\nSummary:\nToday, Stripe launches Stripe Workflows, a powerful new way to automate your payment operations and orchestrate Stripe products with ease\u2014right from the Dashboard. Whether you are looking to streamline invoicin"
+        }
+      }
+    },
+    {
+      "fixture": "stripe_doing_more_with_less.html",
+      "url": "https://stripe.dev/blog/doing-more-with-less-reducing-requests-to-the-stripe-api",
+      "input_bytes": 77691,
+      "has_next_data": true,
+      "next_data_content_chars": 12922,
+      "next_data_content_snippet": " It is important for developers to optimize third-party API usage to reduce costs, improve performance, and enhance user experience.   An effective strategy to ",
+      "article_body_dom_text_chars": 0,
+      "outputs": {
+        "txt": {
+          "file": "stripe_doing_more_with_less.txt.out",
+          "chars": 897,
+          "semantic_tag_hits": 0,
+          "semantic_tags_sample": [],
+          "contains_next_data_prose": false,
+          "snippet": "---\ntitle: \"Doing more with less: Reducing requests to the Stripe API\"\nauthor: About the author\nurl: https://stripe.dev/blog/doing-more-with-less-reducing-requests-to-the-stripe-api\nhostname: stripe.dev\ndescription: The performance of an application can directly affect the customer experience. Using the expand feature along with caching techniques, developers can improve the performance of their application by reducing the number of API calls to Stripe.\nsitename: Stripepress\ndate: \"2024-08-19\"\n-"
+        },
+        "html": {
+          "file": "stripe_doing_more_with_less.html.out",
+          "chars": 1203,
+          "semantic_tag_hits": 1,
+          "semantic_tags_sample": [
+            "p"
+          ],
+          "contains_next_data_prose": false,
+          "snippet": "<html>\n  <head>\n    <meta name=\"sitename\" content=\"Stripepress\"/>\n    <meta name=\"title\" content=\"Doing more with less: Reducing requests to the Stripe API\"/>\n    <meta name=\"author\" content=\"About the author\"/>\n    <meta name=\"date\" content=\"2024-08-19\"/>\n    <meta name=\"url\" content=\"https://stripe.dev/blog/doing-more-with-less-reducing-requests-to-the-stripe-api\"/>\n    <meta name=\"hostname\" content=\"stripe.dev\"/>\n    <meta name=\"description\" content=\"The performance of an application can dire"
+        },
+        "xml": {
+          "file": "stripe_doing_more_with_less.xml.out",
+          "chars": 980,
+          "semantic_tag_hits": 1,
+          "semantic_tags_sample": [
+            "p"
+          ],
+          "contains_next_data_prose": false,
+          "snippet": "<doc sitename=\"Stripepress\" title=\"Doing more with less: Reducing requests to the Stripe API\" author=\"About the author\" date=\"2024-08-19\" url=\"https://stripe.dev/blog/doing-more-with-less-reducing-requests-to-the-stripe-api\" hostname=\"stripe.dev\" description=\"The performance of an application can directly affect the customer experience. Using the expand feature along with caching techniques, developers can improve the performance of their application by reducing the number of API calls to Stripe"
+        },
+        "markdown": {
+          "file": "stripe_doing_more_with_less.markdown.out",
+          "chars": 897,
+          "semantic_tag_hits": 0,
+          "semantic_tags_sample": [],
+          "contains_next_data_prose": false,
+          "snippet": "---\ntitle: \"Doing more with less: Reducing requests to the Stripe API\"\nauthor: About the author\nurl: https://stripe.dev/blog/doing-more-with-less-reducing-requests-to-the-stripe-api\nhostname: stripe.dev\ndescription: The performance of an application can directly affect the customer experience. Using the expand feature along with caching techniques, developers can improve the performance of their application by reducing the number of API calls to Stripe.\nsitename: Stripepress\ndate: \"2024-08-19\"\n-"
+        }
+      }
+    },
+    {
+      "fixture": "stripe_because_nobody_likes.html",
+      "url": "https://stripe.dev/blog/because-nobody-likes-being-charged-twice",
+      "input_bytes": 89186,
+      "has_next_data": true,
+      "next_data_content_chars": 9711,
+      "next_data_content_snippet": "Imagine a customer checks out on your eCommerce site, enters their payment details, and chooses the \"Pay\" button. Just as the request is processed, their intern",
+      "article_body_dom_text_chars": 0,
+      "outputs": {
+        "txt": {
+          "file": "stripe_because_nobody_likes.txt.out",
+          "chars": 1053,
+          "semantic_tag_hits": 0,
+          "semantic_tags_sample": [],
+          "contains_next_data_prose": false,
+          "snippet": "---\ntitle: Because nobody likes being charged twice\nauthor: About the author\nurl: https://stripe.dev/blog/because-nobody-likes-being-charged-twice\nhostname: stripe.dev\ndescription: In complex, high-volume systems, even minor failures\u2014like a dropped internet connection\u2014can lead to major headaches, such as duplicate charges. This post explores advanced patterns for integrating Stripe into your enterprise applications with a focus on building fault-tolerant, user-friendly payment systems. Learn how"
+        },
+        "html": {
+          "file": "stripe_because_nobody_likes.html.out",
+          "chars": 1361,
+          "semantic_tag_hits": 1,
+          "semantic_tags_sample": [
+            "p"
+          ],
+          "contains_next_data_prose": false,
+          "snippet": "<html>\n  <head>\n    <meta name=\"sitename\" content=\"Stripepress\"/>\n    <meta name=\"title\" content=\"Because nobody likes being charged twice\"/>\n    <meta name=\"author\" content=\"About the author\"/>\n    <meta name=\"date\" content=\"2025-04-10\"/>\n    <meta name=\"url\" content=\"https://stripe.dev/blog/because-nobody-likes-being-charged-twice\"/>\n    <meta name=\"hostname\" content=\"stripe.dev\"/>\n    <meta name=\"description\" content=\"In complex, high-volume systems, even minor failures\u2014like a dropped interne"
+        },
+        "xml": {
+          "file": "stripe_because_nobody_likes.xml.out",
+          "chars": 1138,
+          "semantic_tag_hits": 1,
+          "semantic_tags_sample": [
+            "p"
+          ],
+          "contains_next_data_prose": false,
+          "snippet": "<doc sitename=\"Stripepress\" title=\"Because nobody likes being charged twice\" author=\"About the author\" date=\"2025-04-10\" url=\"https://stripe.dev/blog/because-nobody-likes-being-charged-twice\" hostname=\"stripe.dev\" description=\"In complex, high-volume systems, even minor failures\u2014like a dropped internet connection\u2014can lead to major headaches, such as duplicate charges. This post explores advanced patterns for integrating Stripe into your enterprise applications with a focus on building fault-tole"
+        },
+        "markdown": {
+          "file": "stripe_because_nobody_likes.markdown.out",
+          "chars": 1053,
+          "semantic_tag_hits": 0,
+          "semantic_tags_sample": [],
+          "contains_next_data_prose": false,
+          "snippet": "---\ntitle: Because nobody likes being charged twice\nauthor: About the author\nurl: https://stripe.dev/blog/because-nobody-likes-being-charged-twice\nhostname: stripe.dev\ndescription: In complex, high-volume systems, even minor failures\u2014like a dropped internet connection\u2014can lead to major headaches, such as duplicate charges. This post explores advanced patterns for integrating Stripe into your enterprise applications with a focus on building fault-tolerant, user-friendly payment systems. Learn how"
+        }
+      }
+    },
+    {
+      "fixture": "stripe_adding_payments_agentic.html",
+      "url": "https://stripe.dev/blog/adding-payments-to-your-agentic-workflows",
+      "input_bytes": 68184,
+      "has_next_data": true,
+      "next_data_content_chars": 10599,
+      "next_data_content_snippet": " [Large language models](https://en.wikipedia.org/wiki/Large_language_model) (LLMs) can be used to create a broad spectrum of automations, often personified as ",
+      "article_body_dom_text_chars": 0,
+      "outputs": {
+        "txt": {
+          "file": "stripe_adding_payments_agentic.txt.out",
+          "chars": 604,
+          "semantic_tag_hits": 0,
+          "semantic_tags_sample": [],
+          "contains_next_data_prose": false,
+          "snippet": "---\ntitle: Adding payments to your LLM agentic workflows\nauthor: Steve Kaliski Steve is a Software Engineer\nurl: https://stripe.dev/blog/adding-payments-to-your-agentic-workflows\nhostname: stripe.dev\ndescription: This post discusses integrating the Stripe agent toolkit with large language models (LLMs) to enhance automation workflows, enabling financial services access, metered billing, and streamlined operations across agent frameworks.\nsitename: Stripepress\ndate: \"2024-11-14\"\n---\nSteve is a So"
+        },
+        "html": {
+          "file": "stripe_adding_payments_agentic.html.out",
+          "chars": 922,
+          "semantic_tag_hits": 2,
+          "semantic_tags_sample": [
+            "p"
+          ],
+          "contains_next_data_prose": false,
+          "snippet": "<html>\n  <head>\n    <meta name=\"sitename\" content=\"Stripepress\"/>\n    <meta name=\"title\" content=\"Adding payments to your LLM agentic workflows\"/>\n    <meta name=\"author\" content=\"Steve Kaliski Steve is a Software Engineer\"/>\n    <meta name=\"date\" content=\"2024-11-14\"/>\n    <meta name=\"url\" content=\"https://stripe.dev/blog/adding-payments-to-your-agentic-workflows\"/>\n    <meta name=\"hostname\" content=\"stripe.dev\"/>\n    <meta name=\"description\" content=\"This post discusses integrating the Stripe "
+        },
+        "xml": {
+          "file": "stripe_adding_payments_agentic.xml.out",
+          "chars": 699,
+          "semantic_tag_hits": 2,
+          "semantic_tags_sample": [
+            "p"
+          ],
+          "contains_next_data_prose": false,
+          "snippet": "<doc sitename=\"Stripepress\" title=\"Adding payments to your LLM agentic workflows\" author=\"Steve Kaliski Steve is a Software Engineer\" date=\"2024-11-14\" url=\"https://stripe.dev/blog/adding-payments-to-your-agentic-workflows\" hostname=\"stripe.dev\" description=\"This post discusses integrating the Stripe agent toolkit with large language models (LLMs) to enhance automation workflows, enabling financial services access, metered billing, and streamlined operations across agent frameworks.\" fingerprint"
+        },
+        "markdown": {
+          "file": "stripe_adding_payments_agentic.markdown.out",
+          "chars": 604,
+          "semantic_tag_hits": 0,
+          "semantic_tags_sample": [],
+          "contains_next_data_prose": false,
+          "snippet": "---\ntitle: Adding payments to your LLM agentic workflows\nauthor: Steve Kaliski Steve is a Software Engineer\nurl: https://stripe.dev/blog/adding-payments-to-your-agentic-workflows\nhostname: stripe.dev\ndescription: This post discusses integrating the Stripe agent toolkit with large language models (LLMs) to enhance automation workflows, enabling financial services access, metered billing, and streamlined operations across agent frameworks.\nsitename: Stripepress\ndate: \"2024-11-14\"\n---\nSteve is a So"
+        }
+      }
+    },
+    {
+      "fixture": "shopify_eng_sample.html",
+      "url": "https://shopify.engineering/building-resilient-payment-systems",
+      "input_bytes": 279941,
+      "has_next_data": false,
+      "next_data_content_chars": 0,
+      "next_data_content_snippet": "",
+      "article_body_dom_text_chars": -1,
+      "outputs": {
+        "txt": {
+          "file": "shopify_eng_sample.txt.out",
+          "chars": 18783,
+          "semantic_tag_hits": 0,
+          "semantic_tags_sample": [],
+          "contains_next_data_prose": false,
+          "snippet": "---\ntitle: \"10 Tips for Building Resilient Payment Systems - Shopify\"\nauthor: Bart de Water\nurl: https://shopify.engineering/building-resilient-payment-systems\nhostname: shopify.engineering\ndescription: Top ten tips and tricks for building resilient payment systems from a Staff Developer working on Shopify\u2019s payment infrastructure.\nsitename: Shopify\ndate: \"2023-10-18\"\n---\nDuring the past five years I\u2019ve worked on a lot of different parts of Shopify\u2019s payment infrastructure and helped onboard doz"
+        },
+        "html": {
+          "file": "shopify_eng_sample.html.out",
+          "chars": 20192,
+          "semantic_tag_hits": 102,
+          "semantic_tags_sample": [
+            "a",
+            "blockquote",
+            "h1",
+            "i",
+            "li",
+            "p",
+            "pre",
+            "strong",
+            "ul"
+          ],
+          "contains_next_data_prose": false,
+          "snippet": "<html>\n  <head>\n    <meta name=\"sitename\" content=\"Shopify\"/>\n    <meta name=\"title\" content=\"10 Tips for Building Resilient Payment Systems - Shopify\"/>\n    <meta name=\"author\" content=\"Bart de Water\"/>\n    <meta name=\"date\" content=\"2023-10-18\"/>\n    <meta name=\"url\" content=\"https://shopify.engineering/building-resilient-payment-systems\"/>\n    <meta name=\"hostname\" content=\"shopify.engineering\"/>\n    <meta name=\"description\" content=\"Top ten tips and tricks for building resilient payment syst"
+        },
+        "xml": {
+          "file": "shopify_eng_sample.xml.out",
+          "chars": 20416,
+          "semantic_tag_hits": 43,
+          "semantic_tags_sample": [
+            "code",
+            "p"
+          ],
+          "contains_next_data_prose": false,
+          "snippet": "<doc sitename=\"Shopify\" title=\"10 Tips for Building Resilient Payment Systems - Shopify\" author=\"Bart de Water\" date=\"2023-10-18\" url=\"https://shopify.engineering/building-resilient-payment-systems\" hostname=\"shopify.engineering\" description=\"Top ten tips and tricks for building resilient payment systems from a Staff Developer working on Shopify\u2019s payment infrastructure.\" fingerprint=\"7d1cd05703634691\">\n  <main>\n    <p>During the past five years I\u2019ve worked on a lot of different parts of Shopify"
+        },
+        "markdown": {
+          "file": "shopify_eng_sample.markdown.out",
+          "chars": 18783,
+          "semantic_tag_hits": 0,
+          "semantic_tags_sample": [],
+          "contains_next_data_prose": false,
+          "snippet": "---\ntitle: \"10 Tips for Building Resilient Payment Systems - Shopify\"\nauthor: Bart de Water\nurl: https://shopify.engineering/building-resilient-payment-systems\nhostname: shopify.engineering\ndescription: Top ten tips and tricks for building resilient payment systems from a Staff Developer working on Shopify\u2019s payment infrastructure.\nsitename: Shopify\ndate: \"2023-10-18\"\n---\nDuring the past five years I\u2019ve worked on a lot of different parts of Shopify\u2019s payment infrastructure and helped onboard doz"
+        }
+      }
+    }
+  ]
+}

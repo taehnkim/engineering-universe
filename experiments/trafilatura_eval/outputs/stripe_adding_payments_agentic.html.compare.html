@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Trafilatura eval — stripe_adding_payments_agentic.html</title>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --ink: #1c1a16;
+      --muted: #5c564c;
+      --panel: #fffdf8;
+      --accent: #0b6e4f;
+      --warn: #8a3b12;
+      --line: #d7d0c2;
+    }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, #e7f0ea 0%, transparent 45%),
+        linear-gradient(180deg, #efe8d8, var(--bg));
+    }
+    header {
+      padding: 1.25rem 1.5rem 0.5rem;
+      border-bottom: 1px solid var(--line);
+    }
+    h1 { margin: 0 0 0.35rem; font-size: 1.35rem; }
+    .meta { color: var(--muted); font-size: 0.92rem; }
+    .badge {
+      display: inline-block;
+      margin-right: 0.4rem;
+      padding: 0.15rem 0.45rem;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--panel);
+      font-size: 0.8rem;
+    }
+    .warn { color: var(--warn); border-color: #e2b08f; }
+    .ok { color: var(--accent); border-color: #9dceb8; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem 1.5rem;
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      overflow: hidden;
+      min-height: 18rem;
+    }
+    section h2 {
+      margin: 0;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.95rem;
+      border-bottom: 1px solid var(--line);
+      background: #f7f2e8;
+    }
+    pre {
+      margin: 0;
+      padding: 0.75rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.78rem;
+      line-height: 1.35;
+      max-height: 28rem;
+      overflow: auto;
+    }
+    .rendered {
+      padding: 0.85rem 1rem;
+      max-height: 28rem;
+      overflow: auto;
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Trafilatura raw → cleaned HTML</h1>
+    <div class="meta">
+      <div><strong>Fixture:</strong> stripe_adding_payments_agentic.html</div>
+      <div><strong>URL:</strong> https://stripe.dev/blog/adding-payments-to-your-agentic-workflows</div>
+      <div style="margin-top:0.45rem">
+        <span class="badge">input 68,184 B</span>
+        <span class="badge ok">__NEXT_DATA__</span>
+        <span class="badge warn">NEXT content 10,599 chars</span>
+        <span class="badge warn">articleBody DOM text=0</span>
+        <span class="badge">html tags: p</span>
+        <span class="badge warn">NEXT prose NOT in output</span>
+      </div>
+    </div>
+  </header>
+  <div class="grid">
+    <section>
+      <h2>Input HTML snippet (raw)</h2>
+      <pre>&lt;!DOCTYPE html&gt;&lt;html lang="en"&gt;&lt;head&gt;&lt;meta charSet="utf-8" data-next-head=""/&gt;&lt;meta name="viewport" content="width=device-width, initial-scale=1" data-next-head=""/&gt;&lt;title data-next-head=""&gt;Adding payments to your LLM agentic workflows | Stripe Dot Dev Blog&lt;/title&gt;&lt;meta property="og:title" content="Adding payments to your LLM agentic workflows" data-next-head=""/&gt;&lt;meta name="description" content="This post discusses integrating the Stripe agent toolkit with large language models (LLMs) to enhance automation workflows, enabling financial services access, metered billing, and streamlined operations across agent frameworks." data-next-head=""/&gt;&lt;meta property="og:description" content="This post discusses integrating the Stripe agent toolkit with large language models (LLMs) to enhance automation workflows, enabling financial services access, metered billing, and streamlined operations across agent frameworks." data-next-head=""/&gt;&lt;meta property="og:image" content="https://stripe.dev/dev_social.jpeg" data-next-head=""/&gt;&lt;meta property="og:url" content="https://stripe.dev/blog/adding-payments-to-your-agentic-workflows" data-next-head=""/&gt;&lt;meta name="twitter:card" content="summary_large_image" data-next-head=""/&gt;&lt;meta name="twitter:site" content="@stripepress" data-next-head=""/&gt;&lt;meta name="twitter:creator" content="@stripepress" data-next-head=""/&gt;&lt;meta name="twitter:title" content="Adding payments to your LLM agentic workflows" data-next-head=""/&gt;&lt;meta name="twitter:description" content="This post discusses integrating the Stripe agent toolkit with large language models (LLMs) to enhance automation workflows, enabling financial services access, metered billing, and streamlined operations across agent frameworks." data-next-head=""/&gt;&lt;meta name="twitter:image" content="https://stripe.dev/dev_social.jpeg" data-next-head=""/&gt;&lt;link rel="icon" href="../favicon.ico" sizes="16x16" type="image/x-icon" data-next-head=""/&gt;&lt;link rel="alternate" type="application/rss+xml" title="Stripe Dot Dev Blog RSS Feed" href="/blog/feed" data-next-head=""/&gt;&lt;link rel="preload" href="/_next/static/immutable/chunks/26mgwr_fts6qf.css" as="style"/&gt;&lt;link rel="preload" href="/_next/static/immutable/chunks/39yaqcxegdfb6.css" as="style"/&gt;&lt;link rel="preload" href="/_next/static/immutable/chunks/00ox9228fvyp0.css" as="style"/&gt;&lt;link rel="stylesheet" href="/_next/static/immutable/chunks/26mgwr_fts6qf.css" data-n-g=""/&gt;&lt;link rel="stylesheet" href="/_next/static/immutable/chunks/39yaqcxegdfb6.css" data</pre>
+    </section>
+    <section>
+      <h2>Output HTML (trafilatura output_format=&quot;html&quot;)</h2>
+      <pre>&lt;html&gt;
+  &lt;head&gt;
+    &lt;meta name="sitename" content="Stripepress"/&gt;
+    &lt;meta name="title" content="Adding payments to your LLM agentic workflows"/&gt;
+    &lt;meta name="author" content="Steve Kaliski Steve is a Software Engineer"/&gt;
+    &lt;meta name="date" content="2024-11-14"/&gt;
+    &lt;meta name="url" content="https://stripe.dev/blog/adding-payments-to-your-agentic-workflows"/&gt;
+    &lt;meta name="hostname" content="stripe.dev"/&gt;
+    &lt;meta name="description" content="This post discusses integrating the Stripe agent toolkit with large language models (LLMs) to enhance automation workflows, enabling financial services access, metered billing, and streamlined operations across agent frameworks."/&gt;
+    &lt;meta name="fingerprint" content="184d4a7c18df73e9"/&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;p&gt;Steve is a Software Engineer on the Experimental Projects team.&lt;/p&gt;
+    &lt;p&gt;Explore our guides and examples to integrate Stripe.&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</pre>
+    </section>
+    <section>
+      <h2>Output XML (structure-preserving)</h2>
+      <pre>&lt;doc sitename="Stripepress" title="Adding payments to your LLM agentic workflows" author="Steve Kaliski Steve is a Software Engineer" date="2024-11-14" url="https://stripe.dev/blog/adding-payments-to-your-agentic-workflows" hostname="stripe.dev" description="This post discusses integrating the Stripe agent toolkit with large language models (LLMs) to enhance automation workflows, enabling financial services access, metered billing, and streamlined operations across agent frameworks." fingerprint="184d4a7c18df73e9"&gt;
+  &lt;main&gt;
+    &lt;p&gt;Steve is a Software Engineer on the Experimental Projects team.&lt;/p&gt;
+    &lt;p&gt;Explore our guides and examples to integrate Stripe.&lt;/p&gt;
+  &lt;/main&gt;
+  &lt;comments/&gt;
+&lt;/doc&gt;</pre>
+    </section>
+    <section>
+      <h2>Output text (baseline)</h2>
+      <pre>---
+title: Adding payments to your LLM agentic workflows
+author: Steve Kaliski Steve is a Software Engineer
+url: https://stripe.dev/blog/adding-payments-to-your-agentic-workflows
+hostname: stripe.dev
+description: This post discusses integrating the Stripe agent toolkit with large language models (LLMs) to enhance automation workflows, enabling financial services access, metered billing, and streamlined operations across agent frameworks.
+sitename: Stripepress
+date: "2024-11-14"
+---
+Steve is a Software Engineer on the Experimental Projects team.
+
+Explore our guides and examples to integrate Stripe.</pre>
+    </section>
+    <section style="grid-column: 1 / -1">
+      <h2>Rendered cleaned HTML (browser view)</h2>
+      <div class="rendered"><html>
+  <head>
+    <meta name="sitename" content="Stripepress"/>
+    <meta name="title" content="Adding payments to your LLM agentic workflows"/>
+    <meta name="author" content="Steve Kaliski Steve is a Software Engineer"/>
+    <meta name="date" content="2024-11-14"/>
+    <meta name="url" content="https://stripe.dev/blog/adding-payments-to-your-agentic-workflows"/>
+    <meta name="hostname" content="stripe.dev"/>
+    <meta name="description" content="This post discusses integrating the Stripe agent toolkit with large language models (LLMs) to enhance automation workflows, enabling financial services access, metered billing, and streamlined operations across agent frameworks."/>
+    <meta name="fingerprint" content="184d4a7c18df73e9"/>
+  </head>
+  <body>
+    <p>Steve is a Software Engineer on the Experimental Projects team.</p>
+    <p>Explore our guides and examples to integrate Stripe.</p>
+  </body>
+</html></div>
+    </section>
+  </div>
+</body>
+</html>

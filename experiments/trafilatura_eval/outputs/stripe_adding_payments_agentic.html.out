@@ -1,0 +1,16 @@
+<html>
+  <head>
+    <meta name="sitename" content="Stripepress"/>
+    <meta name="title" content="Adding payments to your LLM agentic workflows"/>
+    <meta name="author" content="Steve Kaliski Steve is a Software Engineer"/>
+    <meta name="date" content="2024-11-14"/>
+    <meta name="url" content="https://stripe.dev/blog/adding-payments-to-your-agentic-workflows"/>
+    <meta name="hostname" content="stripe.dev"/>
+    <meta name="description" content="This post discusses integrating the Stripe agent toolkit with large language models (LLMs) to enhance automation workflows, enabling financial services access, metered billing, and streamlined operations across agent frameworks."/>
+    <meta name="fingerprint" content="184d4a7c18df73e9"/>
+  </head>
+  <body>
+    <p>Steve is a Software Engineer on the Experimental Projects team.</p>
+    <p>Explore our guides and examples to integrate Stripe.</p>
+  </body>
+</html>

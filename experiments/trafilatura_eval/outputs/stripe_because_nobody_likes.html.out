@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <meta name="sitename" content="Stripepress"/>
+    <meta name="title" content="Because nobody likes being charged twice"/>
+    <meta name="author" content="About the author"/>
+    <meta name="date" content="2025-04-10"/>
+    <meta name="url" content="https://stripe.dev/blog/because-nobody-likes-being-charged-twice"/>
+    <meta name="hostname" content="stripe.dev"/>
+    <meta name="description" content="In complex, high-volume systems, even minor failures—like a dropped internet connection—can lead to major headaches, such as duplicate charges. This post explores advanced patterns for integrating Stripe into your enterprise applications with a focus on building fault-tolerant, user-friendly payment systems. Learn how strategies like idempotency and message queues can protect your users from double charges, reduce operational errors, and improve reliability as your system scales."/>
+    <meta name="fingerprint" content="69eb538b4229d633"/>
+  </head>
+  <body>
+    <p>Ben is a Staff Developer Advocate at Stripe, based in the UK. Previously, he was a Principal Developer Advocate at AWS, specializing in serverless architecture. With a background in web development, he is passionate about empowering developers through knowledge sharing and community engagement, making complex technologies accessible to all.</p>
+  </body>
+</html>
