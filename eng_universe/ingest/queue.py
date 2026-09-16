@@ -1,6 +1,6 @@
 import time
-from dataclasses import dataclass
 import uuid
+from dataclasses import dataclass
 
 import redis.asyncio as redis
 

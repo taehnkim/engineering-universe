@@ -1,18 +1,17 @@
 import asyncio
-from dataclasses import dataclass
 import hashlib
 import time
-from urllib.parse import urldefrag, urljoin, urlparse
 import uuid
 import xml.etree.ElementTree as ElementTree
+from dataclasses import dataclass
+from urllib.parse import urldefrag, urljoin, urlparse
 
 import aiohttp
-from bs4 import BeautifulSoup
 import redis.asyncio as redis
+from bs4 import BeautifulSoup
 
+import eng_universe.storage.r2 as r2
 from eng_universe.config import Settings
-from eng_universe.monitoring.logging_utils import get_event_logger
-from eng_universe.monitoring.metrics import record_crawl
 from eng_universe.ingest.queue import (
     CrawlItem,
     acknowledge,
@@ -39,7 +38,8 @@ from eng_universe.ingest.sources import (
     resolve_seed_url,
     sitemap_urls_for_host,
 )
-import eng_universe.storage.r2 as r2
+from eng_universe.monitoring.logging_utils import get_event_logger
+from eng_universe.monitoring.metrics import record_crawl
 
 
 @dataclass
