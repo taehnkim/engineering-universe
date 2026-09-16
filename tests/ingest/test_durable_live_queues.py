@@ -7,6 +7,7 @@ import fakeredis.aioredis as fakeredis
 import redis.asyncio as redis
 
 from eng_universe.config import Settings
+from eng_universe.index.pipeline import index_worker
 from eng_universe.ingest.crawler import crawl_worker
 from eng_universe.ingest.queue import (
     CrawlItem,
@@ -15,9 +16,11 @@ from eng_universe.ingest.queue import (
     dequeue,
     enqueue,
     enqueue_raw_index,
-    fail as fail_lease,
     reclaim_leases,
     stage_queue,
+)
+from eng_universe.ingest.queue import (
+    fail as fail_lease,
 )
 from eng_universe.ingest.queue_models import (
     CRAWL_STAGE,
@@ -26,7 +29,6 @@ from eng_universe.ingest.queue_models import (
     StageLease,
 )
 from eng_universe.ingest.stage_queue import LeaseLostError
-from eng_universe.index.pipeline import index_worker
 
 
 class DurableLiveQueueTests(unittest.IsolatedAsyncioTestCase):

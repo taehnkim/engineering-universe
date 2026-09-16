@@ -1,9 +1,8 @@
 import argparse
 import asyncio
-from pathlib import Path
 import sys
 import time
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -13,10 +12,10 @@ import aiohttp
 import redis.asyncio as redis
 
 from eng_universe.config import Settings
+from eng_universe.index.pipeline import index_worker
 from eng_universe.ingest.crawler import crawl_worker
 from eng_universe.ingest.queue import reclaim_leases, stage_queue
 from eng_universe.ingest.queue_models import CRAWL_STAGE
-from eng_universe.index.pipeline import index_worker
 
 
 async def main() -> None:

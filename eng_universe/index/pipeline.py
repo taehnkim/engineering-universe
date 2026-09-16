@@ -11,7 +11,7 @@ from eng_universe.index.entities import extract_topics
 from eng_universe.index.indexer import index_document, log_event
 from eng_universe.ingest.etl import parse_html
 from eng_universe.ingest.queue import acknowledge, fail, stage_queue
-from eng_universe.ingest.queue_models import FailureKind, INDEX_RAW_STAGE
+from eng_universe.ingest.queue_models import INDEX_RAW_STAGE, FailureKind
 from eng_universe.storage.r2 import download_text, r2_enabled, upload_json, upload_text
 
 

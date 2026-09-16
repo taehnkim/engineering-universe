@@ -9,8 +9,8 @@ from eng_universe.config import Settings
 from eng_universe.ingest.contracts import JsonValue, StageIdentity, StageRequest
 from eng_universe.ingest.queue_models import (
     CRAWL_STAGE,
-    FailureKind,
     INDEX_RAW_STAGE,
+    FailureKind,
     StageLease,
     StageQueueKeys,
 )
