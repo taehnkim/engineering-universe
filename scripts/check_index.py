@@ -10,6 +10,8 @@ if str(ROOT) not in sys.path:
 import redis.asyncio as redis
 
 from eng_universe.config import Settings
+from eng_universe.ingest.queue import stage_queue
+from eng_universe.ingest.queue_models import INDEX_RAW_STAGE
 
 
 def _decode(value: object) -> str:
@@ -49,14 +51,15 @@ async def main() -> None:
 
     doc_keys = await _count_keys(redis_client, "doc:*")
     crawl_keys = await _count_keys(redis_client, f"{Settings.crawl_doc_key_prefix}*")
-    raw_queue_len = await redis_client.llen(Settings.raw_queue_key)
+    raw_queue = await stage_queue(redis_client).counts(INDEX_RAW_STAGE)
 
     print(f"index: {'present' if index_exists else 'missing'} ({index_name})")
     if index_docs is not None:
         print(f"index docs: {index_docs}")
     print(f"doc:* keys: {doc_keys}")
     print(f"crawl docs: {crawl_keys}")
-    print(f"raw queue: {raw_queue_len}")
+    print(f"index_raw ready: {raw_queue.ready}")
+    print(f"index_raw leased: {raw_queue.leased}")
 
 
 if __name__ == "__main__":

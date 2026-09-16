@@ -1,5 +1,6 @@
-import time
+import asyncio
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 import redis.asyncio as redis
@@ -8,6 +9,7 @@ from eng_universe.config import Settings
 from eng_universe.ingest.contracts import JsonValue, StageIdentity, StageRequest
 from eng_universe.ingest.queue_models import (
     CRAWL_STAGE,
+    FailureKind,
     INDEX_RAW_STAGE,
     StageLease,
     StageQueueKeys,
@@ -66,26 +68,6 @@ def stage_queue(redis_client: redis.Redis) -> StageQueue:
     )
 
 
-def _serialize(item: CrawlItem) -> str:
-    return f"{item.url}\t{item.source}\t{item.depth}"
-
-
-def _deserialize(raw: bytes) -> CrawlItem | None:
-    """Deserializes redis item from bytes to CrawlItem"""
-    parts = raw.decode().split("\t")
-    if len(parts) < 2:
-        return None
-    url = parts[0]
-    source = parts[1]
-    depth = 0
-    if len(parts) > 2:
-        try:
-            depth = int(parts[2])
-        except ValueError:
-            depth = 0
-    return CrawlItem(url=url, source=source, depth=depth)
-
-
 async def enqueue(
     redis_client: redis.Redis, item: CrawlItem, *, dedupe: bool = True
 ) -> None:
@@ -135,6 +117,22 @@ async def acknowledge(redis_client: redis.Redis, lease: StageLease) -> None:
     await stage_queue(redis_client).complete(lease)
 
 
+async def fail(
+    redis_client: redis.Redis,
+    lease: StageLease,
+    *,
+    kind: FailureKind,
+    error_code: str,
+    error_message: str,
+) -> None:
+    await stage_queue(redis_client).fail(
+        lease,
+        kind=kind,
+        error_code=error_code,
+        error_message=error_message,
+    )
+
+
 async def delay(redis_client: redis.Redis, lease: StageLease, when_ts: int) -> None:
     await stage_queue(redis_client).defer(
         lease,
@@ -142,34 +140,23 @@ async def delay(redis_client: redis.Redis, lease: StageLease, when_ts: int) -> N
     )
 
 
-async def requeue_delayed_items(redis_client: redis.Redis, max_items: int = 100) -> int:
-    """
-    Moves items from the delay queue back to main crawl queue when their
-    scheduled time arrives. It queries for items with timestamps up to current time,
-    removes them from delay queue, and pushes them back to the main queue for processing.
-    """
-    now = time.time()
-
-    # Fetch earliest items until now
-    script = """
-local items = redis.call("ZRANGEBYSCORE", KEYS[1], "-inf", ARGV[1], "LIMIT", 0, ARGV[2])
-for _, item in ipairs(items) do
-    if redis.call("ZREM", KEYS[1], item) == 1 then
-        redis.call("RPUSH", KEYS[2], item)
-    end
-end
-return #items
-"""
-    return int(
-        await redis_client.eval(
-            script,
-            2,
-            Settings.crawl_delay_key,
-            Settings.crawl_queue_key,
-            now,
-            max_items,
-        )
-    )
+async def reclaim_leases(
+    redis_client: redis.Redis,
+    stage_names: Sequence[str],
+    stop_event: asyncio.Event,
+) -> None:
+    """Reclaims expired attempts from one process-level polling loop."""
+    queue = stage_queue(redis_client)
+    while not stop_event.is_set():
+        for stage_name in stage_names:
+            await queue.reclaim_expired(stage_name)
+        try:
+            await asyncio.wait_for(
+                stop_event.wait(),
+                timeout=Settings.stage_reclaim_interval_ms / 1000,
+            )
+        except TimeoutError:
+            pass
 
 
 async def enqueue_raw_index(redis_client: redis.Redis, doc_id: str | int) -> None:

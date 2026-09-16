@@ -666,3 +666,32 @@ class StageQueue:
             dead=int(dead),
             blocked=int(blocked),
         )
+
+    async def clear_stage(self, stage_name: str) -> int:
+        """Deletes one stage's queue records and idempotency pointers."""
+        deleted_runs = 0
+        async for raw_key in self.redis.scan_iter(
+            match=f"{self.keys.namespace}:run:*",
+            count=1000,
+        ):
+            key = _decoded(raw_key)
+            stage, execution_key = await self.redis.hmget(
+                key,
+                "stage",
+                "execution_idempotency_key",
+            )
+            if stage is None or _decoded(stage) != stage_name:
+                continue
+            pipe = self.redis.pipeline()
+            pipe.delete(key)
+            if execution_key is not None:
+                pipe.delete(self.keys.idempotency(_decoded(execution_key)))
+            await pipe.execute()
+            deleted_runs += 1
+        await self.redis.delete(
+            self.keys.ready(stage_name),
+            self.keys.leased(stage_name),
+            self.keys.dead(stage_name),
+            self.keys.blocked(stage_name),
+        )
+        return deleted_runs

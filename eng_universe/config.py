@@ -50,9 +50,6 @@ class Settings:
 
     user_agent = os.getenv("EU_USER_AGENT", "EngUniverseBot/0.1")
     redis_url = env("REDIS_URL", "redis://default:devpass@localhost:6379/0")
-    crawl_queue_key = os.getenv("CRAWL_QUEUE_KEY", "crawl:queue")
-    crawl_delay_key = os.getenv("CRAWL_DELAY_KEY", "crawl:delay")
-    raw_queue_key = os.getenv("RAW_QUEUE_KEY", "raw:queue")
     robots_key_prefix = os.getenv("ROBOTS_KEY_PREFIX", "robots:")
     robots_next_allowed_prefix = os.getenv(
         "ROBOTS_NEXT_ALLOWED_PREFIX", "robots:next_allowed:"

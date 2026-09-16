@@ -1,11 +1,13 @@
 import asyncio
 import unittest
 import uuid
-from unittest.mock import patch
+from unittest.mock import AsyncMock, call, patch
 
 import fakeredis.aioredis as fakeredis
+import redis.asyncio as redis
 
 from eng_universe.config import Settings
+from eng_universe.ingest.crawler import crawl_worker
 from eng_universe.ingest.queue import (
     CrawlItem,
     acknowledge,
@@ -13,10 +15,18 @@ from eng_universe.ingest.queue import (
     dequeue,
     enqueue,
     enqueue_raw_index,
+    fail as fail_lease,
+    reclaim_leases,
     stage_queue,
 )
-from eng_universe.ingest.queue_models import CRAWL_STAGE, INDEX_RAW_STAGE
+from eng_universe.ingest.queue_models import (
+    CRAWL_STAGE,
+    INDEX_RAW_STAGE,
+    FailureKind,
+    StageLease,
+)
 from eng_universe.ingest.stage_queue import LeaseLostError
+from eng_universe.index.pipeline import index_worker
 
 
 class DurableLiveQueueTests(unittest.IsolatedAsyncioTestCase):
@@ -99,6 +109,115 @@ class DurableLiveQueueTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(LeaseLostError):
             await queue.complete(first)
         await queue.complete(recovered)
+
+    async def test_crawler_transport_failure_is_retried_not_acknowledged(self) -> None:
+        item = CrawlItem("https://example.com/failure", "seed")
+        await enqueue(self.redis, item)
+        queue = stage_queue(self.redis)
+        run_id = (await self.redis.zrange(queue.keys.ready(CRAWL_STAGE), 0, 0))[
+            0
+        ].decode()
+        stop_event = asyncio.Event()
+
+        async def record_failure(
+            redis_client: redis.Redis,
+            lease: StageLease,
+            *,
+            kind: FailureKind,
+            error_code: str,
+            error_message: str,
+        ) -> None:
+            await fail_lease(
+                redis_client,
+                lease,
+                kind=kind,
+                error_code=error_code,
+                error_message=error_message,
+            )
+            stop_event.set()
+
+        with (
+            patch(
+                "eng_universe.ingest.crawler.check_robots_txt",
+                new=AsyncMock(return_value="example.com"),
+            ),
+            patch(
+                "eng_universe.ingest.crawler.fetch_html",
+                new=AsyncMock(return_value=(None, TimeoutError("timed out"))),
+            ),
+            patch("eng_universe.ingest.crawler.fail", new=record_failure),
+        ):
+            await crawl_worker(
+                self.redis,
+                AsyncMock(),
+                Settings.crawl_doc_key_prefix,
+                stop_event=stop_event,
+            )
+
+        run = await queue.get_run(run_id)
+        self.assertIsNotNone(run)
+        assert run is not None
+        self.assertEqual(run.state.value, "queued")
+        self.assertEqual(run.error_class, FailureKind.RETRYABLE.value)
+        self.assertEqual(run.error_code, "TimeoutError")
+
+    async def test_indexer_missing_metadata_is_retried(self) -> None:
+        await enqueue_raw_index(self.redis, "missing")
+        queue = stage_queue(self.redis)
+        run_id = (await self.redis.zrange(queue.keys.ready(INDEX_RAW_STAGE), 0, 0))[
+            0
+        ].decode()
+
+        with (
+            patch("eng_universe.index.pipeline.redis.from_url", return_value=self.redis),
+            patch.object(Settings, "indexer_exit_on_idle", True),
+            patch.object(Settings, "indexer_idle_grace_s", 0),
+        ):
+            await index_worker()
+
+        run = await queue.get_run(run_id)
+        self.assertIsNotNone(run)
+        assert run is not None
+        self.assertEqual(run.state.value, "queued")
+        self.assertEqual(run.error_code, "missing_meta")
+
+    async def test_one_reclaimer_loop_handles_each_live_stage(self) -> None:
+        stop_event = asyncio.Event()
+        queue = AsyncMock()
+
+        async def reclaim(stage_name: str) -> int:
+            if stage_name == INDEX_RAW_STAGE:
+                stop_event.set()
+            return 0
+
+        queue.reclaim_expired.side_effect = reclaim
+        with patch("eng_universe.ingest.queue.stage_queue", return_value=queue):
+            await reclaim_leases(
+                self.redis,
+                (CRAWL_STAGE, INDEX_RAW_STAGE),
+                stop_event,
+            )
+
+        self.assertEqual(
+            queue.reclaim_expired.await_args_list,
+            [
+                call(CRAWL_STAGE),
+                call(INDEX_RAW_STAGE),
+            ],
+        )
+
+    async def test_clear_stage_removes_only_selected_run_lifecycle(self) -> None:
+        await enqueue(
+            self.redis,
+            CrawlItem("https://example.com/clear", "seed"),
+        )
+        await enqueue_raw_index(self.redis, "keep")
+        queue = stage_queue(self.redis)
+
+        self.assertEqual(await queue.clear_stage(CRAWL_STAGE), 1)
+
+        self.assertEqual((await queue.counts(CRAWL_STAGE)).ready, 0)
+        self.assertEqual((await queue.counts(INDEX_RAW_STAGE)).ready, 1)
 
 
 if __name__ == "__main__":

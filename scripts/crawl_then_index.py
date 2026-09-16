@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+from pathlib import Path
 import sys
 import time
 
@@ -13,6 +14,8 @@ import redis.asyncio as redis
 
 from eng_universe.config import Settings
 from eng_universe.ingest.crawler import crawl_worker
+from eng_universe.ingest.queue import reclaim_leases, stage_queue
+from eng_universe.ingest.queue_models import CRAWL_STAGE
 from eng_universe.index.pipeline import index_worker
 
 
@@ -64,20 +67,30 @@ async def main() -> None:
             )
             for _ in range(Settings.max_workers)
         ]
+        reclaimer = asyncio.create_task(
+            reclaim_leases(redis_client, (CRAWL_STAGE,), stop_event),
+            name="crawl-reclaimer",
+        )
+        queue = stage_queue(redis_client)
         last_active = time.time()
-        while True:
-            if stop_event.is_set():
-                break
-            queue_len = await redis_client.llen(Settings.crawl_queue_key)
-            delay_len = await redis_client.zcard(Settings.crawl_delay_key)
-            if queue_len == 0 and delay_len == 0:
-                if time.time() - last_active >= max(0.0, args.idle_grace):
-                    stop_event.set()
+        try:
+            while True:
+                if stop_event.is_set():
                     break
-            else:
-                last_active = time.time()
-            await asyncio.sleep(0.5)
-        await asyncio.gather(*workers, return_exceptions=True)
+                counts = await queue.counts(CRAWL_STAGE)
+                if counts.ready == 0 and counts.leased == 0:
+                    if time.time() - last_active >= max(0.0, args.idle_grace):
+                        stop_event.set()
+                        break
+                else:
+                    last_active = time.time()
+                await asyncio.sleep(0.5)
+            await asyncio.gather(*workers, return_exceptions=True)
+        finally:
+            stop_event.set()
+            if not reclaimer.done():
+                reclaimer.cancel()
+            await asyncio.gather(reclaimer, return_exceptions=True)
 
     await index_worker()
 

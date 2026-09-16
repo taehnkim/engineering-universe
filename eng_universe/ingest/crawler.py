@@ -19,10 +19,11 @@ from eng_universe.ingest.queue import (
     dequeue,
     enqueue,
     enqueue_raw_index,
-    requeue_delayed_items,
+    fail,
+    reclaim_leases,
     stage_queue,
 )
-from eng_universe.ingest.queue_models import CRAWL_STAGE, StageLease
+from eng_universe.ingest.queue_models import CRAWL_STAGE, FailureKind, StageLease
 from eng_universe.ingest.robots import (
     can_fetch_path,
     get_or_fetch_robots,
@@ -222,7 +223,7 @@ async def upload_r2(
     item: CrawlItem,
     result: CrawlResult,
     domain: str,
-) -> bool:
+) -> bool | None:
     kind = classify_url(item.url)
     should_store = kind == UrlKind.ARTICLE
     if not should_store:
@@ -243,7 +244,7 @@ async def upload_r2(
         )
     except Exception as exc:
         log_event("r2_fail", url=item.url, error=type(exc).__name__)
-        return False
+        return None
 
     await redis_client.hset(
         f"{doc_key_prefix}{doc_id}",
@@ -282,8 +283,6 @@ async def crawl_worker(
     while True:
         if stop_event and stop_event.is_set():
             return
-        await requeue_delayed_items(redis_client)
-        await stage_queue(redis_client).reclaim_expired(CRAWL_STAGE)
         claimed = await dequeue(redis_client, worker_id=worker_id)
         if claimed is None:
             await asyncio.sleep(0.2)
@@ -301,7 +300,13 @@ async def crawl_worker(
         if domain is None:
             run = await stage_queue(redis_client).get_run(lease.run.run_id)
             if run is not None and run.state.value != "queued":
-                await acknowledge(redis_client, lease)
+                await fail(
+                    redis_client,
+                    lease,
+                    kind=FailureKind.BLOCKED,
+                    error_code="robots_denied",
+                    error_message=f"robots policy denied exact path {item.url}",
+                )
             continue
 
         # Fetch url
@@ -315,7 +320,20 @@ async def crawl_worker(
                 log_payload["error"] = str(fetch_error)
                 log_payload["error_type"] = type(fetch_error).__name__
             log_event("fail", **log_payload)
-            await acknowledge(redis_client, lease)
+            retryable = result is None or result.status == 429 or result.status >= 500
+            await fail(
+                redis_client,
+                lease,
+                kind=FailureKind.RETRYABLE
+                if retryable
+                else FailureKind.PERMANENT,
+                error_code=type(fetch_error).__name__
+                if fetch_error is not None
+                else f"http_{result.status}",
+                error_message=str(fetch_error)
+                if fetch_error is not None
+                else f"HTTP request returned {result.status}",
+            )
             continue
 
         # Parse sitemap
@@ -330,6 +348,15 @@ async def crawl_worker(
         # Store raw html to r2
         stored = await upload_r2(redis_client, doc_key_prefix, item, result, domain)
         record_crawl(domain)
+        if stored is None:
+            await fail(
+                redis_client,
+                lease,
+                kind=FailureKind.RETRYABLE,
+                error_code="r2_upload_failed",
+                error_message=f"raw HTML upload failed for {item.url}",
+            )
+            continue
         await acknowledge(redis_client, lease)
 
         # Check if max crawl limit reached
@@ -353,7 +380,7 @@ async def run_crawlers(
     prefix = doc_key_prefix or Settings.crawl_doc_key_prefix
     if max_docs is not None and max_docs <= 0:
         return
-    stop_event = asyncio.Event() if max_docs is not None else None
+    stop_event = asyncio.Event()
     counter = [0] if max_docs is not None else None
     counter_lock = asyncio.Lock() if max_docs is not None else None
     async with aiohttp.ClientSession(
@@ -373,7 +400,17 @@ async def run_crawlers(
             )
             for _ in range(Settings.max_workers)
         ]
-        await asyncio.gather(*workers)
+        reclaimer = asyncio.create_task(
+            reclaim_leases(redis_client, (CRAWL_STAGE,), stop_event),
+            name="crawl-reclaimer",
+        )
+        try:
+            await asyncio.gather(*workers)
+        finally:
+            stop_event.set()
+            if not reclaimer.done():
+                reclaimer.cancel()
+            await asyncio.gather(reclaimer, return_exceptions=True)
 
 
 async def seed_queue(seed_url: str, source: str = "seed") -> None:

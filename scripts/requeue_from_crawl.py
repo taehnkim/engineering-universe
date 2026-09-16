@@ -11,6 +11,8 @@ if str(ROOT) not in sys.path:
 import redis.asyncio as redis
 
 from eng_universe.config import Settings
+from eng_universe.ingest.queue import enqueue_raw_index, stage_queue
+from eng_universe.ingest.queue_models import INDEX_RAW_STAGE
 
 
 async def main() -> None:
@@ -20,22 +22,21 @@ async def main() -> None:
     parser.add_argument(
         "--clear",
         action="store_true",
-        help="Clear the raw queue before requeuing.",
+        help="Clear index_raw runs before requeuing.",
     )
     parser.add_argument(
         "--batch",
         type=int,
         default=1000,
-        help="Batch size for RPUSH.",
+        help="Batch size for concurrent stage enqueue.",
     )
     args = parser.parse_args()
 
     redis_client = redis.from_url(Settings.redis_url)
     if args.clear:
-        await redis_client.delete(Settings.raw_queue_key)
+        await stage_queue(redis_client).clear_stage(INDEX_RAW_STAGE)
 
     prefix = Settings.crawl_doc_key_prefix
-    queue_key = Settings.raw_queue_key
     batch: list[str] = []
     total = 0
 
@@ -48,15 +49,19 @@ async def main() -> None:
             continue
         batch.append(doc_id)
         if len(batch) >= args.batch:
-            await redis_client.rpush(queue_key, *batch)
+            await asyncio.gather(
+                *(enqueue_raw_index(redis_client, value) for value in batch)
+            )
             total += len(batch)
             batch.clear()
 
     if batch:
-        await redis_client.rpush(queue_key, *batch)
+        await asyncio.gather(
+            *(enqueue_raw_index(redis_client, value) for value in batch)
+        )
         total += len(batch)
 
-    print(f"Requeued {total} docs into {queue_key}.")
+    print(f"Requeued {total} docs into {INDEX_RAW_STAGE}.")
 
 
 if __name__ == "__main__":
