@@ -1,10 +1,10 @@
-  Key Pattern: crawl:queue
-  Type: List
-  Description: FIFO queue of URLs pending crawl
-  ────────────────────────────────────────
-  Key Pattern: crawl:delay
+  Key Pattern: eu:v1:q:ready:crawl
   Type: Sorted Set
-  Description: URLs delayed due to rate limiting, scored by next-allowed timestamp
+  Description: Crawl stage runs scored by ready time
+  ────────────────────────────────────────
+  Key Pattern: eu:v1:q:leased:crawl
+  Type: Sorted Set
+  Description: Leased crawl runs scored by lease expiry
   ────────────────────────────────────────
   Key Pattern: crawl:seen
   Type: Set
@@ -18,9 +18,13 @@
   Type: Hash
   Description: Metadata for a crawled page (url, domain, paths, status, etc.)
   ────────────────────────────────────────
-  Key Pattern: raw:queue
-  Type: List
-  Description: Queue of doc IDs waiting to be indexed
+  Key Pattern: eu:v1:q:ready:index_raw
+  Type: Sorted Set
+  Description: Raw-index stage runs scored by ready time
+  ────────────────────────────────────────
+  Key Pattern: eu:v1:q:leased:index_raw
+  Type: Sorted Set
+  Description: Leased raw-index runs scored by lease expiry
   ────────────────────────────────────────
   Key Pattern: robots:{domain}
   Type: Hash

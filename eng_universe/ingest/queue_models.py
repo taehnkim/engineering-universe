@@ -12,9 +12,12 @@ from urllib.parse import urlsplit
 
 from eng_universe.ingest.contracts import JsonValue, StageStatus
 
-QUEUE_SCHEMA_VERSION = "1"
+QUEUE_SCHEMA_VERSION = "2"
 QUEUE_NAMESPACE = "eu:v1"
 FETCH_RAW_STAGE = "fetch_raw"
+CRAWL_STAGE = "crawl"
+INDEX_RAW_STAGE = "index_raw"
+DEFAULT_MAX_ATTEMPTS = 5
 
 
 class FailureKind(str, Enum):
@@ -174,10 +177,6 @@ class StageRunRecord:
     def __post_init__(self) -> None:
         if not self.run_id:
             raise ValueError("run_id must not be empty")
-        if self.schema_version != QUEUE_SCHEMA_VERSION:
-            raise ValueError(
-                f"unsupported queue schema version {self.schema_version!r}"
-            )
         if self.max_attempts < 1:
             raise ValueError("max_attempts must be at least 1")
         if self.attempt_count < 0:

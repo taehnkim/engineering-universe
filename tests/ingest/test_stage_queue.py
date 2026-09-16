@@ -2,11 +2,9 @@ import asyncio
 import unittest
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
-from unittest.mock import patch
 
 import fakeredis.aioredis as fakeredis
 
-from eng_universe.config import Settings
 from eng_universe.ingest.contracts import (
     JsonValue,
     StageIdentity,
@@ -67,12 +65,52 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         result = await self.queue.enqueue(request_for("doc-1"))
 
         self.assertTrue(result.created)
-        self.assertEqual(result.run.schema_version, "1")
+        self.assertEqual(result.run.schema_version, "2")
         self.assertEqual(result.run.state, StageStatus.QUEUED)
         self.assertEqual(result.run.input_payload, {"id": "doc-1"})
         self.assertTrue(
             self.queue.keys.run(result.run.run_id).startswith("eu:test:v1:run:")
         )
+
+    async def test_older_schema_record_does_not_crash_claim(self) -> None:
+        result = await self.queue.enqueue(request_for("doc-1"))
+        await self.redis.hset(
+            self.queue.keys.run(result.run.run_id),
+            "schema_version",
+            "1",
+        )
+
+        lease = await self.queue.claim("parse_article", worker_id="worker-1")
+
+        self.assertIsNotNone(lease)
+        assert lease is not None
+        self.assertEqual(lease.run.schema_version, "1")
+
+    async def test_older_schema_lease_does_not_crash_reclaimer(self) -> None:
+        result = await self.queue.enqueue(request_for("doc-1"), max_attempts=2)
+        lease = await self.queue.claim(
+            "parse_article",
+            worker_id="worker-1",
+            lease_ms=10,
+        )
+        self.assertIsNotNone(lease)
+        await self.redis.hset(
+            self.queue.keys.run(result.run.run_id),
+            "schema_version",
+            "1",
+        )
+        await asyncio.sleep(0.02)
+
+        reclaimed = await self.queue.reclaim_expired(
+            "parse_article",
+            retry_delay_ms=0,
+        )
+        recovered = await self.queue.claim("parse_article", worker_id="worker-2")
+
+        self.assertEqual(reclaimed, 1)
+        self.assertIsNotNone(recovered)
+        assert recovered is not None
+        self.assertEqual(recovered.run.schema_version, "1")
 
     def test_origin_identity_normalizes_ports_and_ipv6(self) -> None:
         self.assertEqual(
@@ -102,7 +140,6 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len({result.run.run_id for result in results}), 1)
         counts = await self.queue.counts("parse_article")
         self.assertEqual(counts.ready, 1)
-
 
     async def test_concurrent_claims_have_no_duplicates_or_loss(self) -> None:
         total = 250
@@ -135,17 +172,27 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         first = await self.queue.claim("parse_article", worker_id="worker-1")
         self.assertIsNotNone(first)
         assert first is not None
+        before_failure_ms = await self.queue.server_time_ms()
 
         failed = await self.queue.fail(
             first,
             kind=FailureKind.RETRYABLE,
             error_code="timeout",
             error_message="request timed out",
-            retry_delay_ms=0,
+            retry_delay_ms=50,
         )
-        self.assertEqual(failed.state, StageStatus.RETRY_WAIT)
+        self.assertEqual(failed.state, StageStatus.QUEUED)
         self.assertEqual(failed.run_id, enqueued.run.run_id)
+        self.assertEqual(failed.attempt_count, 1)
+        self.assertGreaterEqual(failed.due_at_ms, before_failure_ms + 50)
+        self.assertEqual(failed.error_class, FailureKind.RETRYABLE.value)
+        self.assertEqual(failed.error_code, "timeout")
+        self.assertEqual(failed.error_message, "request timed out")
+        self.assertIsNone(
+            await self.queue.claim("parse_article", worker_id="worker-too-early")
+        )
 
+        await asyncio.sleep(0.06)
         second = await self.queue.claim("parse_article", worker_id="worker-2")
         self.assertIsNotNone(second)
         assert second is not None
@@ -406,6 +453,99 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         assert next_lease is not None
         self.assertNotEqual(next_lease.run.origin_id, first.run.origin_id)
 
+    async def test_future_enqueue_does_not_delay_ready_same_origin_run(self) -> None:
+        ready = await self.queue.enqueue(
+            request_for(
+                "ready",
+                stage_name=FETCH_RAW_STAGE,
+                url="https://same.example/ready",
+            ),
+        )
+        now = await self.queue.server_time_ms()
+        await self.queue.enqueue(
+            request_for(
+                "future",
+                stage_name=FETCH_RAW_STAGE,
+                url="https://same.example/future",
+            ),
+            due_at_ms=now + 1_000,
+        )
+
+        lease = await self.queue.claim(FETCH_RAW_STAGE, worker_id="worker-1")
+
+        self.assertIsNotNone(lease)
+        assert lease is not None
+        self.assertEqual(lease.run.run_id, ready.run.run_id)
+
+    async def test_retry_does_not_delay_ready_same_origin_run(self) -> None:
+        first = await self.queue.enqueue(
+            request_for(
+                "first",
+                stage_name=FETCH_RAW_STAGE,
+                url="https://same.example/first",
+            ),
+        )
+        second = await self.queue.enqueue(
+            request_for(
+                "second",
+                stage_name=FETCH_RAW_STAGE,
+                url="https://same.example/second",
+            ),
+        )
+        lease = await self.queue.claim(FETCH_RAW_STAGE, worker_id="worker-1")
+        self.assertIsNotNone(lease)
+        assert lease is not None
+
+        await self.queue.fail(
+            lease,
+            kind=FailureKind.RETRYABLE,
+            error_code="timeout",
+            error_message="request timed out",
+            retry_delay_ms=1_000,
+        )
+        next_lease = await self.queue.claim(FETCH_RAW_STAGE, worker_id="worker-2")
+
+        self.assertIsNotNone(next_lease)
+        assert next_lease is not None
+        self.assertIn(next_lease.run.run_id, {first.run.run_id, second.run.run_id})
+        self.assertNotEqual(next_lease.run.run_id, lease.run.run_id)
+
+    async def test_reclaim_does_not_delay_ready_same_origin_run(self) -> None:
+        first = await self.queue.enqueue(
+            request_for(
+                "first",
+                stage_name=FETCH_RAW_STAGE,
+                url="https://same.example/first",
+            ),
+        )
+        second = await self.queue.enqueue(
+            request_for(
+                "second",
+                stage_name=FETCH_RAW_STAGE,
+                url="https://same.example/second",
+            ),
+        )
+        lease = await self.queue.claim(
+            FETCH_RAW_STAGE,
+            worker_id="worker-1",
+            lease_ms=10,
+        )
+        self.assertIsNotNone(lease)
+        assert lease is not None
+        await asyncio.sleep(0.02)
+
+        reclaimed = await self.queue.reclaim_expired(
+            FETCH_RAW_STAGE,
+            retry_delay_ms=1_000,
+        )
+        next_lease = await self.queue.claim(FETCH_RAW_STAGE, worker_id="worker-2")
+
+        self.assertEqual(reclaimed, 1)
+        self.assertIsNotNone(next_lease)
+        assert next_lease is not None
+        self.assertIn(next_lease.run.run_id, {first.run.run_id, second.run.run_id})
+        self.assertNotEqual(next_lease.run.run_id, lease.run.run_id)
+
     async def test_queue_holds_more_than_ten_thousand_ready_runs(self) -> None:
         total = 10_001
         batch_size = 200
@@ -420,37 +560,50 @@ class StageQueueTests(unittest.IsolatedAsyncioTestCase):
         counts = await self.queue.counts("parse_article")
         self.assertEqual(counts.ready, total)
 
+    async def test_succeeded_run_and_idempotency_pointer_do_not_expire(self) -> None:
+        request = request_for("ttl-ok")
+        enqueued = await self.queue.enqueue(request)
+        lease = await self.queue.claim(
+            enqueued.run.stage_name,
+            worker_id="worker-1",
+        )
+        self.assertIsNotNone(lease)
+        assert lease is not None
+        await self.queue.complete(lease, output={"ok": True})
+        ttl = await self.redis.ttl(self.queue.keys.run(enqueued.run.run_id))
+        self.assertEqual(ttl, -1)
 
-    async def test_complete_sets_ttl_on_succeeded_runs_only(self) -> None:
-        with patch.object(Settings, "stage_succeeded_run_ttl_s", 3600):
-            enqueued = await self.queue.enqueue(request_for("ttl-ok"))
-            lease = await self.queue.claim(
-                enqueued.run.stage_name,
-                worker_id="worker-1",
-            )
-            self.assertIsNotNone(lease)
-            assert lease is not None
-            await self.queue.complete(lease, output={"ok": True})
-            ttl = await self.redis.ttl(self.queue.keys.run(enqueued.run.run_id))
-            self.assertGreater(ttl, 0)
-            self.assertLessEqual(ttl, 3600)
+        duplicate = await self.queue.enqueue(request)
+        self.assertFalse(duplicate.created)
+        self.assertEqual(duplicate.run.run_id, enqueued.run.run_id)
+        self.assertEqual(duplicate.run.state, StageStatus.SUCCEEDED)
 
-        failed = await self.queue.enqueue(request_for("ttl-fail"), max_attempts=1)
-        fail_lease = await self.queue.claim(
-            failed.run.stage_name,
+    async def test_defer_is_token_fenced_and_not_claimable_before_due(self) -> None:
+        result = await self.queue.enqueue(request_for("delayed"))
+        lease = await self.queue.claim(result.run.stage_name, worker_id="worker-1")
+        self.assertIsNotNone(lease)
+        assert lease is not None
+        due_at_ms = await self.queue.server_time_ms() + 50
+
+        stale = replace(lease, token="stale-token")
+        with self.assertRaises(LeaseLostError):
+            await self.queue.defer(stale, due_at_ms=due_at_ms)
+        self.assertIsNone(
+            await self.queue.claim(result.run.stage_name, worker_id="worker-2")
+        )
+
+        deferred = await self.queue.defer(lease, due_at_ms=due_at_ms)
+        self.assertEqual(deferred.state, StageStatus.QUEUED)
+        self.assertGreaterEqual(deferred.due_at_ms, due_at_ms)
+        self.assertIsNone(
+            await self.queue.claim(result.run.stage_name, worker_id="worker-2")
+        )
+        await asyncio.sleep(0.06)
+        recovered = await self.queue.claim(
+            result.run.stage_name,
             worker_id="worker-2",
         )
-        self.assertIsNotNone(fail_lease)
-        assert fail_lease is not None
-        await self.queue.fail(
-            fail_lease,
-            kind=FailureKind.PERMANENT,
-            error_code="boom",
-            error_message="permanent",
-        )
-        fail_ttl = await self.redis.ttl(self.queue.keys.run(failed.run.run_id))
-        self.assertEqual(fail_ttl, -1)
-
+        self.assertIsNotNone(recovered)
 
 
 if __name__ == "__main__":

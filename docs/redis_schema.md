@@ -5,12 +5,15 @@ search uses a local PLAID index on disk instead of RediSearch.
 
 ## Keys
 
-- `crawl:queue` list of URL events (`url\\tsource\\tdepth`).
-- `crawl:delay` sorted set for delayed URLs (score = next_allowed_ts).
+- `eu:v1:q:ready:crawl` sorted set of ready and delayed crawl runs.
+- `eu:v1:q:leased:crawl` sorted set of leased crawl runs.
+- `eu:v1:q:ready:index_raw` sorted set of crawl documents ready for indexing.
+- `eu:v1:q:leased:index_raw` sorted set of leased raw-index runs.
+- `eu:v1:run:{run_id}` hash of stage input, state, attempts, and lease data.
+- `eu:v1:idem:{digest}` string that maps semantic work to its canonical run.
 - `crawl:seen` set of normalized URLs that were enqueued.
 - `crawl:doc_seq` integer sequence for crawl doc IDs.
 - `crawl:doc:{doc_id}` hash of crawl metadata (url, domain, depth, status, raw_key, clean_key).
-- `raw:queue` list of crawl document IDs ready for indexing.
 - `doc:{doc_id}` hash of indexed document fields.
 - `robots:{domain}` hash of robots rules.
 - `robots:next_allowed:{domain}` string unix timestamp.

@@ -60,6 +60,12 @@ Reset crawl queues and seen state for a fresh test:
 uv run python scripts/clear_crawl.py
 ```
 
+## Redis ingestion queue
+
+- `uv run eng-universe ingest enqueue-fetch <url> --config-version <version>` enqueues one `fetch_raw` run for debugging.
+- `uv run eng-universe ingest run-fetch-worker` runs the Redis-backed fetch worker until it receives a stop signal.
+- `LIVE_REDIS_URL=redis://default:devpass@localhost:6379/0 uv run pytest tests/ingest/test_live_redis_smoke.py` runs the isolated live-Redis smoke test.
+
 ## Docker
 
 - `docker compose --profile api up` - API + Redis
