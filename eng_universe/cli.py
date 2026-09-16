@@ -26,6 +26,11 @@ from eng_universe.ingest.queue_models import (
 )
 from eng_universe.ingest.sources import all_seed_urls
 from eng_universe.ingest.stage_queue import StageQueue
+from eng_universe.ingest.tui.runner import (
+    run_crawl_with_tui,
+    run_monitor,
+    should_open_tui,
+)
 from eng_universe.monitoring.logging_utils import get_event_logger
 from eng_universe.monitoring.metrics_server import run_metrics_server
 
@@ -92,6 +97,20 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help="Number of crawler workers to run (default: MAX_WORKERS)",
+    )
+    crawl_parser.add_argument(
+        "--no-tui",
+        action="store_true",
+        help="Skip the live crawl monitor TUI (default: open TUI on a TTY)",
+    )
+    monitor_parser = sub.add_parser(
+        "crawl-monitor",
+        help="Open the crawl queue monitor TUI without starting workers",
+    )
+    monitor_parser.add_argument(
+        "--stage",
+        default="crawl",
+        help="Stage name to monitor (default: crawl)",
     )
     sub.add_parser("index", help="Run indexer workers")
     sub.add_parser("init-index", help="Initialize search index")
@@ -230,7 +249,13 @@ def main(argv: Sequence[str] | None = None) -> None:
     if args.command == "crawl":
         if args.concurrency is not None:
             Settings.max_workers = max(1, args.concurrency)
-        asyncio.run(run_crawlers(max_docs=args.max_docs))
+        if should_open_tui(no_tui=args.no_tui):
+            asyncio.run(run_crawl_with_tui(max_docs=args.max_docs))
+        else:
+            asyncio.run(run_crawlers(max_docs=args.max_docs))
+        return
+    if args.command == "crawl-monitor":
+        asyncio.run(run_monitor(stage=args.stage))
         return
     if args.command == "index":
         asyncio.run(index_worker())
