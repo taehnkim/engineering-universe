@@ -17,6 +17,7 @@ from eng_universe.ingest.contracts import (
     canonical_json,
 )
 from eng_universe.ingest.queue_models import (
+    DEFAULT_MAX_ATTEMPTS,
     FETCH_RAW_STAGE,
     QUEUE_SCHEMA_VERSION,
     EnqueueResult,
@@ -145,7 +146,7 @@ class StageQueue:
         *,
         run_id: str | None = None,
         due_at_ms: int = 0,
-        max_attempts: int = 5,
+        max_attempts: int = DEFAULT_MAX_ATTEMPTS,
         origin: Origin | None = None,
         origin_max_inflight: int = 1,
         origin_interval_ms: int = 0,
@@ -311,7 +312,6 @@ class StageQueue:
                 token,
                 lease_ms,
                 attempt_id,
-                QUEUE_SCHEMA_VERSION,
             ],
         )
         if _first_integer(response) == 0:
@@ -370,7 +370,6 @@ class StageQueue:
                             token,
                             lease_ms,
                             attempt_id,
-                            QUEUE_SCHEMA_VERSION,
                             self.origin_busy_delay_ms,
                         ],
                     )
@@ -494,8 +493,6 @@ class StageQueue:
                 error_code[:128],
                 error_message[:2048],
                 delay,
-                QUEUE_SCHEMA_VERSION,
-                lease.run.attempt_id or "",
                 origin_id,
                 origin_backoff_ms,
             ],
@@ -564,7 +561,6 @@ class StageQueue:
                     run.lease_owner or "",
                     run.lease_token or "",
                     retry_delay_ms,
-                    QUEUE_SCHEMA_VERSION,
                     run.attempt_id,
                     origin_id,
                 ],

@@ -2,11 +2,11 @@ import asyncio
 import os
 import unittest
 import uuid
+from dataclasses import dataclass
 
 import redis.asyncio as redis
 
-from eng_universe.ingest.application import enqueue_fetch
-from eng_universe.ingest.contracts import StageStatus
+from eng_universe.ingest.contracts import JsonValue, StageIdentity, StageRequest, StageStatus
 from eng_universe.ingest.queue_models import (
     FETCH_RAW_STAGE,
     FailureKind,
@@ -15,6 +15,16 @@ from eng_universe.ingest.queue_models import (
 from eng_universe.ingest.stage_queue import StageQueue
 
 LIVE_REDIS_URL = os.getenv("LIVE_REDIS_URL")
+
+
+@dataclass(frozen=True)
+class SmokeFetchInput:
+    """Provides one URL for the live Redis smoke test."""
+
+    url: str
+
+    def idempotency_payload(self) -> dict[str, JsonValue]:
+        return {"url": self.url}
 
 
 @unittest.skipUnless(LIVE_REDIS_URL, "LIVE_REDIS_URL is not set")
@@ -38,10 +48,13 @@ class LiveRedisQueueSmokeTests(unittest.IsolatedAsyncioTestCase):
         await self.redis.aclose()
 
     async def test_queued_retry_is_claimable_only_when_due(self) -> None:
-        await enqueue_fetch(
-            self.queue,
-            "https://example.com/article",
+        request = StageRequest(
+            identity=StageIdentity(name=FETCH_RAW_STAGE, version="1.0.0"),
+            stage_input=SmokeFetchInput("https://example.com/article"),
             config_version="smoke-1",
+        )
+        await self.queue.enqueue(
+            request,
             max_attempts=2,
         )
         first = await self.queue.claim(FETCH_RAW_STAGE, worker_id="smoke-1")

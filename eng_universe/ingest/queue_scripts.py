@@ -53,9 +53,10 @@ if ARGV[12] ~= "" then
     redis.call("HSETNX", KEYS[7], "inflight", 0)
     redis.call("ZADD", KEYS[5], due_at, ARGV[2])
 
+    local next_item = redis.call("ZRANGE", KEYS[5], 0, 0, "WITHSCORES")
     local next_allowed = tonumber(redis.call("HGET", KEYS[6], "next_allowed_ms") or "0")
     local backoff_until = tonumber(redis.call("HGET", KEYS[6], "backoff_until_ms") or "0")
-    local origin_due = math.max(due_at, next_allowed, backoff_until)
+    local origin_due = math.max(tonumber(next_item[2]), next_allowed, backoff_until)
     redis.call("ZADD", KEYS[4], origin_due, ARGV[12])
 end
 
@@ -160,7 +161,7 @@ local global_max_inflight = tonumber(
 local next_allowed = tonumber(redis.call("HGET", KEYS[7], "next_allowed_ms") or "0")
 local backoff_until = tonumber(redis.call("HGET", KEYS[7], "backoff_until_ms") or "0")
 if inflight >= max_inflight or global_inflight >= global_max_inflight then
-    schedule_origin(now + tonumber(ARGV[8]))
+    schedule_origin(now + tonumber(ARGV[7]))
     return {0}
 end
 if next_allowed > now or backoff_until > now then
@@ -289,7 +290,7 @@ return {1, now}
 
 FAIL_RUN = r"""
 local function schedule_origin(now)
-    if ARGV[10] == "" then
+    if ARGV[8] == "" then
         return
     end
     local inflight = tonumber(redis.call("HGET", KEYS[9], "inflight") or "0")
@@ -301,8 +302,8 @@ local function schedule_origin(now)
         redis.call("HSET", KEYS[10], "inflight", global_inflight - 1)
     end
     local backoff_until = tonumber(redis.call("HGET", KEYS[9], "backoff_until_ms") or "0")
-    if tonumber(ARGV[11]) > 0 then
-        backoff_until = math.max(backoff_until, now + tonumber(ARGV[11]))
+    if tonumber(ARGV[9]) > 0 then
+        backoff_until = math.max(backoff_until, now + tonumber(ARGV[9]))
     end
     redis.call(
         "HSET",
@@ -313,7 +314,7 @@ local function schedule_origin(now)
     )
     local next_item = redis.call("ZRANGE", KEYS[8], 0, 0, "WITHSCORES")
     if #next_item == 0 then
-        redis.call("ZREM", KEYS[7], ARGV[10])
+        redis.call("ZREM", KEYS[7], ARGV[8])
         return
     end
     local next_allowed = tonumber(redis.call("HGET", KEYS[9], "next_allowed_ms") or "0")
@@ -321,7 +322,7 @@ local function schedule_origin(now)
         "ZADD",
         KEYS[7],
         math.max(tonumber(next_item[2]), next_allowed, backoff_until),
-        ARGV[10]
+        ARGV[8]
     )
 end
 
@@ -336,7 +337,6 @@ local clock = redis.call("TIME")
 local now = (tonumber(clock[1]) * 1000) + math.floor(tonumber(clock[2]) / 1000)
 redis.call("ZREM", KEYS[1], ARGV[1])
 redis.call("HDEL", KEYS[2], "lease_owner", "lease_token", "lease_until_ms")
-schedule_origin(now)
 
 local attempt_count = tonumber(redis.call("HGET", KEYS[2], "attempt_count") or "0")
 local max_attempts = tonumber(redis.call("HGET", KEYS[2], "max_attempts") or "1")
@@ -352,20 +352,14 @@ if ARGV[4] == "retryable" and attempt_count < max_attempts then
         "error_message", ARGV[6]
     )
     redis.call("ZADD", KEYS[4], retry_at, ARGV[1])
-    if ARGV[10] ~= "" then
+    if ARGV[8] ~= "" then
         redis.call("ZADD", KEYS[8], retry_at, ARGV[1])
-        local next_allowed = tonumber(redis.call("HGET", KEYS[9], "next_allowed_ms") or "0")
-        local backoff_until = tonumber(redis.call("HGET", KEYS[9], "backoff_until_ms") or "0")
-        redis.call(
-            "ZADD",
-            KEYS[7],
-            math.max(retry_at, next_allowed, backoff_until),
-            ARGV[10]
-        )
     end
+    schedule_origin(now)
     return {1, "queued", retry_at}
 end
 
+schedule_origin(now)
 local terminal_state = "failed"
 local terminal_key = KEYS[5]
 if ARGV[4] == "blocked" then
@@ -388,7 +382,7 @@ return {1, terminal_state, now}
 
 RECLAIM_RUN = r"""
 local function schedule_origin(now)
-    if ARGV[7] == "" then
+    if ARGV[6] == "" then
         return
     end
     local inflight = tonumber(redis.call("HGET", KEYS[9], "inflight") or "0")
@@ -400,6 +394,19 @@ local function schedule_origin(now)
         redis.call("HSET", KEYS[10], "inflight", global_inflight - 1)
     end
     redis.call("HSET", KEYS[9], "inflight", inflight, "last_released_at_ms", now)
+    local next_item = redis.call("ZRANGE", KEYS[8], 0, 0, "WITHSCORES")
+    if #next_item == 0 then
+        redis.call("ZREM", KEYS[7], ARGV[6])
+        return
+    end
+    local next_allowed = tonumber(redis.call("HGET", KEYS[9], "next_allowed_ms") or "0")
+    local backoff_until = tonumber(redis.call("HGET", KEYS[9], "backoff_until_ms") or "0")
+    redis.call(
+        "ZADD",
+        KEYS[7],
+        math.max(tonumber(next_item[2]), next_allowed, backoff_until),
+        ARGV[6]
+    )
 end
 
 local state = redis.call("HGET", KEYS[2], "state")
@@ -409,7 +416,7 @@ if state ~= "leased" and state ~= "running" then
 end
 if redis.call("HGET", KEYS[2], "lease_owner") ~= ARGV[2]
     or redis.call("HGET", KEYS[2], "lease_token") ~= ARGV[3]
-    or redis.call("HGET", KEYS[2], "attempt_id") ~= ARGV[6] then
+    or redis.call("HGET", KEYS[2], "attempt_id") ~= ARGV[5] then
     return {0}
 end
 
@@ -422,7 +429,6 @@ end
 
 redis.call("ZREM", KEYS[1], ARGV[1])
 redis.call("HDEL", KEYS[2], "lease_owner", "lease_token", "lease_until_ms")
-schedule_origin(now)
 
 local attempt_count = tonumber(redis.call("HGET", KEYS[2], "attempt_count") or "0")
 local max_attempts = tonumber(redis.call("HGET", KEYS[2], "max_attempts") or "1")
@@ -438,20 +444,14 @@ if attempt_count < max_attempts then
         "error_message", "worker lease expired"
     )
     redis.call("ZADD", KEYS[4], retry_at, ARGV[1])
-    if ARGV[7] ~= "" then
+    if ARGV[6] ~= "" then
         redis.call("ZADD", KEYS[8], retry_at, ARGV[1])
-        local next_allowed = tonumber(redis.call("HGET", KEYS[9], "next_allowed_ms") or "0")
-        local backoff_until = tonumber(redis.call("HGET", KEYS[9], "backoff_until_ms") or "0")
-        redis.call(
-            "ZADD",
-            KEYS[7],
-            math.max(retry_at, next_allowed, backoff_until),
-            ARGV[7]
-        )
     end
+    schedule_origin(now)
     return {1, "queued", retry_at}
 end
 
+schedule_origin(now)
 redis.call(
     "HSET",
     KEYS[2],

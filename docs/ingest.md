@@ -145,8 +145,7 @@ A lease token must match before a completion or failure releases an origin slot.
 `worker.py` runs asynchronous handler pools and heartbeats active leases.
 Handlers are plain async functions. `StageError(kind=...)` selects retryable, permanent, or blocked outcomes.
 `fetch_worker.py` exposes `run_fetch_worker()` as the single fetch composition root.
-`application.py` builds the configured queue and the `fetch_raw` request.
-`eng_universe.cli` exposes that application through the installed `eng-universe` command.
+`eng_universe.cli` exposes it through the installed `eng-universe` command.
 
 ```text
 Settings (env)
@@ -164,17 +163,12 @@ run_fetch_worker(queue, stop)        fn: lease + session + pool
 
 ```text
 enqueue → queued + due_at_ms ──due claim──► leased ──heartbeat──► running
-              ▲                                │                      │
-              │                                └──── fail/reclaim ────┤
-              │                                                       │
-              └──── retryable + attempts left + future due_at_ms ─────┘
-                                                                      │
-                                              complete ──► succeeded  │
-                                              permanent/exhausted ◄───┤
-                                                    │                 │
-                                                    ▼                 │
-                                              failed (dead)           │
-                                              blocked ◄───────────────┘
+              ▲                                │                     │
+              └──────── retryable/reclaim ─────┴─────────────────────┘
+
+leased/running ──complete──────────────► succeeded
+leased/running ──permanent/exhausted───► failed (dead)
+leased/running ──blocked───────────────► blocked
 ```
 
 Lease expiry (watchdog reclaim):
@@ -231,27 +225,10 @@ Redis AOF is enabled with `appendfsync everysec`, and the Redis `/data` director
 
 Succeeded run hashes receive a TTL (`STAGE_SUCCEEDED_RUN_TTL_S`, default 7 days). Failed, dead, and blocked runs keep no TTL so operators can inspect them.
 
-Queue record schema version 2 removes the separate retry-wait state.
-Schema version 1 run hashes are not read as version 2 records.
-PR #3 had no application entrypoint, so this change does not add an in-place data migration.
-Clear an experimental version 1 namespace before using the new entrypoint.
+New queue records use schema version 2, which removes the separate retry-wait state.
 
 ## Boundaries
 
 The contract module has no Redis, HTTP, R2, database, or model client.
 Tests can use it without infrastructure.
-The queue is Redis-only and stores no raw artifact body.
-Artifact publication and downstream stage scheduling remain separate concerns.
-
-This change adds only these application commands:
-
-```text
-eng-universe ingest enqueue-fetch <url> --config-version <version>
-eng-universe ingest run-fetch-worker
-```
-
-The enqueue command writes only Redis queue state.
-The worker command exposes the existing `fetch_raw` handler.
-Publishing HTTP response bytes to R2 and publishing Redis artifact records remain deferred.
-The legacy `seed`, `crawl`, and `index` paths remain separate.
-This change does not add dual writes, migration, or legacy cutover.
+The queue stores run state in Redis and passes large content through artifact references.
