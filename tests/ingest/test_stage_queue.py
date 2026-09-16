@@ -2,6 +2,7 @@ import asyncio
 import unittest
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
+
 import fakeredis.aioredis as fakeredis
 
 from eng_universe.ingest.contracts import (
