@@ -11,6 +11,21 @@ import redis.asyncio as redis
 from eng_universe.config import Settings
 
 
+# RESERVE_NEXT_ALLOWED — atomically reserve the next allowed crawl time for a domain.
+RESERVE_NEXT_ALLOWED = r"""
+-- Reserve the next allowed crawl time when the current window has passed.
+local now = tonumber(ARGV[1])
+local delay = tonumber(ARGV[2])
+local current = tonumber(redis.call("GET", KEYS[1]) or "0")
+if current <= now then
+    local next_allowed = now + delay
+    redis.call("SET", KEYS[1], next_allowed)
+    return {1, next_allowed}
+end
+return {0, current}
+"""
+
+
 @dataclass
 class RobotsRules:
     """Stores parsed robots policy data for one domain."""
@@ -255,16 +270,7 @@ async def reserve_next_allowed(
 ) -> tuple[bool, int]:
     now = int(time.time())
     key = robots_next_allowed_key(domain)
-    script = """
-    local now = tonumber(ARGV[1])
-    local delay = tonumber(ARGV[2])
-    local current = tonumber(redis.call("GET", KEYS[1]) or "0")
-    if current <= now then
-        local next_allowed = now + delay
-        redis.call("SET", KEYS[1], next_allowed)
-        return {1, next_allowed}
-    end
-    return {0, current}
-    """
-    allowed, next_allowed = await redis_client.eval(script, 1, key, now, delay_s)
+    allowed, next_allowed = await redis_client.eval(
+        RESERVE_NEXT_ALLOWED, 1, key, now, delay_s
+    )
     return bool(int(allowed)), int(next_allowed)

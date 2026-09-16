@@ -13,14 +13,18 @@ from eng_universe.ingest.queue_models import FETCH_RAW_STAGE
 from eng_universe.ingest.stage_queue import StageQueue
 from eng_universe.ingest.worker import StageHandler, StageWorkerPool
 
+# _COMPARE_EXPIRE — renew a process lease only when the token matches.
 _COMPARE_EXPIRE = r"""
+-- Renew key TTL only when the holder token still matches.
 if redis.call("GET", KEYS[1]) ~= ARGV[1] then
     return 0
 end
 return redis.call("PEXPIRE", KEYS[1], ARGV[2])
 """
 
+# _COMPARE_DELETE — release a process lease only when the token matches.
 _COMPARE_DELETE = r"""
+-- Delete key only when the holder token still matches.
 if redis.call("GET", KEYS[1]) ~= ARGV[1] then
     return 0
 end

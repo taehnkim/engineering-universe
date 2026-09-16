@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+"""Redis Lua scripts for atomic stage-queue transitions (loaded via EVALSHA)."""
+
+# ENQUEUE_RUN — create run hash, idempotency key, and ready-queue membership.
 ENQUEUE_RUN = r"""
+-- Create a stage run or return an existing idempotency mapping.
 local existing = redis.call("GET", KEYS[1])
 if existing then
     return {0, existing}
@@ -62,8 +66,9 @@ end
 return {1, ARGV[2]}
 """
 
-
+# CLAIM_RUN — move one due general-stage run from ready to leased.
 CLAIM_RUN = r"""
+-- Claim one due stage run and move it from ready to leased.
 local state = redis.call("HGET", KEYS[3], "state")
 if (state == "leased" or state == "running")
     and redis.call("HGET", KEYS[3], "lease_owner") == ARGV[2]
@@ -104,8 +109,9 @@ redis.call("ZADD", KEYS[2], lease_until, ARGV[1])
 return {1, attempt, lease_until}
 """
 
-
+# CLAIM_FETCH_RUN — claim fetch_raw with origin and global concurrency limits.
 CLAIM_FETCH_RUN = r"""
+-- Claim one fetch_raw run with origin scheduling and concurrency limits.
 local function schedule_origin(not_before)
     local next_item = redis.call("ZRANGE", KEYS[2], 0, 0, "WITHSCORES")
     if #next_item == 0 then
@@ -202,8 +208,9 @@ schedule_origin(fairness_not_before)
 return {1, attempt, lease_until}
 """
 
-
+# HEARTBEAT_RUN — extend lease and mark an owned run as running.
 HEARTBEAT_RUN = r"""
+-- Extend a worker lease and mark the run as running.
 local state = redis.call("HGET", KEYS[1], "state")
 if state ~= "leased" and state ~= "running" then
     return {0}
@@ -221,8 +228,9 @@ redis.call("ZADD", KEYS[2], lease_until, ARGV[1])
 return {1, lease_until}
 """
 
-
+# COMPLETE_RUN — mark success, release origin slots, optional run TTL.
 COMPLETE_RUN = r"""
+-- Mark a leased run succeeded and release any reserved origin capacity.
 local function release_origin(now)
     if ARGV[5] == "" then
         return
@@ -286,8 +294,9 @@ end
 return {1, now}
 """
 
-
+# FAIL_RUN — retry, dead-letter, or block a failed leased run.
 FAIL_RUN = r"""
+-- Record failure and retry, dead-letter, or block the run.
 local function schedule_origin(now)
     if ARGV[10] == "" then
         return
@@ -385,8 +394,9 @@ redis.call("ZADD", terminal_key, now, ARGV[1])
 return {1, terminal_state, now}
 """
 
-
+# RECLAIM_RUN — recover expired leases into retry_wait or failed.
 RECLAIM_RUN = r"""
+-- Reclaim an expired lease and requeue or fail the run.
 local function schedule_origin(now)
     if ARGV[7] == "" then
         return
@@ -465,8 +475,9 @@ redis.call("ZADD", KEYS[5], now, ARGV[1])
 return {1, "failed", now}
 """
 
-
+# CONFIGURE_ORIGIN — update origin rate limits and reschedule fetch work.
 CONFIGURE_ORIGIN = r"""
+-- Update origin rate limits and reschedule fetch queue eligibility.
 local clock = redis.call("TIME")
 local now = (tonumber(clock[1]) * 1000) + math.floor(tonumber(clock[2]) / 1000)
 redis.call(
