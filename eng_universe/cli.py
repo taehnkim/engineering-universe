@@ -26,11 +26,23 @@ from eng_universe.ingest.queue_models import (
 )
 from eng_universe.ingest.sources import all_seed_urls
 from eng_universe.ingest.stage_queue import StageQueue
+from eng_universe.ingest.tui.app import (
+    run_crawl_with_tui,
+    run_index_with_tui,
+    run_monitor,
+)
+from eng_universe.ingest.tui.stages import MONITOR_STAGE_CHOICES, resolve_stage
 from eng_universe.monitoring.logging_utils import get_event_logger
 from eng_universe.monitoring.metrics_server import run_metrics_server
 
 log_event = get_event_logger("main")
 FETCH_RAW_IDENTITY = StageIdentity(name=FETCH_RAW_STAGE, version="1.0.0")
+
+
+def _should_open_tui(*, no_tui: bool) -> bool:
+    """Returns True when a worker command should open the monitor TUI."""
+
+    return (not no_tui) and sys.stdout.isatty()
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,9 +105,43 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Number of crawler workers to run (default: MAX_WORKERS)",
     )
-    sub.add_parser("index", help="Run indexer workers")
+    crawl_parser.add_argument(
+        "--no-tui",
+        action="store_true",
+        help="Skip the live crawl monitor TUI (default: open TUI on a TTY)",
+    )
+    monitor_parser = sub.add_parser(
+        "monitor",
+        help="Open the stage queue monitor TUI without starting workers",
+    )
+    monitor_parser.add_argument(
+        "--stage",
+        default="crawl",
+        choices=MONITOR_STAGE_CHOICES,
+        help=(
+            "Stage to monitor: crawl, or index|index_raw|clean "
+            "(clean maps to index_raw; default: crawl)"
+        ),
+    )
+    index_parser = sub.add_parser(
+        "index",
+        help="Run indexer workers (clean + index via index_raw)",
+    )
+    index_parser.add_argument(
+        "--no-tui",
+        action="store_true",
+        help="Skip the live index/clean monitor TUI (default: open TUI on a TTY)",
+    )
     sub.add_parser("init-index", help="Initialize search index")
-    sub.add_parser("reindex", help="Initialize search index and run indexer")
+    reindex_parser = sub.add_parser(
+        "reindex",
+        help="Initialize search index and run indexer",
+    )
+    reindex_parser.add_argument(
+        "--no-tui",
+        action="store_true",
+        help="Skip the live index/clean monitor TUI (default: open TUI on a TTY)",
+    )
     sub.add_parser("metrics", help="Run Prometheus metrics server")
 
     ingest_parser = sub.add_parser("ingest", help="Use the Redis ingestion queue")
@@ -194,15 +240,6 @@ async def _init_index() -> None:
         await redis_client.aclose()
 
 
-async def _reindex() -> None:
-    redis_client = redis.from_url(Settings.redis_url)
-    try:
-        await create_search_index(redis_client, "idx:blogs")
-        await index_worker()
-    finally:
-        await redis_client.aclose()
-
-
 def main(argv: Sequence[str] | None = None) -> None:
     """Runs one Engineering Universe command."""
 
@@ -230,16 +267,32 @@ def main(argv: Sequence[str] | None = None) -> None:
     if args.command == "crawl":
         if args.concurrency is not None:
             Settings.max_workers = max(1, args.concurrency)
-        asyncio.run(run_crawlers(max_docs=args.max_docs))
+        if _should_open_tui(no_tui=args.no_tui):
+            asyncio.run(run_crawl_with_tui(max_docs=args.max_docs))
+        else:
+            asyncio.run(run_crawlers(max_docs=args.max_docs))
+        return
+    if args.command == "monitor":
+        asyncio.run(run_monitor(stage=resolve_stage(args.stage)))
         return
     if args.command == "index":
-        asyncio.run(index_worker())
+        if _should_open_tui(no_tui=args.no_tui):
+            asyncio.run(run_index_with_tui())
+        else:
+            asyncio.run(index_worker())
         return
     if args.command == "init-index":
         asyncio.run(_init_index())
         return
     if args.command == "reindex":
-        asyncio.run(_reindex())
+        async def _reindex_with_optional_tui() -> None:
+            await _init_index()
+            if _should_open_tui(no_tui=args.no_tui):
+                await run_index_with_tui()
+            else:
+                await index_worker()
+
+        asyncio.run(_reindex_with_optional_tui())
         return
     if args.command == "metrics":
         run_metrics_server()
