@@ -110,23 +110,58 @@ async def index_worker(doc_key_prefix: str | None = None) -> None:
         fetched_at = _decode_int(crawl_meta.get(b"fetched_at"))
         status = _decode_int(crawl_meta.get(b"status"))
         raw_html = ""
+        r2_key_missing = False
+        r2_download_failed = False
         if r2_enabled():
             try:
-                raw_html = await asyncio.to_thread(download_text, raw_key)
+                downloaded = await asyncio.to_thread(download_text, raw_key)
+                if downloaded is None:
+                    log_event("r2_miss", doc_id=raw_doc_id, raw_key=raw_key)
+                    r2_key_missing = True
+                else:
+                    raw_html = downloaded
             except Exception as exc:
                 log_event("r2_fail", doc_id=raw_doc_id, error=type(exc).__name__)
-                raw_html = ""
+                r2_download_failed = True
         if not raw_html:
             raw_html = _read_text(raw_path)
         cleaned_html = _read_text(cleaned_path)
-        if not url or not (raw_html or cleaned_html):
-            log_event("skip", doc_id=raw_doc_id, url=url, reason="missing_html")
+        if not url:
+            log_event("skip", doc_id=raw_doc_id, url=url, reason="missing_url")
             await fail(
                 redis_client,
                 lease,
-                kind=FailureKind.RETRYABLE,
-                error_code="missing_html",
-                error_message=f"crawl HTML is missing for {raw_doc_id}",
+                kind=FailureKind.PERMANENT,
+                error_code="missing_url",
+                error_message=f"crawl url is missing for {raw_doc_id}",
+            )
+            continue
+        if not (raw_html or cleaned_html):
+            if r2_key_missing:
+                kind, code, msg = (
+                    FailureKind.PERMANENT,
+                    "r2_miss",
+                    "R2 raw object is missing",
+                )
+            elif r2_download_failed:
+                kind, code, msg = (
+                    FailureKind.RETRYABLE,
+                    "r2_download_failed",
+                    "R2 raw download failed",
+                )
+            else:
+                kind, code, msg = (
+                    FailureKind.RETRYABLE,
+                    "missing_html",
+                    "crawl HTML is missing",
+                )
+            log_event("skip", doc_id=raw_doc_id, url=url, reason=code)
+            await fail(
+                redis_client,
+                lease,
+                kind=kind,
+                error_code=code,
+                error_message=f"{msg} for {raw_doc_id}",
             )
             continue
         base_html = raw_html or cleaned_html
@@ -140,7 +175,6 @@ async def index_worker(doc_key_prefix: str | None = None) -> None:
                 "url": parsed.url,
                 "canonical_url": parsed.canonical_url,
                 "title": parsed.title,
-                "content": parsed.content,
                 "authors": parsed.authors,
                 "company": parsed.company,
                 "published_at": parsed.published_at,
@@ -154,18 +188,27 @@ async def index_worker(doc_key_prefix: str | None = None) -> None:
                 "raw_key": raw_key,
                 "clean_key": clean_key,
             }
+            upload_ok = False
             try:
-                await asyncio.to_thread(
+                upload_ok = await asyncio.to_thread(
                     upload_text,
                     parsed.content,
                     clean_key,
-                )
-                await asyncio.to_thread(
+                ) and await asyncio.to_thread(
                     upload_json,
                     index_payload,
                     f"index/{raw_doc_id}.json",
                 )
             except Exception as exc:
                 log_event("r2_fail", doc_id=raw_doc_id, error=type(exc).__name__)
+            if not upload_ok:
+                await fail(
+                    redis_client,
+                    lease,
+                    kind=FailureKind.RETRYABLE,
+                    error_code="r2_upload_failed",
+                    error_message=f"R2 clean/index upload failed for {raw_doc_id}",
+                )
+                continue
         await index_document(redis_client, parsed, source=source)
         await acknowledge(redis_client, lease)
