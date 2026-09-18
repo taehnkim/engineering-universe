@@ -1,0 +1,720 @@
+<html lang="en"><head>
+        <meta charset="utf-8">
+        
+        <title>
+            
+            Expanding our Fully Homomorphic Encryption offering
+            
+            
+            - Google Developers Blog
+            
+        </title>
+        <meta property="og:title" content="Expanding our Fully Homomorphic Encryption offering- Google Developers Blog">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+	<meta name="description" content="As part of this commitment, we open-sourced a first-of-its-kind Fully Homomorphic Encryption (FHE) t...">
+  <meta content="summary_large_image" name="twitter:card">
+  <meta content="Google for Developers Blog - News about Web, Mobile, AI and Cloud" property="twitter:title">
+  <meta property="og:title" content="Expanding our Fully Homomorphic Encryption offering">
+  <script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-H733Y2BZES&amp;cx=c&amp;gtm=4e69g1" nonce=""></script><script async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-WVTLDSL"></script><script type="text/javascript" id="www-widgetapi-script" src="https://www.youtube.com/s/player/4fd832e7/www-widgetapi.vflset/www-widgetapi.js" async="" nonce=""></script><script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [{
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Google for Developers Blog",
+      "item": "https://developers.googleblog.com/"
+    },{
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Expanding our Fully Homomorphic Encryption offering",
+      "item": "https://developers.googleblog.com/expanding-our-fully-homomorphic-encryption-offering/"
+    }]
+  }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Expanding our Fully Homomorphic Encryption offering",
+      "description": "",
+      "image": "https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/80.2e16d0ba.fill-800x400.png",
+      "datePublished": "2023-08-10",
+      "author": [
+        
+        
+          { "@type": "Person", "name": "Miguel Guevara", "url": "/search/?author=Miguel+Guevara" }
+        
+        
+      ]
+    }
+  </script>
+  
+  <meta content="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/80.2e16d0ba.fill-1200x600.png" property="og:image">
+  
+
+
+        
+        
+
+        <!-- Google Tag Manager -->
+        <script type="text/javascript" nonce="" src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/analytics.js"></script>
+        <!-- End Google Tag Manager -->
+
+        
+        <link href="//www.gstatic.com/glue/v27_1/glue.min.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/dgc_blog.css">
+        <link rel="icon" href="https://storage.googleapis.com/gweb-developer-goog-blog-assets/meta/favicon.ico" type="image/x-icon">
+        <link rel="apple-touch-icon" href="https://storage.googleapis.com/gweb-developer-goog-blog-assets/meta/apple-touch-icon.png">
+
+        
+				<link rel="preconnect" href="https://fonts.googleapis.com">
+				<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+				<link rel="preload" href="https://fonts.googleapis.com/css2?family=Product+Sans&amp;family=Google+Sans+Display:ital@0;1&amp;family=Google+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;family=Google+Sans+Text:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;display=swap" as="style">
+				<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Product+Sans&amp;family=Google+Sans+Display:ital@0;1&amp;family=Google+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;family=Google+Sans+Text:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;display=swap">
+        <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&amp;family=Google+Sans+Flex:opsz,wght@6..144,1..1000&amp;display=swap" rel="stylesheet" data-page-link="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&amp;display=swap">
+
+        
+        <link href="https://www.gstatic.com/glue/cookienotificationbar/cookienotificationbar.min.css" rel="stylesheet">
+
+        
+  <link rel="stylesheet" type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/blog_detail.css">
+  <link type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/prism.css" rel="stylesheet">
+
+    </head>
+
+    <body id="main-content" class="glue-body ">
+        <!-- Google Tag Manager (noscript) -->
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVTLDSL "
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
+
+        
+
+				
+        
+
+<!-- HTML -->
+<header class="dgc-header">
+  <div class="dgc-header-inner">
+    <button class="hamburger" aria-haspopup="true" aria-expanded="false" aria-label="Open Menu">
+      <svg role="presentation" aria-hidden="true" class="glue-icon">
+        <use href="/glue-icon/#menu"></use>
+      </svg>
+    </button>
+    <div class="product-name-wrapper">
+      <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+        <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+      </a>
+    </div>
+    <div class="desktop-nav-wrapper">
+      <div class="upper-tabs-wrapper">
+        <div class="upper-tabs">
+          <nav class="tabs" aria-label="Upper Tabs">
+            <div class="tab">
+              <a href="//developers.google.com/community" class="top-nav-title">
+                Community/Events
+              </a>
+            </div>
+            <div class="tab">
+              <a href="//developers.google.com/solutions/catalog" class="top-nav-title">
+                Learn
+              </a>
+            </div>
+            <div class="tab">
+              <a href="//developers.googleblog.com" class="top-nav-title">
+                Blog
+              </a>
+            </div>
+            <div class="tab">
+              <a href="https://www.youtube.com/user/GoogleDevelopers" class="top-nav-title">
+                YouTube
+              </a>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dgc-header-search">
+    <div class="search-wrapper glue-page">
+      <div class="glue-grid">
+        <form id="search-form" action="/search/" method="get" class="search-content glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-9-md glue-grid__col--span-7-lg">
+          <div class="search-input-wrapper">
+            <svg role="presentation" aria-hidden="true" class="glue-icon search-icon">
+              <use href="/glue-icon/#search"></use>
+            </svg>
+            <input type="text" name="query" placeholder="Search all articles..." aria-label="Search" class="search-input-field">
+          </div>
+          <button class="glue-button glue-button--high-emphasis">
+            Search
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-drawer" top-level-nav="">
+  <nav class="nav-content" aria-label="Side menu">
+    <div class="mobile-header">
+      <button class="nav-close-btn nav-btn" aria-label="Close navigation">
+        <svg role="presentation" aria-hidden="true" class="glue-icon">
+          <use href="/glue-icon/#close"></use>
+        </svg>
+      </button>
+      <button class="nav-back-btn nav-btn hidden" aria-label="Back to Menu">
+        <svg role="presentation" aria-hidden="true" class="glue-icon">
+          <use href="/glue-icon/#arrow-back"></use>
+        </svg>
+      </button>
+      <div class="product-name-wrapper">
+        <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+          <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+        </a>
+      </div>
+    </div>
+    <div class="nav-wrapper">
+      <div class="mobile-nav-top">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="//developers.google.com/community" class="nav-title" data-label="Tab: Community/Events">
+              <span class="nav-text" tooltip="">
+                Community/Events
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="//developers.google.com/solutions/catalog" class="nav-title" data-label="Tab: Learn">
+              <span class="nav-text" tooltip="">
+                Learn
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="//developers.googleblog.com" class="nav-title" data-label="Tab: Blog">
+              <span class="nav-text" tooltip="">
+                Blog
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="https://www.youtube.com/user/GoogleDevelopers" class="nav-title" data-label="Tab: YouTube">
+              <span class="nav-text" tooltip="">
+                YouTube
+             </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<div class="backdrop"></div>
+
+        
+  <div class="blog-detail-container">
+
+    
+      <section class="tags-container glue-page glue-spacer-5-top">
+        <div class="glue-eyebrow"></div>
+      </section>
+    
+
+    <section class="heading-container glue-page  glue-spacer-5-top">
+      <h1 class="glue-headline glue-headline--headline-1">Expanding our Fully Homomorphic Encryption offering</h1>
+    </section>
+
+    <section class="summary-container glue-page glue-spacer-4-top">
+      <div class="date-time">
+        <div class="published-date glue-font-weight-medium">AUG. 10, 2023</div>
+      </div>
+    </section>
+
+    <section class="glue-page glue-grid glue-spacer-1-top">
+
+      <section class="author-container glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-10-md">
+      
+        
+          <div class="author-obj">
+            <a class="glue-font-weight-medium" href="/search/?author=Miguel+Guevara">Miguel Guevara</a>
+            
+              <span class="glue-font-weight-medium role">Product Manager</span>
+            
+            
+              <span class="glue-font-weight-medium team">Privacy Safety and Security</span>
+            
+          </div>
+        
+
+      
+      </section>
+      <section class="social-container glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-2-md">
+        <button id="social-button" class="glue-button glue-button--low-emphasis glue-button--icon" aria-haspopup="true" aria-expanded="false">
+          <svg role="presentation" aria-hidden="true" class="glue-icon">
+            <use href="/glue-icon/#share"></use>
+          </svg>
+          <span>Share</span>
+        </button>
+        <ul id="social-menu" class="glue-elevation-level-1" role="menu" aria-labelledby="social-button">
+          <li>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=https://developers.googleblog.com/expanding-our-fully-homomorphic-encryption-offering/" title="Share on Facebook" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#post-facebook"></use>
+              </svg>
+              <span>Facebook</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://twitter.com/intent/tweet?text=https://developers.googleblog.com/expanding-our-fully-homomorphic-encryption-offering/" title="Share on Twitter" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#twitter-x"></use>
+              </svg>
+              <span>Twitter</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://www.linkedin.com/shareArticle?url=https://developers.googleblog.com/expanding-our-fully-homomorphic-encryption-offering/&amp;mini=true" title="Share on LinkedIn" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#post-linkedin"></use>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
+          </li>
+          <li>
+            <a href="mailto:name@example.com?subject=Check%20out%20this%20site&amp;body=Check%20out%20https://developers.googleblog.com/expanding-our-fully-homomorphic-encryption-offering/" title="Send via Email">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#email"></use>
+              </svg>
+              <span>Mail</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" title="Get shareable link" data-link="https://developers.googleblog.com/expanding-our-fully-homomorphic-encryption-offering/" data-copy-text="Copy Link" data-copied-text="Copied!">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#link"></use>
+              </svg>
+              <span></span>
+            </a>
+          </li>
+        </ul>
+      </section>
+    </section>
+
+    
+    <section class="blocks-container glue-page glue-spacer-3-top">
+      <div class="block">
+          
+
+<img class="banner-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/HEADER-G4D-20An20Update20on20our20FHE20work.original.png" alt="HEADER-G4D-%20An%20Update%20on%20our%20FHE%20work.png">  <div class="inner-block-content rich-content">
+    <p data-block-key="wh4cf">As part of this commitment, we open-sourced a first-of-its-kind Fully Homomorphic Encryption (FHE) transpiler&nbsp;<a href="https://developers.googleblog.com/2021/06/our-latest-updates-on-fully-homomorphic-encryption.html">two years ago</a>,&nbsp;and have continued to <a href="https://developers.googleblog.com/2022/12/new-privacy-enhancing-technology-for-everyone.html">remove barriers to entry</a> along the way. FHE is a powerful technology that allows you to perform computations on encrypted data without being able to access sensitive or personal information&nbsp;and we’re excited to share our latest developments that were born out of collaboration with our&nbsp;developer and research community to help expand what can be done with FHE.</p><h3 data-block-key="5lrvs">Furthering the adoption of Fully Homomorphic Encryption</h3><p data-block-key="iguwf">Today, we are introducing new tools that enable anyone to apply FHE technologies to video files. This advancement is important because video adoption can often be expensive and incur long run times, limiting the ability to scale FHE use to larger files and new formats.</p><p data-block-key="epckp">To do so, we are expanding our FHE toolkit in three new ways to make it easier for developers to use FHE for a wider range of applications, such as private machine learning, text analysis, and the aforementioned video processing. As part of our toolkit, we are <a href="https://github.com/google/fully-homomorphic-encryption">releasing</a> new hardware, a software crypto library and an open source compiler toolchain. Our goal is to provide these new tools to researchers and developers to help advance how FHE is used to protect privacy while simultaneously lowering costs.</p>
+</div>  <div class="inner-block-content yt-video">
+    <div class="glue-video">
+        <div class="glue-video__container glue-video__container--inline" data-glue-yt-video-vid="ZSAMpyl5cw8" id="youtube-player-650775">
+        <iframe frameborder="0" allowfullscreen="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" title="Fully Homomorphic Encryption (FHE)" src="https://www.youtube.com/embed/ZSAMpyl5cw8?enablejsapi=1&amp;origin=https%3A%2F%2Fdevelopers.googleblog.com&amp;widgetid=1&amp;forigin=https%3A%2F%2Fdevelopers.googleblog.com%2Fexpanding-our-fully-homomorphic-encryption-offering%2F&amp;aoriginsup=1&amp;vf=1" id="widget2" data-gtm-yt-inspected-12="true"></iframe></div>
+        <div class="glue-video__nojs">
+          <p><a href="https://www.youtube.com/watch?v=ZSAMpyl5cw8">Link to Youtube Video</a>
+          (visible only when JS is disabled)</p>
+        </div>
+    </div>
+    
+</div>  <div class="inner-block-content rich-content">
+    <h3 data-block-key="tuni9">Expanding our toolkit</h3><p data-block-key="rpkz9">We believe—with more optimization and specialty hardware — there will be a wider amount of use cases for a myriad of similar private machine learning tasks, like privately analyzing more complex files, such as long videos, or processing text documents. Which is why we are releasing a TensorFlow-to-FHE compiler that will allow any developer to compile their trained TensorFlow Machine Learning models into a FHE version of those models.</p><p data-block-key="a6qmp">Once a model has been compiled to FHE, developers can use it to run inference on encrypted user data without having access to the content of the user inputs or the inference results. For instance, our <a href="https://github.com/google/fully-homomorphic-encryption/tree/main/transpiler/tensorflow">toolchain</a> can be used to compile a <a href="https://github.com/tensorflow/tflite-micro/blob/main/tensorflow/lite/micro/examples/micro_speech/README.md">TensorFlow Lite model</a> to FHE, producing a private inference in 16 seconds for a 3-layer neural network. This is just one way we are helping researchers analyze large datasets without revealing personal information.</p><p data-block-key="z328y">In addition, we are releasing <a href="https://github.com/google/jaxite">Jaxite</a>, a software library for cryptography that allows developers to run FHE on a variety of hardware accelerators. Jaxite is built on top of JAX, a high-performance cross-platform machine learning library, which allows Jaxite to run FHE programs on graphics processing units (GPUs) and Tensor Processing Units (<a href="https://en.wikipedia.org/wiki/Tensor_Processing_Unit">TPUs</a>). Google originally developed JAX for accelerating neural network computations, and we have discovered that it can also be used to speed up FHE computations.</p><p data-block-key="7g1mj">Finally, we are announcing <a href="http://google.github.io/heir">Homomorphic Encryption Intermediate Representation</a> (HEIR), an open-source compiler toolchain for homomorphic encryption. HEIR is designed to enable interoperability of FHE programs across FHE schemes, compilers, and hardware accelerators. Built on top of <a href="https://mlir.llvm.org/">MLIR</a>, HEIR aims to lower the barriers to privacy engineering and research. We will be working on HEIR with a variety of industry and academic partners, and we hope it will be a hub for researchers and engineers to try new optimizations, compare benchmarks, and avoid rebuilding boilerplate. <b>We encourage anyone interested in FHE compiler development to come to our regular meetings, which can be found on the</b> <a href="https://google.github.io/heir"><b>HEIR website</b></a><b>.</b></p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/2023Q320Launch20Diagram.original.png" alt="2023Q3%20Launch%20Diagram.png">
+            
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <h3 data-block-key="u3iot">Building advanced privacy technologies and sharing them with others</h3><p data-block-key="vz5ly">Organizations and governments around the world <a href="https://www.dataprotectionreport.com/2023/06/the-ico-urges-organisations-to-start-using-privacy-enhancing-technologies-to-share-personal-data-safely-securely-and-anonymously/">continue to explore</a> how to use PETs to tackle societal challenges and help developers and researchers securely process and protect user data and privacy. At Google, we’re continuing to improve and apply these novel techniques across many of our products,&nbsp;through our <a href="https://blog.google/technology/safety-security/how-we-achieve-privacy-through-innovation/">Protected Computing</a>, which is a growing toolkit of technologies that transforms how, when and where data is processed to technically ensure its privacy and safety.&nbsp;We’ll also continue to democratize&nbsp;access to the PETs we’ve developed as we believe that every internet user deserves world-class privacy.</p>
+</div> 
+      </div>
+    </section>
+    
+
+    <section class="navigation-container glue-page glue-spacer-6-top">
+      <div class="posted-in-section">
+        <div class="posted-in-section__heading">
+          <span class="glue-caption">
+            posted in:
+          </span>
+        </div>
+        <div class="posted-in-section__tags">
+          <ul>
+              
+                  <li>
+                      <a href="/search/?content_type_categories=Announcements" class="glue-caption">Announcements</a>
+                  </li>
+              
+              
+                  <li>
+                      <a href="/search/?tag=privacy" class="glue-caption">privacy</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=Resources" class="glue-caption">Resources</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=encyption" class="glue-caption">encyption</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=Security" class="glue-caption">Security</a>
+                  </li>
+              
+          </ul>
+      </div>
+      </div>
+      <div class="buttons-section">
+        <div class="buttons-section__left">
+          <a href="/introducing-project-idx-an-experiment-to-improve-full-stack-multiplatform-app-development/" class="glue-button--icon glue-elevation-level-1 " aria-label="Previous">
+            <svg role="presentation" aria-hidden="true" class="glue-icon">
+              <use href="/glue-icon/#chevron-left"></use>
+            </svg>
+          </a>
+          <span class="caption ">Previous</span>
+        </div>
+        <div class="buttons-section__right">
+          <span class="caption ">Next</span>
+          <a href="/google-developer-groups-ecosystem-partners-bring-startup-success-days-to-15-indian-cities/" class="glue-button--icon glue-elevation-level-1 " aria-label="Next">
+            <svg role="presentation" aria-hidden="true" class="glue-icon">
+              <use href="/glue-icon/#chevron-right"></use>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class="related-posts-container glue-page glue-spacer-6-top glue-spacer-3-bottom">
+      <span class="glue-headline glue-headline--headline-3">Related Posts</span>
+      <div class="related-posts-container__carousel glue-page glue-spacer-5-top">
+        <div class="glue-carousel glue-carousel--cards glue-carousel-related-posts glue-carousel--peek-out glue-carousel--has-navigation" aria-label="Related Posts">
+          <!-- Previous -->
+          <button class="glue-carousel__button glue-carousel__button--prev glue-is-inactive" aria-label="Go to the previous slide" aria-controls="">
+            <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--32px">
+              <use href="/glue-icon/#chevron-left"></use>
+            </svg>
+          </button>
+          <!-- Next -->
+          <button class="glue-carousel__button glue-carousel__button--next glue-is-inactive" aria-label="Go to the next slide" aria-controls="">
+            <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--32px">
+              <use href="/glue-icon/#chevron-right"></use>
+            </svg>
+          </button>
+          <!-- List -->
+          <div class="glue-carousel__viewport">
+            <div class="glue-carousel__list" aria-live="polite" style="width: 990px; grid-template-columns: repeat(2, 1fr); transform: translate3d(0px, 0px, 0px);">
+              
+                <a class="glue-card glue-carousel__item" href="/why-client-sdk-generation-belongs-in-the-open/" tabindex="0">
+                  <div aria-label="Why client SDK generation belongs in the open" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Why client SDK generation belongs in the open" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Copy_of_why_client_SDK_generation_.2e16d0ba.fill-800x400.png">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                            <span class="glue-label">Learn</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Why client SDK generation belongs in the open</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">SEPT. 17, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+                <a class="glue-card glue-carousel__item" href="/agent-anomaly-detection-now-in-private-preview-on-the-gemini-enterprise-agent-platform/" tabindex="-1">
+                  <div aria-label="Agent Anomaly Detection, now in Private Preview on the Gemini Enterprise Agent Platform" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Agent Anomaly Detection, now in Private Preview on the Gemini Enterprise Agent Platform" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Blog_Banner_3.2e16d0ba.fill-800x400.jpg">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            <span class="glue-label">Cloud</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                            <span class="glue-label">Learn</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Agent Anomaly Detection, now in Private Preview on the Gemini Enterprise Agent Platform</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">SEPT. 16, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+            </div>
+          </div>
+          <!-- Navigation dots -->
+          <div class="glue-carousel__navigation" aria-label="Choose a page" data-glue-carousel-navigation-label="Selected tab $glue_carousel_page_number$ of $glue_carousel_page_total$">
+          <button class="glue-carousel__dot glue-is-active" data-dot="1" aria-controls="" aria-label="Selected tab 1 of 1" tabindex="0" aria-current="true"></button></div>
+        </div>
+      </div>
+    </section>
+    
+  </div>
+
+
+				
+				
+
+<div class="footer-linkboxes__wrapper">
+  <nav class="footer-linkboxes" aria-label="Footer links">
+    <ul class="footer-linkboxes__list">
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Connect
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//googledevelopers.blogspot.com" class="footer-linkbox-list__link">
+                Blog
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/3FReQXN" class="footer-linkbox-list__link">
+                Bluesky
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/googlefordevs" class="footer-linkbox-list__link">
+                Instagram
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/gdevs-li" class="footer-linkbox-list__link">
+                LinkedIn
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/gdevs-tw" class="footer-linkbox-list__link">
+                X (Twitter)
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/developers" class="footer-linkbox-list__link">
+                YouTube
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Programs
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/program" class="footer-linkbox-list__link">
+                Google Developer Program
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/gdg" class="footer-linkbox-list__link">
+                Google Developer Groups
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/experts" class="footer-linkbox-list__link">
+                Google Developer Experts
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/accelerators" class="footer-linkbox-list__link">
+                Accelerators
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//www.womentechmakers.com" class="footer-linkbox-list__link">
+                Women Techmakers
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/nvidia" class="footer-linkbox-list__link">
+                Google Cloud &amp; NVIDIA
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Developer consoles
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.developers.google.com" class="footer-linkbox-list__link">
+                Google API Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.cloud.google.com" class="footer-linkbox-list__link">
+                Google Cloud Platform Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//play.google.com/apps/publish" class="footer-linkbox-list__link">
+                Google Play Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.firebase.google.com" class="footer-linkbox-list__link">
+                Firebase Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.actions.google.com" class="footer-linkbox-list__link">
+                Actions on Google Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//cast.google.com/publish" class="footer-linkbox-list__link">
+                Cast SDK Developer Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//chrome.google.com/webstore/developer/dashboard" class="footer-linkbox-list__link">
+                Chrome Web Store Dashboard
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.home.google.com/" class="footer-linkbox-list__link">
+                Google Home Developer Console
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+    </ul>
+  </nav>
+</div>
+<div class="footer-utility__wrapper">
+  <div>
+    <nav class="footer-sites" aria-label="Other Google Developers websites">
+      <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+        <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+      </a>
+      <ul class="footer-sites-list">
+        <li class="footer-sites-item">
+          <a href="//developer.android.com" class="footer-sites-link">
+            Android
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//developer.chrome.com/home" class="footer-sites-link">
+            Chrome
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//firebase.google.com" class="footer-sites-link">
+            Firebase
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//cloud.google.com" class="footer-sites-link">
+            Google Cloud Platform
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//developers.google.com/products" class="footer-sites-link">
+            All products
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <button aria-hidden="true" class="glue-cookie-notification-bar-control footer-sites-link">
+            Manage cookies
+          </button>
+        </li>
+      </ul>
+    </nav>
+    <nav class="footer-utility-links">
+      <ul class="footer-utility-list">
+        <li class="footer-utility-item">
+          <a href="//developers.google.com/terms/site-terms" class="footer-utility-link">
+            Terms
+          </a>
+        </li>
+        <li class="footer-utility-item">
+          <a href="//policies.google.com/privacy" class="footer-utility-link">
+            Privacy
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+
+        
+				
+
+        
+        <script nonce="" src="https://www.youtube.com/player_api"></script>
+        <script nonce="" src="//www.gstatic.com/glue/v27_1/glue.min.js"></script>
+        <script nonce="" type="text/javascript" src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/dgc_blog.js"></script>
+
+        <script nonce="" src="https://www.gstatic.com/glue/cookienotificationbar/cookienotificationbar.min.js" data-glue-cookie-notification-bar-category="2A" data-glue-cookie-notification-bar-site-id="developers.googleblog.com"></script>
+
+        
+  <script src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/blog_detail.js" nonce=""></script>
+  <script src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/prism.js" nonce=""></script>
+
+    
+
+</body></html>

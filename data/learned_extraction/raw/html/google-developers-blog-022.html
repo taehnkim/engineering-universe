@@ -1,0 +1,839 @@
+<html lang="en"><head>
+        <meta charset="utf-8">
+        
+        <title>
+            
+            Enterprise-Grade Precision for Long-Context Multimodal Embedding Inference on Cloud TPU
+            
+            
+            - Google Developers Blog
+            
+        </title>
+        <meta property="og:title" content="Enterprise-Grade Precision for Long-Context Multimodal Embedding Inference on Cloud TPU- Google Developers Blog">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+	<meta name="description" content="Scale long-context embedding models on Google Cloud TPUs using vLLM. Discover architecture optimizations and open-source GKE deployment recipes for Qwen3.">
+  <meta content="summary_large_image" name="twitter:card">
+  <meta content="Google for Developers Blog - News about Web, Mobile, AI and Cloud" property="twitter:title">
+  <meta property="og:title" content="Enterprise-Grade Precision for Long-Context Multimodal Embedding Inference on Cloud TPU">
+  <script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-H733Y2BZES&amp;cx=c&amp;gtm=4e69g1h1" nonce=""></script><script async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-WVTLDSL"></script><script type="text/javascript" id="www-widgetapi-script" src="https://www.youtube.com/s/player/4fd832e7/www-widgetapi.vflset/www-widgetapi.js" async="" nonce=""></script><script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [{
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Google for Developers Blog",
+      "item": "https://developers.googleblog.com/"
+    },{
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Enterprise-Grade Precision for Long-Context Multimodal Embedding Inference on Cloud TPU",
+      "item": "https://developers.googleblog.com/enterprise-grade-precision-for-long-context-multimodal-embedding-inference-on-cloud-tpu/"
+    }]
+  }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Enterprise-Grade Precision for Long-Context Multimodal Embedding Inference on Cloud TPU",
+      "description": "Google Cloud has natively integrated TPU support into the vLLM serving engine, allowing developers to elastically scale high-demand embedding pipelines using Google Kubernetes Engine (GKE). To handle massive 15K+ token contexts for models like Qwen3-Embedding-8B, the engineering team implemented TPU-specific optimizations such as hardware-safe tensor alignment, JAX/XLA compilation pre-warming, and a hybrid StepPool architecture for chunked prefill management. These enhancements achieve near-perfect numerical parity with reference GPU baselines, and developers can immediately leverage the open-sourced setup recipes on the AI-Hypercomputer GitHub to build their own high-throughput semantic retrieval applications.",
+      "image": "https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/image4_IpoHoDr.2e16d0ba.fill-800x400.jpg",
+      "datePublished": "2026-08-26",
+      "author": [
+        
+        
+          { "@type": "Person", "name": "Anthony Su", "url": "/search/?author=Anthony+Su" },
+        
+          { "@type": "Person", "name": "Injae Kwak", "url": "/search/?author=Injae+Kwak" }
+        
+        
+      ]
+    }
+  </script>
+  
+  <meta content="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Gemini_Generated_Image_xub7wcxub7.2e16d0ba.fill-1200x600.jpg" property="og:image">
+  
+
+
+        
+        
+
+        <!-- Google Tag Manager -->
+        <script type="text/javascript" nonce="" src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/analytics.js"></script>
+        <!-- End Google Tag Manager -->
+
+        
+        <link href="//www.gstatic.com/glue/v27_1/glue.min.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/dgc_blog.css">
+        <link rel="icon" href="https://storage.googleapis.com/gweb-developer-goog-blog-assets/meta/favicon.ico" type="image/x-icon">
+        <link rel="apple-touch-icon" href="https://storage.googleapis.com/gweb-developer-goog-blog-assets/meta/apple-touch-icon.png">
+
+        
+				<link rel="preconnect" href="https://fonts.googleapis.com">
+				<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+				<link rel="preload" href="https://fonts.googleapis.com/css2?family=Product+Sans&amp;family=Google+Sans+Display:ital@0;1&amp;family=Google+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;family=Google+Sans+Text:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;display=swap" as="style">
+				<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Product+Sans&amp;family=Google+Sans+Display:ital@0;1&amp;family=Google+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;family=Google+Sans+Text:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;display=swap">
+        <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&amp;family=Google+Sans+Flex:opsz,wght@6..144,1..1000&amp;display=swap" rel="stylesheet" data-page-link="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&amp;display=swap">
+
+        
+        <link href="https://www.gstatic.com/glue/cookienotificationbar/cookienotificationbar.min.css" rel="stylesheet">
+
+        
+  <link rel="stylesheet" type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/blog_detail.css">
+  <link type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/prism.css" rel="stylesheet">
+
+    </head>
+
+    <body id="main-content" class="glue-body ">
+        <!-- Google Tag Manager (noscript) -->
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVTLDSL "
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
+
+        
+
+				
+        
+
+<!-- HTML -->
+<header class="dgc-header">
+  <div class="dgc-header-inner">
+    <button class="hamburger" aria-haspopup="true" aria-expanded="false" aria-label="Open Menu">
+      <svg role="presentation" aria-hidden="true" class="glue-icon">
+        <use href="/glue-icon/#menu"></use>
+      </svg>
+    </button>
+    <div class="product-name-wrapper">
+      <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+        <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+      </a>
+    </div>
+    <div class="desktop-nav-wrapper">
+      <div class="upper-tabs-wrapper">
+        <div class="upper-tabs">
+          <nav class="tabs" aria-label="Upper Tabs">
+            <div class="tab">
+              <a href="//developers.google.com/community" class="top-nav-title">
+                Community/Events
+              </a>
+            </div>
+            <div class="tab">
+              <a href="//developers.google.com/solutions/catalog" class="top-nav-title">
+                Learn
+              </a>
+            </div>
+            <div class="tab">
+              <a href="//developers.googleblog.com" class="top-nav-title">
+                Blog
+              </a>
+            </div>
+            <div class="tab">
+              <a href="https://www.youtube.com/user/GoogleDevelopers" class="top-nav-title">
+                YouTube
+              </a>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dgc-header-search">
+    <div class="search-wrapper glue-page">
+      <div class="glue-grid">
+        <form id="search-form" action="/search/" method="get" class="search-content glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-9-md glue-grid__col--span-7-lg">
+          <div class="search-input-wrapper">
+            <svg role="presentation" aria-hidden="true" class="glue-icon search-icon">
+              <use href="/glue-icon/#search"></use>
+            </svg>
+            <input type="text" name="query" placeholder="Search all articles..." aria-label="Search" class="search-input-field">
+          </div>
+          <button class="glue-button glue-button--high-emphasis">
+            Search
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-drawer" top-level-nav="">
+  <nav class="nav-content" aria-label="Side menu">
+    <div class="mobile-header">
+      <button class="nav-close-btn nav-btn" aria-label="Close navigation">
+        <svg role="presentation" aria-hidden="true" class="glue-icon">
+          <use href="/glue-icon/#close"></use>
+        </svg>
+      </button>
+      <button class="nav-back-btn nav-btn hidden" aria-label="Back to Menu">
+        <svg role="presentation" aria-hidden="true" class="glue-icon">
+          <use href="/glue-icon/#arrow-back"></use>
+        </svg>
+      </button>
+      <div class="product-name-wrapper">
+        <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+          <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+        </a>
+      </div>
+    </div>
+    <div class="nav-wrapper">
+      <div class="mobile-nav-top">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="//developers.google.com/community" class="nav-title" data-label="Tab: Community/Events">
+              <span class="nav-text" tooltip="">
+                Community/Events
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="//developers.google.com/solutions/catalog" class="nav-title" data-label="Tab: Learn">
+              <span class="nav-text" tooltip="">
+                Learn
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="//developers.googleblog.com" class="nav-title" data-label="Tab: Blog">
+              <span class="nav-text" tooltip="">
+                Blog
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="https://www.youtube.com/user/GoogleDevelopers" class="nav-title" data-label="Tab: YouTube">
+              <span class="nav-text" tooltip="">
+                YouTube
+             </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<div class="backdrop"></div>
+
+        
+  <div class="blog-detail-container">
+
+    
+      <section class="tags-container glue-page glue-spacer-5-top">
+        <div class="glue-eyebrow"></div>
+      </section>
+    
+
+    <section class="heading-container glue-page  glue-spacer-1-top">
+      <h1 class="glue-headline glue-headline--headline-1">Enterprise-Grade Precision for Long-Context Multimodal Embedding Inference on Cloud TPU</h1>
+    </section>
+
+    <section class="summary-container glue-page glue-spacer-4-top">
+      <div class="date-time">
+        <div class="published-date glue-font-weight-medium">AUG. 26, 2026</div>
+      </div>
+    </section>
+
+    <section class="glue-page glue-grid glue-spacer-1-top">
+
+      <section class="author-container glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-10-md">
+      
+        
+          <div class="author-obj">
+            <a class="glue-font-weight-medium" href="/search/?author=Anthony+Su">Anthony Su</a>
+            
+              <span class="glue-font-weight-medium role">Software Engineer</span>
+            
+            
+          </div>
+        
+          <div class="author-obj">
+            <a class="glue-font-weight-medium" href="/search/?author=Injae+Kwak">Injae Kwak</a>
+            
+              <span class="glue-font-weight-medium role">Product Manager</span>
+            
+            
+          </div>
+        
+
+      
+      </section>
+      <section class="social-container glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-2-md">
+        <button id="social-button" class="glue-button glue-button--low-emphasis glue-button--icon" aria-haspopup="true" aria-expanded="false">
+          <svg role="presentation" aria-hidden="true" class="glue-icon">
+            <use href="/glue-icon/#share"></use>
+          </svg>
+          <span>Share</span>
+        </button>
+        <ul id="social-menu" class="glue-elevation-level-1" role="menu" aria-labelledby="social-button">
+          <li>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=https://developers.googleblog.com/enterprise-grade-precision-for-long-context-multimodal-embedding-inference-on-cloud-tpu/" title="Share on Facebook" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#post-facebook"></use>
+              </svg>
+              <span>Facebook</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://twitter.com/intent/tweet?text=https://developers.googleblog.com/enterprise-grade-precision-for-long-context-multimodal-embedding-inference-on-cloud-tpu/" title="Share on Twitter" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#twitter-x"></use>
+              </svg>
+              <span>Twitter</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://www.linkedin.com/shareArticle?url=https://developers.googleblog.com/enterprise-grade-precision-for-long-context-multimodal-embedding-inference-on-cloud-tpu/&amp;mini=true" title="Share on LinkedIn" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#post-linkedin"></use>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
+          </li>
+          <li>
+            <a href="mailto:name@example.com?subject=Check%20out%20this%20site&amp;body=Check%20out%20https://developers.googleblog.com/enterprise-grade-precision-for-long-context-multimodal-embedding-inference-on-cloud-tpu/" title="Send via Email">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#email"></use>
+              </svg>
+              <span>Mail</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" title="Get shareable link" data-link="https://developers.googleblog.com/enterprise-grade-precision-for-long-context-multimodal-embedding-inference-on-cloud-tpu/" data-copy-text="Copy Link" data-copied-text="Copied!">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#link"></use>
+              </svg>
+              <span></span>
+            </a>
+          </li>
+        </ul>
+      </section>
+    </section>
+
+    
+    <section class="blocks-container glue-page glue-spacer-3-top">
+      <div class="block">
+          
+
+<img class="banner-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/image4_IpoHoDr.original.jpg" alt="image4">  <div class="inner-block-content rich-content">
+    <h2 data-block-key="t8e89" id="what-is-an-embedding-model-and-what-is-it-used-for"><b>What is an Embedding Model and What is it Used For?</b></h2><p data-block-key="8l4be">In modern AI architectures, <b>embedding models</b> serve as the foundational translators bridging raw unstructured data and downstream intelligent reasoning. Simply put, embedding models translate inputs of various types of data — including text, images, and audio — into dense vector math. These high-dimensional numeric arrays capture semantic relationships, powering critical enterprise capabilities such as semantic search, recommender systems, intent classification, personalized content discovery, and vector clustering.</p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/image5_jQEZRqL.original.png" alt="image5">
+            
+            
+                
+                    <div class="regular-image-description">
+                        Figure 1. Embedding models enterprise capabilities.
+                    </div>
+                
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <p data-block-key="w1oji">To understand how embedding models work in practice, consider a standard vector search query. When a user queries a semantic search engine for the word "cat", the model maps the token into a dense coordinate space. In this vector space, the mathematical distance between "cat" and "feline" or "dog" is short, yielding high similarity scores; conversely, terms like "hat" or "car" map to distant coordinates despite their orthographic similarity.</p><h2 data-block-key="4sl1t" id="seamless-elasticity-with-vllm-tpu-and-gke"><b>Seamless Elasticity with vLLM-TPU &amp; GKE</b></h2><p data-block-key="b76cs">While deploying small text embedding models for prototype applications is straightforward, scaling pipelines to serve millions of queries introduces different types of production bottlenecks. The most common ones we see are accessing elastic capacity of accelerators to seamlessly scale compute resources alongside dynamic traffic fluctuations and improving cost/performance efficiency.</p><p data-block-key="1nkve">To overcome these scaling and capacity constraints, Google Cloud has integrated native TPU support into <b>vLLM</b> — the industry-standard, highly optimized and popular open-source LLM serving engine. Standardizing on vLLM for TPU serving provides architecture true elasticity. Engineering teams can scale serving capacity up and down dynamically by provisioning TPU nodes directly alongside other XPU instances.</p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/image6_1.original.png" alt="image6 (1)">
+            
+            
+                
+                    <div class="regular-image-description">
+                        Figure 2. If primary TPU reservations are fully utilized, the serving infrastructure automatically falls back to secondary GPU spot or on-demand pools without interrupting incoming inference traffic.
+                    </div>
+                
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <p data-block-key="w1oji">By taking advantage of primitives like <b>Custom Compute Classes</b> in Google Kubernetes Engine (GKE), organizations can automate node autoscaling based on strict priority rules to scale up across different capacity types or accelerators if the previous one isn’t available.</p><h2 data-block-key="u0myw" id="engineering-high-precision-embedding-support-on-tpus"><b>Engineering High-Precision Embedding Support on TPUs</b></h2><p data-block-key="6uh14">Serving next-generation embedding models in production demands processing ultra-long sequence contexts - ranging from 4K+ tokens for text workloads up to 15K+ tokens for multimodal text-and-image inputs. Crucially, enterprise applications require that these embeddings maintain strict mathematical parity and high precision across heterogeneous hardware backends compared to reference.</p><p data-block-key="5hv82">To bring high-dimensional vector pooling models to TPU hardware topologies, we took the Qwen3 Embedding model series as the target engineering models and engineered several key optimizations of the vLLM framework on TPU.</p><h3 data-block-key="tdsdf" id="challenge-a:-hardware-safe-tensor-alignment"><b>Challenge A: Hardware-Safe Tensor Alignment</b></h3><p data-block-key="3jaru">TPU Matrix Execution Units (MXUs) impose strict divisibility constraints when sharding vocabulary matrices across topology meshes via Tensor Parallelism (TP). We implemented a unified, hardware-safe vocabulary padding strategy that guarantees exact tensor alignment during All-Gather execution.</p><h3 data-block-key="tepos" id="challenge-b:-materialization-hardening-tpu-lazy-loading-and-compilation-pre-warming"><b>Challenge B: Materialization Hardening, TPU Lazy-Loading &amp; Compilation Pre-warming</b></h3><p data-block-key="fi9qf">vLLM relies on lazy-loading mechanisms on TPUs to minimize server cold-start latencies and reduce host memory peaks. To eliminate model initialization failures during lazy tensor transformations, we introduced attribute promotion within the unquantization pipeline, making weight loading fully compatible with vLLM’s TPU lazy-loader for zero-failure initialization.</p><p data-block-key="ffdj7">Furthermore, to eliminate runtime JIT compilation latencies and avoid compilation traps in multi-processes deployments, we implemented sharding-aware pre-warming to lock JAX/XLA compilation caches prior to inference and stabilize the production pipelines and rollouts.</p><h3 data-block-key="im919" id="challenge-c:-long-context-steppool-architecture"><b>Challenge C: Long-Context StepPool Architecture</b></h3><p data-block-key="2k5bb">Ultra-long contexts require Chunked Prefill in the pooling layer to prevent High Bandwidth Memory (HBM) exhaustion, creating risk of state loss across step boundaries. We engineered a hybrid StepPool and migrated metadata to <i>CachedRequestState</i>, ensuring pooling states correctly accumulate across steps and survive request preemptions.</p><h3 data-block-key="8389t" id="vllm-embedding-sample-on-tpu"><b>vLLM Embedding Sample on TPU</b></h3><p data-block-key="fhtg4">Below is a minimal example demonstrating how to initialize Qwen3-Embedding-8B on TPU. For complete setup scripts and environment deployment steps, refer to the official <a href="https://github.com/AI-Hypercomputer/tpu-recipes/tree/main/inference/ironwood/vLLM/Qwen3-Embedding-8B">AI-Hypercomputer Qwen3-Embedding-8B Recipes on GitHub</a>:</p>
+</div>  <div class="inner-block-content code-block line-numbers">
+    <pre class="language-python line-numbers" tabindex="0"><code class="language-python"><span class="token keyword">from</span> vllm <span class="token keyword">import</span> LLM
+
+<span class="token comment"># Initialize Qwen3-Embedding-8B on Cloud TPU using vLLM's native pooling runner</span>
+llm <span class="token operator">=</span> LLM<span class="token punctuation">(</span>
+    model<span class="token operator">=</span><span class="token string">"Qwen/Qwen3-Embedding-8B"</span><span class="token punctuation">,</span>
+    runner<span class="token operator">=</span><span class="token string">"pooling"</span><span class="token punctuation">,</span>             <span class="token comment"># Enables dense pooling output</span>
+    tensor_parallel_size<span class="token operator">=</span><span class="token number">2</span><span class="token punctuation">,</span>       <span class="token comment"># Sharded across TPU topology mesh</span>
+    max_model_len<span class="token operator">=</span><span class="token number">16384</span><span class="token punctuation">,</span>
+    max_num_batched_tokens<span class="token operator">=</span><span class="token number">512</span><span class="token punctuation">,</span>
+    dtype<span class="token operator">=</span><span class="token string">"bfloat16"</span><span class="token punctuation">,</span>
+    trust_remote_code<span class="token operator">=</span><span class="token boolean">True</span>
+<span class="token punctuation">)</span>
+
+<span class="token comment"># Extract dense vector embeddings across inputs</span>
+prompts <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string">"Enterprise-grade semantic retrieval on TPUs with vLLM."</span><span class="token punctuation">]</span>
+results <span class="token operator">=</span> llm<span class="token punctuation">.</span>embed<span class="token punctuation">(</span>prompts<span class="token punctuation">)</span>
+embedding_vector <span class="token operator">=</span> results<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span>outputs<span class="token punctuation">.</span>embedding<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+    <div class="language-block glue-font-weight-medium">
+        Python
+    </div>
+    <div class="copy-code-block">
+        <span class="hidden">Copied</span>
+        <button class="copy-clipboard">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"></path></svg>
+        </button>
+    </div>
+    <div class="dark-mode-block">
+        <button class="dark-mode-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Zm-10-270Z"></path></svg>
+        </button>
+    </div>
+    
+</div>  <div class="inner-block-content rich-content">
+    <h2 data-block-key="puowa" id="golden-reference-precision-and-numerical-parity"><b>Golden-Reference Precision &amp; Numerical Parity</b></h2><p data-block-key="8mdtk">To certify enterprise-grade precision, we conducted rigorous mathematical parity evaluations comparing TPU outputs against other XPU golden references across multi-language and multimodal datasets.</p><p data-block-key="d35gs">To evaluate numerical alignment between dense embedding vectors generated on TPUs (v<sub>Tpu</sub>) and reference baseline vectors generated on XPUs (v<sub>Ref</sub>), we calculate their <b>cosine similarity</b>:</p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/image3_1.original_Nz5sB1k.png" alt="image3 (1)">
+            
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <p data-block-key="w1oji">A cosine similarity score approaching 1.0 (with a target quality pass threshold of <i>≥0.999</i> for text and <i>≥0.995</i> for multimodal inputs) demonstrates near-perfect numerical parity across hardware backends. This confirms that optimizations implemented on the vLLM-TPU stack maintain golden-reference precision without sacrificing accuracy.</p><p data-block-key="2t44b">For step-by-step instructions on generating pairwise calculations, check out the official <a href="https://github.com/AI-Hypercomputer/tpu-recipes/tree/main/inference/ironwood/vLLM/Qwen3-Embedding-8B">AI-Hypercomputer Qwen3-Embedding-8B Recipes on GitHub</a>.</p><p data-block-key="atm61"></p><h3 data-block-key="ksqd4" id=""><b>Qwen3-Embedding-8B (7K+ Tokens, TPU vs. CPU Baseline)</b></h3>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/table_1_7Bmaj04.original.png" alt="table 1">
+            
+            
+                
+                    <div class="regular-image-description">
+                        Table1. While maintaining strict numerical alignment, serving qwen-3-embedding-8b (bf16, 16K+ sequence length, TP=4) on TPU Ironwood achieved an impressive throughput of 83,996 total token/s and 5.13 req/s.
+                    </div>
+                
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <h3 data-block-key="q2uuj" id=""><b>Qwen3-VL-Embedding-8B (15K+ Tokens, TPU vs. XPU Baseline)</b></h3>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/table_2.original.png" alt="table 2">
+            
+            
+                
+                    <div class="regular-image-description">
+                        Table2. vLLM-TPU only chunks the text portion of multimodal prefill.
+                    </div>
+                
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <h2 data-block-key="floxd" id="public-recipes-and-explore-resources"><b>Public Recipes &amp; Explore Resources</b></h2><p data-block-key="5o5gq">To help developers reproduce our numerical parity evaluations and rapidly deploy embedding workloads on Google Cloud TPUs, we have open-sourced official setup and execution recipes on the <b>AI-Hypercomputer</b> Public Repository.</p><h3 data-block-key="7m7jw" id="get-started:"><b>Get Started:</b></h3><p data-block-key="dv769"><b>* Qwen3-Embedding-8B TPU Recipe:</b> Explore text embedding recipes at <a href="https://github.com/AI-Hypercomputer/tpu-recipes/tree/main/inference/ironwood/vLLM/Qwen3-Embedding-8B">AI-Hypercomputer/Qwen3-Embedding-8B</a></p><p data-block-key="cr5ig"><b>* Qwen3-VL-Embedding-8B TPU Recipe:</b> Explore multimodal embedding recipes at <a href="https://github.com/AI-Hypercomputer/tpu-recipes/tree/main/inference/ironwood/vLLM/Qwen3-VL-Embedding-8B">AI-Hypercomputer/Qwen3-VL-Embedding-8B</a></p><p data-block-key="adaf7"><b>* vLLM TPU Engine:</b> Explore more on vLLM framework on TPU at <a href="https://github.com/vllm-project/tpu-inference">vllm-project/tpu-inference</a></p><p data-block-key="12ifa"><b>* Google Cloud TPU Portal:</b> Provision Cloud TPU instances and explore hardware specs at <a href="https://cloud.google.com/tpu">cloud.google.com/tpu</a></p><h2 data-block-key="1o9jm" id="acknowledgments"><b>Acknowledgments</b></h2><p data-block-key="4gclj">The engineering achievements and cross-hardware optimizations highlighted in this post were made possible through the incredible collaboration across Google Cloud Product, Engineering and the vLLM community.</p>
+</div> 
+      </div>
+    </section>
+    
+
+    <section class="navigation-container glue-page glue-spacer-6-top">
+      <div class="posted-in-section">
+        <div class="posted-in-section__heading">
+          <span class="glue-caption">
+            posted in:
+          </span>
+        </div>
+        <div class="posted-in-section__tags">
+          <ul>
+              
+                  <li>
+                      <a href="/search/?technology_categories=AI" class="glue-caption">AI</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?technology_categories=Cloud" class="glue-caption">Cloud</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?content_type_categories=Announcements" class="glue-caption">Announcements</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?content_type_categories=Best+Practices" class="glue-caption">Best Practices</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?content_type_categories=Learn" class="glue-caption">Learn</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?content_type_categories=Explore" class="glue-caption">Explore</a>
+                  </li>
+              
+              
+                  <li>
+                      <a href="/search/?tag=Influence" class="glue-caption">Influence</a>
+                  </li>
+              
+          </ul>
+      </div>
+      </div>
+      <div class="buttons-section">
+        <div class="buttons-section__left">
+          <a href="/4-engineering-patterns-behind-the-strongest-ai-agents-challenge-submissions/" class="glue-button--icon glue-elevation-level-1 " aria-label="Previous">
+            <svg role="presentation" aria-hidden="true" class="glue-icon">
+              <use href="/glue-icon/#chevron-left"></use>
+            </svg>
+          </a>
+          <span class="caption ">Previous</span>
+        </div>
+        <div class="buttons-section__right">
+          <span class="caption ">Next</span>
+          <a href="/how-to-evaluate-live-voice-agents-in-adk/" class="glue-button--icon glue-elevation-level-1 " aria-label="Next">
+            <svg role="presentation" aria-hidden="true" class="glue-icon">
+              <use href="/glue-icon/#chevron-right"></use>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class="related-posts-container glue-page glue-spacer-6-top glue-spacer-3-bottom">
+      <span class="glue-headline glue-headline--headline-3">Related Posts</span>
+      <div class="related-posts-container__carousel glue-page glue-spacer-5-top">
+        <div class="glue-carousel glue-carousel--cards glue-carousel-related-posts glue-carousel--peek-out glue-carousel--has-navigation" aria-label="Related Posts">
+          <!-- Previous -->
+          <button class="glue-carousel__button glue-carousel__button--prev glue-is-inactive" aria-label="Go to the previous slide" aria-controls="">
+            <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--32px">
+              <use href="/glue-icon/#chevron-left"></use>
+            </svg>
+          </button>
+          <!-- Next -->
+          <button class="glue-carousel__button glue-carousel__button--next glue-is-inactive" aria-label="Go to the next slide" aria-controls="">
+            <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--32px">
+              <use href="/glue-icon/#chevron-right"></use>
+            </svg>
+          </button>
+          <!-- List -->
+          <div class="glue-carousel__viewport">
+            <div class="glue-carousel__list" aria-live="polite" style="width: 990px; grid-template-columns: repeat(2, 1fr); transform: translate3d(0px, 0px, 0px);">
+              
+                <a class="glue-card glue-carousel__item" href="/why-client-sdk-generation-belongs-in-the-open/" tabindex="0">
+                  <div aria-label="Why client SDK generation belongs in the open" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Why client SDK generation belongs in the open" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Copy_of_why_client_SDK_generation_.2e16d0ba.fill-800x400.png">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                            <span class="glue-label">Learn</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Why client SDK generation belongs in the open</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">SEPT. 17, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+                <a class="glue-card glue-carousel__item" href="/agent-anomaly-detection-now-in-private-preview-on-the-gemini-enterprise-agent-platform/" tabindex="-1">
+                  <div aria-label="Agent Anomaly Detection, now in Private Preview on the Gemini Enterprise Agent Platform" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Agent Anomaly Detection, now in Private Preview on the Gemini Enterprise Agent Platform" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Blog_Banner_3.2e16d0ba.fill-800x400.jpg">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            <span class="glue-label">Cloud</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                            <span class="glue-label">Learn</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Agent Anomaly Detection, now in Private Preview on the Gemini Enterprise Agent Platform</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">SEPT. 16, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+            </div>
+          </div>
+          <!-- Navigation dots -->
+          <div class="glue-carousel__navigation" aria-label="Choose a page" data-glue-carousel-navigation-label="Selected tab $glue_carousel_page_number$ of $glue_carousel_page_total$">
+          <button class="glue-carousel__dot glue-is-active" data-dot="1" aria-controls="" aria-label="Selected tab 1 of 1" tabindex="0" aria-current="true"></button></div>
+        </div>
+      </div>
+    </section>
+    
+  </div>
+
+
+				
+				
+
+<div class="footer-linkboxes__wrapper">
+  <nav class="footer-linkboxes" aria-label="Footer links">
+    <ul class="footer-linkboxes__list">
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Connect
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//googledevelopers.blogspot.com" class="footer-linkbox-list__link">
+                Blog
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/3FReQXN" class="footer-linkbox-list__link">
+                Bluesky
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/googlefordevs" class="footer-linkbox-list__link">
+                Instagram
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/gdevs-li" class="footer-linkbox-list__link">
+                LinkedIn
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/gdevs-tw" class="footer-linkbox-list__link">
+                X (Twitter)
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/developers" class="footer-linkbox-list__link">
+                YouTube
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Programs
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/program" class="footer-linkbox-list__link">
+                Google Developer Program
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/gdg" class="footer-linkbox-list__link">
+                Google Developer Groups
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/experts" class="footer-linkbox-list__link">
+                Google Developer Experts
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/accelerators" class="footer-linkbox-list__link">
+                Accelerators
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//www.womentechmakers.com" class="footer-linkbox-list__link">
+                Women Techmakers
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/nvidia" class="footer-linkbox-list__link">
+                Google Cloud &amp; NVIDIA
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Developer consoles
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.developers.google.com" class="footer-linkbox-list__link">
+                Google API Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.cloud.google.com" class="footer-linkbox-list__link">
+                Google Cloud Platform Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//play.google.com/apps/publish" class="footer-linkbox-list__link">
+                Google Play Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.firebase.google.com" class="footer-linkbox-list__link">
+                Firebase Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.actions.google.com" class="footer-linkbox-list__link">
+                Actions on Google Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//cast.google.com/publish" class="footer-linkbox-list__link">
+                Cast SDK Developer Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//chrome.google.com/webstore/developer/dashboard" class="footer-linkbox-list__link">
+                Chrome Web Store Dashboard
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.home.google.com/" class="footer-linkbox-list__link">
+                Google Home Developer Console
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+    </ul>
+  </nav>
+</div>
+<div class="footer-utility__wrapper">
+  <div>
+    <nav class="footer-sites" aria-label="Other Google Developers websites">
+      <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+        <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+      </a>
+      <ul class="footer-sites-list">
+        <li class="footer-sites-item">
+          <a href="//developer.android.com" class="footer-sites-link">
+            Android
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//developer.chrome.com/home" class="footer-sites-link">
+            Chrome
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//firebase.google.com" class="footer-sites-link">
+            Firebase
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//cloud.google.com" class="footer-sites-link">
+            Google Cloud Platform
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//developers.google.com/products" class="footer-sites-link">
+            All products
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <button aria-hidden="true" class="glue-cookie-notification-bar-control footer-sites-link">
+            Manage cookies
+          </button>
+        </li>
+      </ul>
+    </nav>
+    <nav class="footer-utility-links">
+      <ul class="footer-utility-list">
+        <li class="footer-utility-item">
+          <a href="//developers.google.com/terms/site-terms" class="footer-utility-link">
+            Terms
+          </a>
+        </li>
+        <li class="footer-utility-item">
+          <a href="//policies.google.com/privacy" class="footer-utility-link">
+            Privacy
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+
+        
+				
+
+        
+        <script nonce="" src="https://www.youtube.com/player_api"></script>
+        <script nonce="" src="//www.gstatic.com/glue/v27_1/glue.min.js"></script>
+        <script nonce="" type="text/javascript" src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/dgc_blog.js"></script>
+
+        <script nonce="" src="https://www.gstatic.com/glue/cookienotificationbar/cookienotificationbar.min.js" data-glue-cookie-notification-bar-category="2A" data-glue-cookie-notification-bar-site-id="developers.googleblog.com"></script>
+
+        
+  <script src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/blog_detail.js" nonce=""></script>
+  <script src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/prism.js" nonce=""></script>
+
+    
+
+</body></html>

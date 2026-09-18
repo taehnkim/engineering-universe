@@ -1,0 +1,816 @@
+<html lang="en"><head>
+        <meta charset="utf-8">
+        
+        <title>
+            
+            7 dos and don'ts of using ML on the web with MediaPipe
+            
+            
+            - Google Developers Blog
+            
+        </title>
+        <meta property="og:title" content="7 dos and don'ts of using ML on the web with MediaPipe- Google Developers Blog">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+	<meta name="description" content="If you're a web developer looking to bring the power of machine learning (ML) to your web apps,...">
+  <meta content="summary_large_image" name="twitter:card">
+  <meta content="Google for Developers Blog - News about Web, Mobile, AI and Cloud" property="twitter:title">
+  <meta property="og:title" content="7 dos and don'ts of using ML on the web with MediaPipe">
+  <script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-H733Y2BZES&amp;cx=c&amp;gtm=4e69g1" nonce=""></script><script async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-WVTLDSL"></script><script type="text/javascript" id="www-widgetapi-script" src="https://www.youtube.com/s/player/4fd832e7/www-widgetapi.vflset/www-widgetapi.js" async="" nonce=""></script><script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [{
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Google for Developers Blog",
+      "item": "https://developers.googleblog.com/"
+    },{
+      "@type": "ListItem",
+      "position": 2,
+      "name": "7 dos and don&#x27;ts of using ML on the web with MediaPipe",
+      "item": "https://developers.googleblog.com/7-dos-and-donts-of-using-ml-on-the-web-with-mediapipe/"
+    }]
+  }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "7 dos and don&#x27;ts of using ML on the web with MediaPipe",
+      "description": "",
+      "image": "https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/121.2e16d0ba.fill-800x400.png",
+      "datePublished": "2023-10-05",
+      "author": [
+        
+        
+          { "@type": "Person", "name": "Jen Person", "url": "/search/?author=Jen+Person" }
+        
+        
+      ]
+    }
+  </script>
+  
+  <meta content="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/121.2e16d0ba.fill-1200x600.png" property="og:image">
+  
+
+
+        
+        
+
+        <!-- Google Tag Manager -->
+        <script type="text/javascript" nonce="" src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/analytics.js"></script>
+        <!-- End Google Tag Manager -->
+
+        
+        <link href="//www.gstatic.com/glue/v27_1/glue.min.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/dgc_blog.css">
+        <link rel="icon" href="https://storage.googleapis.com/gweb-developer-goog-blog-assets/meta/favicon.ico" type="image/x-icon">
+        <link rel="apple-touch-icon" href="https://storage.googleapis.com/gweb-developer-goog-blog-assets/meta/apple-touch-icon.png">
+
+        
+				<link rel="preconnect" href="https://fonts.googleapis.com">
+				<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+				<link rel="preload" href="https://fonts.googleapis.com/css2?family=Product+Sans&amp;family=Google+Sans+Display:ital@0;1&amp;family=Google+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;family=Google+Sans+Text:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;display=swap" as="style">
+				<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Product+Sans&amp;family=Google+Sans+Display:ital@0;1&amp;family=Google+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;family=Google+Sans+Text:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;display=swap">
+        <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&amp;family=Google+Sans+Flex:opsz,wght@6..144,1..1000&amp;display=swap" rel="stylesheet" data-page-link="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&amp;display=swap">
+
+        
+        <link href="https://www.gstatic.com/glue/cookienotificationbar/cookienotificationbar.min.css" rel="stylesheet">
+
+        
+  <link rel="stylesheet" type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/blog_detail.css">
+  <link type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/prism.css" rel="stylesheet">
+
+    </head>
+
+    <body id="main-content" class="glue-body ">
+        <!-- Google Tag Manager (noscript) -->
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVTLDSL "
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
+
+        
+
+				
+        
+
+<!-- HTML -->
+<header class="dgc-header">
+  <div class="dgc-header-inner">
+    <button class="hamburger" aria-haspopup="true" aria-expanded="false" aria-label="Open Menu">
+      <svg role="presentation" aria-hidden="true" class="glue-icon">
+        <use href="/glue-icon/#menu"></use>
+      </svg>
+    </button>
+    <div class="product-name-wrapper">
+      <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+        <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+      </a>
+    </div>
+    <div class="desktop-nav-wrapper">
+      <div class="upper-tabs-wrapper">
+        <div class="upper-tabs">
+          <nav class="tabs" aria-label="Upper Tabs">
+            <div class="tab">
+              <a href="//developers.google.com/community" class="top-nav-title">
+                Community/Events
+              </a>
+            </div>
+            <div class="tab">
+              <a href="//developers.google.com/solutions/catalog" class="top-nav-title">
+                Learn
+              </a>
+            </div>
+            <div class="tab">
+              <a href="//developers.googleblog.com" class="top-nav-title">
+                Blog
+              </a>
+            </div>
+            <div class="tab">
+              <a href="https://www.youtube.com/user/GoogleDevelopers" class="top-nav-title">
+                YouTube
+              </a>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dgc-header-search">
+    <div class="search-wrapper glue-page">
+      <div class="glue-grid">
+        <form id="search-form" action="/search/" method="get" class="search-content glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-9-md glue-grid__col--span-7-lg">
+          <div class="search-input-wrapper">
+            <svg role="presentation" aria-hidden="true" class="glue-icon search-icon">
+              <use href="/glue-icon/#search"></use>
+            </svg>
+            <input type="text" name="query" placeholder="Search all articles..." aria-label="Search" class="search-input-field">
+          </div>
+          <button class="glue-button glue-button--high-emphasis">
+            Search
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-drawer" top-level-nav="">
+  <nav class="nav-content" aria-label="Side menu">
+    <div class="mobile-header">
+      <button class="nav-close-btn nav-btn" aria-label="Close navigation">
+        <svg role="presentation" aria-hidden="true" class="glue-icon">
+          <use href="/glue-icon/#close"></use>
+        </svg>
+      </button>
+      <button class="nav-back-btn nav-btn hidden" aria-label="Back to Menu">
+        <svg role="presentation" aria-hidden="true" class="glue-icon">
+          <use href="/glue-icon/#arrow-back"></use>
+        </svg>
+      </button>
+      <div class="product-name-wrapper">
+        <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+          <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+        </a>
+      </div>
+    </div>
+    <div class="nav-wrapper">
+      <div class="mobile-nav-top">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="//developers.google.com/community" class="nav-title" data-label="Tab: Community/Events">
+              <span class="nav-text" tooltip="">
+                Community/Events
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="//developers.google.com/solutions/catalog" class="nav-title" data-label="Tab: Learn">
+              <span class="nav-text" tooltip="">
+                Learn
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="//developers.googleblog.com" class="nav-title" data-label="Tab: Blog">
+              <span class="nav-text" tooltip="">
+                Blog
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="https://www.youtube.com/user/GoogleDevelopers" class="nav-title" data-label="Tab: YouTube">
+              <span class="nav-text" tooltip="">
+                YouTube
+             </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<div class="backdrop"></div>
+
+        
+  <div class="blog-detail-container">
+
+    
+      <section class="tags-container glue-page glue-spacer-5-top">
+        <div class="glue-eyebrow"></div>
+      </section>
+    
+
+    <section class="heading-container glue-page  glue-spacer-1-top">
+      <h1 class="glue-headline glue-headline--headline-1">7 dos and don'ts of using ML on the web with MediaPipe</h1>
+    </section>
+
+    <section class="summary-container glue-page glue-spacer-4-top">
+      <div class="date-time">
+        <div class="published-date glue-font-weight-medium">OCT. 5, 2023</div>
+      </div>
+    </section>
+
+    <section class="glue-page glue-grid glue-spacer-1-top">
+
+      <section class="author-container glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-10-md">
+      
+        
+          <div class="author-obj">
+            <a class="glue-font-weight-medium" href="/search/?author=Jen+Person">Jen Person</a>
+            
+              <span class="glue-font-weight-medium role">Developer Relations Engineer</span>
+            
+            
+          </div>
+        
+
+      
+      </section>
+      <section class="social-container glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-2-md">
+        <button id="social-button" class="glue-button glue-button--low-emphasis glue-button--icon" aria-haspopup="true" aria-expanded="false">
+          <svg role="presentation" aria-hidden="true" class="glue-icon">
+            <use href="/glue-icon/#share"></use>
+          </svg>
+          <span>Share</span>
+        </button>
+        <ul id="social-menu" class="glue-elevation-level-1" role="menu" aria-labelledby="social-button">
+          <li>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=https://developers.googleblog.com/7-dos-and-donts-of-using-ml-on-the-web-with-mediapipe/" title="Share on Facebook" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#post-facebook"></use>
+              </svg>
+              <span>Facebook</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://twitter.com/intent/tweet?text=https://developers.googleblog.com/7-dos-and-donts-of-using-ml-on-the-web-with-mediapipe/" title="Share on Twitter" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#twitter-x"></use>
+              </svg>
+              <span>Twitter</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://www.linkedin.com/shareArticle?url=https://developers.googleblog.com/7-dos-and-donts-of-using-ml-on-the-web-with-mediapipe/&amp;mini=true" title="Share on LinkedIn" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#post-linkedin"></use>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
+          </li>
+          <li>
+            <a href="mailto:name@example.com?subject=Check%20out%20this%20site&amp;body=Check%20out%20https://developers.googleblog.com/7-dos-and-donts-of-using-ml-on-the-web-with-mediapipe/" title="Send via Email">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#email"></use>
+              </svg>
+              <span>Mail</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" title="Get shareable link" data-link="https://developers.googleblog.com/7-dos-and-donts-of-using-ml-on-the-web-with-mediapipe/" data-copy-text="Copy Link" data-copied-text="Copied!">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#link"></use>
+              </svg>
+              <span></span>
+            </a>
+          </li>
+        </ul>
+      </section>
+    </section>
+
+    
+    <section class="blocks-container glue-page glue-spacer-3-top">
+      <div class="block">
+          
+
+<img class="banner-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/HEADER-Google-Developers-GD-BLOG-7-dos-and-dont.original.png" alt="HEADER-Google-Developers-[GD-BLOG]-7-dos-and-don'ts-of-using-ML-on-the-web-with-MediaPipe">  <div class="inner-block-content rich-content">
+    <p data-block-key="dh37d"></p><p data-block-key="zh0fc">If you're a web developer looking to bring the power of machine learning (ML) to your web apps, then check out MediaPipe Solutions! With MediaPipe Solutions, you can deploy custom tasks to solve common ML problems in just a few lines of code. View the <a href="https://developers.google.com/mediapipe/solutions/guide">guides in the docs</a> and try out the <a href="https://codepen.io/mediapipe-preview">web demos on Codepen</a> to see how simple it is to get started. While MediaPipe Solutions handles a lot of the complexity of ML on the web, there are still a few things to keep in mind that go beyond the usual JavaScript best practices. I've compiled them here in this list of seven dos and don'ts. Do read on to get some good tips!</p><p data-block-key="fkcg7"></p><h2 data-block-key="ipnv6">❌ DON'T bundle your model in your app</h2><p data-block-key="6773b"></p><p data-block-key="zoono">As a web developer, you're accustomed to making your apps as lightweight as possible to ensure the best user experience. When you have larger items to load, you already know that you want to download them in a thoughtful way that allows the user to interact with the content quickly rather than having to wait for a long download. Strategies like quantization have made ML models smaller and accessible to edge devices, but they're still large enough that you don't want to bundle them in your web app. Store your models in the cloud storage solution of your choice. Then, when you initialize your task, the model and WebAssembly binary will be downloaded and initialized. After the first page load, use local storage or IndexedDB to cache the model and binary so future page loads run even faster. You can see an example of this in this <a href="https://github.com/googlesamples/mediapipe/tree/main/tutorials/atm_playground">touchless ATM sample app on GitHub</a>.</p><p data-block-key="a28c8"></p><h2 data-block-key="jklle">✅ DO initialize your task early</h2><p data-block-key="ejsdk"></p><p data-block-key="vro0g">Task initialization can take a bit of time depending on model size, connection speed, and device type. Therefore, it's a good idea to initialize the solution before user interaction. In the majority of the code samples on Codepen, initialization takes place on page load. Keep in mind that these samples are meant to be as simple as possible so you can understand the code and apply it to your own use case. Initializing your model on page load might not make sense for you. Just focus on finding the right place to spin up the task so that processing is hidden from the user.</p><p data-block-key="zj7z5">After initialization, you should warm up the task by passing a placeholder image through the model. This example shows a function for running a 1x1 pixel canvas through the Pose Landmarker task:</p><p data-block-key="pt70l"></p>
+</div>  <div class="inner-block-content code-block line-numbers">
+    <pre class="language-javascript line-numbers" tabindex="0"><code class="language-javascript"><span class="token keyword">function</span> <span class="token function">dummyDetection</span><span class="token punctuation">(</span><span class="token parameter"><span class="token literal-property property">poseLandmarker</span><span class="token operator">:</span> PoseLandmarker</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> width <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+  <span class="token keyword">const</span> height <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+  <span class="token keyword">const</span> canvas <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">createElement</span><span class="token punctuation">(</span><span class="token string">'canvas'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  canvas<span class="token punctuation">.</span>width <span class="token operator">=</span> width<span class="token punctuation">;</span>
+  canvas<span class="token punctuation">.</span>height <span class="token operator">=</span> height<span class="token punctuation">;</span>
+  
+  <span class="token keyword">const</span> ctx <span class="token operator">=</span> canvas<span class="token punctuation">.</span><span class="token function">getContext</span><span class="token punctuation">(</span><span class="token string">'2d'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  ctx<span class="token punctuation">.</span>fillStyle <span class="token operator">=</span> <span class="token string">'rgba(0, 0, 0, 1)'</span><span class="token punctuation">;</span>
+  ctx<span class="token punctuation">.</span><span class="token function">fillRect</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> width<span class="token punctuation">,</span> height<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  poseLandmarker<span class="token punctuation">.</span><span class="token function">detect</span><span class="token punctuation">(</span>canvas<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+    <div class="language-block glue-font-weight-medium">
+        JavaScript
+    </div>
+    <div class="copy-code-block">
+        <span class="hidden">Copied</span>
+        <button class="copy-clipboard">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"></path></svg>
+        </button>
+    </div>
+    <div class="dark-mode-block">
+        <button class="dark-mode-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Zm-10-270Z"></path></svg>
+        </button>
+    </div>
+    
+</div>  <div class="inner-block-content rich-content">
+    <h2 data-block-key="xmza0"><br></h2><h2 data-block-key="0c03v">✅ DO clean up resources</h2><p data-block-key="rf3ts">One of my favorite parts of JavaScript is automatic garbage collection. In fact, I can't remember the last time memory management crossed my mind. Hopefully you've cached a little information about memory in your own memory, as you'll need just a bit of it to make the most of your MediaPipe task. MediaPipe Solutions for web uses WebAssembly (WASM) to run C++ code in-browser. You don't need to know C++, but it helps to know that C++ makes you take out your own garbage. If you don't free up unused memory, you will find that your web page uses more and more memory over time. It can have performance issues or even crash.</p><p data-block-key="j9svz">When you're done with your solution, free up resources using the .close() method.</p><p data-block-key="syyij">For example, I can create a gesture recognizer using the following code:</p><p data-block-key="sf31k"></p>
+</div>  <div class="inner-block-content code-block line-numbers">
+    <pre class="language-javascript line-numbers" tabindex="0"><code class="language-javascript"><span class="token keyword">const</span> <span class="token function-variable function">createGestureRecognizer</span> <span class="token operator">=</span> <span class="token keyword">async</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=&gt;</span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> vision <span class="token operator">=</span> <span class="token keyword">await</span> FilesetResolver<span class="token punctuation">.</span><span class="token function">forVisionTasks</span><span class="token punctuation">(</span>
+    <span class="token string">"https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"</span>
+  <span class="token punctuation">)</span><span class="token punctuation">;</span>
+  gestureRecognizer <span class="token operator">=</span> <span class="token keyword">await</span> GestureRecognizer<span class="token punctuation">.</span><span class="token function">createFromOptions</span><span class="token punctuation">(</span>vision<span class="token punctuation">,</span> <span class="token punctuation">{</span>
+    <span class="token literal-property property">baseOptions</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+      <span class="token literal-property property">modelAssetPath</span><span class="token operator">:</span>
+        <span class="token string">"https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task"</span><span class="token punctuation">,</span>
+      <span class="token literal-property property">delegate</span><span class="token operator">:</span> <span class="token string">"GPU"</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span class="token function">createGestureRecognizer</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+    <div class="language-block glue-font-weight-medium">
+        JavaScript
+    </div>
+    <div class="copy-code-block">
+        <span class="hidden">Copied</span>
+        <button class="copy-clipboard">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"></path></svg>
+        </button>
+    </div>
+    <div class="dark-mode-block">
+        <button class="dark-mode-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Zm-10-270Z"></path></svg>
+        </button>
+    </div>
+    
+</div>  <div class="inner-block-content rich-content">
+    <p data-block-key="4174t">Once I'm done recognizing gestures, I dispose of the gesture recognizer using the close() method:</p><p data-block-key="5gs5d"></p>
+</div>  <div class="inner-block-content code-block line-numbers">
+    <pre class="language-javascript line-numbers" tabindex="0"><code class="language-javascript">gestureRecognizer<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+    <div class="language-block glue-font-weight-medium">
+        JavaScript
+    </div>
+    <div class="copy-code-block">
+        <span class="hidden">Copied</span>
+        <button class="copy-clipboard">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"></path></svg>
+        </button>
+    </div>
+    <div class="dark-mode-block">
+        <button class="dark-mode-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Zm-10-270Z"></path></svg>
+        </button>
+    </div>
+    
+</div>  <div class="inner-block-content rich-content">
+    <p data-block-key="5r984">Each task has a close method, so be sure to use it where relevant! Some tasks have close() methods for the returned results, so refer to the <a href="https://developers.google.com/mediapipe/api/solutions/js/tasks-vision">API docs</a> for details.</p><p data-block-key="dbjrd"></p><h2 data-block-key="xzj66">✅ DO try out tasks in MediaPipe Studio</h2><p data-block-key="7smfo"></p><p data-block-key="297rj">When deciding on or customizing your solution, it's a good idea to try it out in <a href="https://mediapipe-studio.webapps.google.com/home">MediaPipe Studio</a> before writing your own code. MediaPipe Studio is a web-based application for evaluating and customizing on-device ML models and pipelines for your applications. The app lets you quickly test MediaPipe solutions in your browser with your own data, and your own customized ML models. Each solution demo also lets you experiment with model settings for the total number of results, minimum confidence threshold for reporting results, and more. You'll find this especially useful when customizing solutions so you can see how your model performs without needing to create a test web page.</p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/mediapipe.original.png" alt="MediaPipeStudioImage">
+            
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <h2 data-block-key="6ewah">✅ DO test on different devices</h2><p data-block-key="11mhf"></p><p data-block-key="6b7v9">It's always important to test your web apps on various devices and browsers to ensure they work as expected, but I think it's worth adding a reminder here to test early and often on a variety of platforms. You can use MediaPipe Studio to test devices as well so you know right away that a solution will work on your users' devices.</p><p data-block-key="462kg"></p><h2 data-block-key="vftd6">❌ DON'T default to the biggest model</h2><p data-block-key="5uvoo"></p><p data-block-key="pe3yg">Each task lists one or more recommended models. For example, the <a href="https://developers.google.com/mediapipe/solutions/vision/object_detector#models">Object Detection task</a> lists three different models, each with benefits and drawbacks based on speed, size and accuracy. It can be tempting to think that the most important thing is to choose the model with the very highest accuracy, but if you do so, you will be sacrificing speed and increasing the size of your model. Depending on your use case, your users might benefit from a faster result rather than a more accurate one. The best way to compare model options is in MediaPipe Studio. I realize that this is starting to sound like an advertisement for MediaPipe Studio, but it really does come in handy here!</p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/image1.original.jpg" alt="image1.jpg">
+            
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <h2 data-block-key="jf7ct">✅ DO reach out!</h2><p data-block-key="2vn3o"></p><p data-block-key="n26yp">Do you have any dos or don'ts of ML on the web that you think I missed? Do you have questions about how to get started? Or do you have a cool project you want to share? Reach out to me on <a href="https://www.linkedin.com/in/jennifer-person/">LinkedIn</a> and tell me all about it!</p>
+</div> 
+      </div>
+    </section>
+    
+
+    <section class="navigation-container glue-page glue-spacer-6-top">
+      <div class="posted-in-section">
+        <div class="posted-in-section__heading">
+          <span class="glue-caption">
+            posted in:
+          </span>
+        </div>
+        <div class="posted-in-section__tags">
+          <ul>
+              
+                  <li>
+                      <a href="/search/?technology_categories=Mobile" class="glue-caption">Mobile</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?technology_categories=AI" class="glue-caption">AI</a>
+                  </li>
+              
+              
+                  <li>
+                      <a href="/search/?tag=web development" class="glue-caption">web development</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=ML" class="glue-caption">ML</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=augmented reality" class="glue-caption">augmented reality</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=MediaPipe" class="glue-caption">MediaPipe</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=javascript" class="glue-caption">javascript</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=Machine Learning" class="glue-caption">Machine Learning</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=Artificial Intelligence" class="glue-caption">Artificial Intelligence</a>
+                  </li>
+              
+          </ul>
+      </div>
+      </div>
+      <div class="buttons-section">
+        <div class="buttons-section__left">
+          <a href="/weareplay-meet-solape-and-yomi-from-nigeria-more-stories-from-around-the-world/" class="glue-button--icon glue-elevation-level-1 " aria-label="Previous">
+            <svg role="presentation" aria-hidden="true" class="glue-icon">
+              <use href="/glue-icon/#chevron-left"></use>
+            </svg>
+          </a>
+          <span class="caption ">Previous</span>
+        </div>
+        <div class="buttons-section__right">
+          <span class="caption ">Next</span>
+          <a href="/mediapipe-on-device-text-to-image-generation-solution-now-available-for-android-developers/" class="glue-button--icon glue-elevation-level-1 " aria-label="Next">
+            <svg role="presentation" aria-hidden="true" class="glue-icon">
+              <use href="/glue-icon/#chevron-right"></use>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class="related-posts-container glue-page glue-spacer-6-top glue-spacer-3-bottom">
+      <span class="glue-headline glue-headline--headline-3">Related Posts</span>
+      <div class="related-posts-container__carousel glue-page glue-spacer-5-top">
+        <div class="glue-carousel glue-carousel--cards glue-carousel-related-posts glue-carousel--peek-out glue-carousel--has-navigation" aria-label="Related Posts">
+          <!-- Previous -->
+          <button class="glue-carousel__button glue-carousel__button--prev glue-is-inactive" aria-label="Go to the previous slide" aria-controls="">
+            <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--32px">
+              <use href="/glue-icon/#chevron-left"></use>
+            </svg>
+          </button>
+          <!-- Next -->
+          <button class="glue-carousel__button glue-carousel__button--next glue-is-inactive" aria-label="Go to the next slide" aria-controls="">
+            <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--32px">
+              <use href="/glue-icon/#chevron-right"></use>
+            </svg>
+          </button>
+          <!-- List -->
+          <div class="glue-carousel__viewport">
+            <div class="glue-carousel__list" aria-live="polite" style="width: 990px; grid-template-columns: repeat(2, 1fr); transform: translate3d(0px, 0px, 0px);">
+              
+                <a class="glue-card glue-carousel__item" href="/introducing-credentio-open-source-c-library-for-c2pa-content-credentials-from-google/" tabindex="0">
+                  <div aria-label="Introducing Credentio: Open Source C++ Library for C2PA Content Credentials from Google" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Introducing Credentio: Open Source C++ Library for C2PA Content Credentials from Google" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/credentio-hero-updated.2e16d0ba.fill-800x400.png">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">Mobile</span>
+                            
+                            <span class="glue-label">Web</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                            <span class="glue-label">Solutions</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Introducing Credentio: Open Source C++ Library for C2PA Content Credentials from Google</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">AUG. 13, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+                <a class="glue-card glue-carousel__item" href="/announcing-adk-for-kotlin-10-building-production-ready-ai-agents-in-kotlin-android-and-beyond/" tabindex="-1">
+                  <div aria-label="Announcing ADK for Kotlin 1.0: Building Production-Ready AI Agents in Kotlin, Android, and Beyond" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Announcing ADK for Kotlin 1.0: Building Production-Ready AI Agents in Kotlin, Android, and Beyond" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/banner-1080p.2e16d0ba.fill-800x400.png">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">Mobile</span>
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Announcing ADK for Kotlin 1.0: Building Production-Ready AI Agents in Kotlin, Android, and Beyond</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">SEPT. 9, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+            </div>
+          </div>
+          <!-- Navigation dots -->
+          <div class="glue-carousel__navigation" aria-label="Choose a page" data-glue-carousel-navigation-label="Selected tab $glue_carousel_page_number$ of $glue_carousel_page_total$">
+          <button class="glue-carousel__dot glue-is-active" data-dot="1" aria-controls="" aria-label="Selected tab 1 of 1" tabindex="0" aria-current="true"></button></div>
+        </div>
+      </div>
+    </section>
+    
+  </div>
+
+
+				
+				
+
+<div class="footer-linkboxes__wrapper">
+  <nav class="footer-linkboxes" aria-label="Footer links">
+    <ul class="footer-linkboxes__list">
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Connect
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//googledevelopers.blogspot.com" class="footer-linkbox-list__link">
+                Blog
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/3FReQXN" class="footer-linkbox-list__link">
+                Bluesky
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/googlefordevs" class="footer-linkbox-list__link">
+                Instagram
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/gdevs-li" class="footer-linkbox-list__link">
+                LinkedIn
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/gdevs-tw" class="footer-linkbox-list__link">
+                X (Twitter)
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/developers" class="footer-linkbox-list__link">
+                YouTube
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Programs
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/program" class="footer-linkbox-list__link">
+                Google Developer Program
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/gdg" class="footer-linkbox-list__link">
+                Google Developer Groups
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/experts" class="footer-linkbox-list__link">
+                Google Developer Experts
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/accelerators" class="footer-linkbox-list__link">
+                Accelerators
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//www.womentechmakers.com" class="footer-linkbox-list__link">
+                Women Techmakers
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/nvidia" class="footer-linkbox-list__link">
+                Google Cloud &amp; NVIDIA
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Developer consoles
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.developers.google.com" class="footer-linkbox-list__link">
+                Google API Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.cloud.google.com" class="footer-linkbox-list__link">
+                Google Cloud Platform Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//play.google.com/apps/publish" class="footer-linkbox-list__link">
+                Google Play Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.firebase.google.com" class="footer-linkbox-list__link">
+                Firebase Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.actions.google.com" class="footer-linkbox-list__link">
+                Actions on Google Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//cast.google.com/publish" class="footer-linkbox-list__link">
+                Cast SDK Developer Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//chrome.google.com/webstore/developer/dashboard" class="footer-linkbox-list__link">
+                Chrome Web Store Dashboard
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.home.google.com/" class="footer-linkbox-list__link">
+                Google Home Developer Console
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+    </ul>
+  </nav>
+</div>
+<div class="footer-utility__wrapper">
+  <div>
+    <nav class="footer-sites" aria-label="Other Google Developers websites">
+      <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+        <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+      </a>
+      <ul class="footer-sites-list">
+        <li class="footer-sites-item">
+          <a href="//developer.android.com" class="footer-sites-link">
+            Android
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//developer.chrome.com/home" class="footer-sites-link">
+            Chrome
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//firebase.google.com" class="footer-sites-link">
+            Firebase
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//cloud.google.com" class="footer-sites-link">
+            Google Cloud Platform
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//developers.google.com/products" class="footer-sites-link">
+            All products
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <button aria-hidden="true" class="glue-cookie-notification-bar-control footer-sites-link">
+            Manage cookies
+          </button>
+        </li>
+      </ul>
+    </nav>
+    <nav class="footer-utility-links">
+      <ul class="footer-utility-list">
+        <li class="footer-utility-item">
+          <a href="//developers.google.com/terms/site-terms" class="footer-utility-link">
+            Terms
+          </a>
+        </li>
+        <li class="footer-utility-item">
+          <a href="//policies.google.com/privacy" class="footer-utility-link">
+            Privacy
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+
+        
+				
+
+        
+        <script nonce="" src="https://www.youtube.com/player_api"></script>
+        <script nonce="" src="//www.gstatic.com/glue/v27_1/glue.min.js"></script>
+        <script nonce="" type="text/javascript" src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/dgc_blog.js"></script>
+
+        <script nonce="" src="https://www.gstatic.com/glue/cookienotificationbar/cookienotificationbar.min.js" data-glue-cookie-notification-bar-category="2A" data-glue-cookie-notification-bar-site-id="developers.googleblog.com"></script>
+
+        
+  <script src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/blog_detail.js" nonce=""></script>
+  <script src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/prism.js" nonce=""></script>
+
+    
+
+</body></html>

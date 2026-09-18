@@ -1,0 +1,963 @@
+<html lang="en-US"><head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-title" content="Engineering at Meta - Engineering at Meta Blog">
+	<meta property="fb:app_id" content="1425766027653270">
+	<link rel="profile" href="http://gmpg.org/xfn/11">
+	<link rel="pingback" href="https://engineering.fb.com/xmlrpc.php">
+	<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+		<script src="https://connect.facebook.net/en_US/bundle/sdk.js/" async="" crossorigin="anonymous"></script><script src="//connect.facebook.net/en_US/sdk.js#xfbml=1&amp;appId=249643311490&amp;version=v2.3"></script><script id="facebook-jssdk" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&amp;version=v2.6"></script><script async="" src="https://engineering.fb.com/wp-content/themes/code-fb-com/dist/js/optimize.min.js"></script>
+	
+	<!-- This site is optimized with the Yoast SEO Premium plugin v19.3 (Yoast SEO v27.3) - https://yoast.com/product/yoast-seo-premium-wordpress/ -->
+	<title>Announcing tools to help partners improve connectivity - Engineering at Meta</title>
+	<link rel="canonical" href="https://engineering.fb.com/2018/08/10/connectivity/announcing-tools-to-help-partners-improve-connectivity/">
+	<meta name="twitter:label1" content="Written by">
+	<meta name="twitter:data1" content="Vincent Gonguet, changigi649">
+	<meta name="twitter:label2" content="Est. reading time">
+	<meta name="twitter:data2" content="6 minutes">
+	<script type="application/ld+json" class="yoast-schema-graph">{"@context":"https:\/\/schema.org","@graph":[{"@type":"Article","@id":"https:\/\/engineering.fb.com\/2018\/08\/10\/connectivity\/announcing-tools-to-help-partners-improve-connectivity\/#article","isPartOf":{"@id":"https:\/\/engineering.fb.com\/2018\/08\/10\/connectivity\/announcing-tools-to-help-partners-improve-connectivity\/"},"author":[{"@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/bb774a749b062af76b20f3983a5a258c"},{"@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/7167c692371a46d5bb5879bbd971c6c0"}],"headline":"Announcing tools to help partners improve connectivity","datePublished":"2018-08-10T17:00:32+00:00","dateModified":"2026-01-29T21:33:06+00:00","mainEntityOfPage":{"@id":"https:\/\/engineering.fb.com\/2018\/08\/10\/connectivity\/announcing-tools-to-help-partners-improve-connectivity\/"},"wordCount":1269,"publisher":{"@id":"https:\/\/engineering.fb.com\/#organization"},"image":{"@id":"https:\/\/engineering.fb.com\/2018\/08\/10\/connectivity\/announcing-tools-to-help-partners-improve-connectivity\/#primaryimage"},"thumbnailUrl":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2018\/08\/Asset-1-green.png","articleSection":["Connectivity","Networking &amp; Traffic"],"inLanguage":"en-US"},{"@type":"WebPage","@id":"https:\/\/engineering.fb.com\/2018\/08\/10\/connectivity\/announcing-tools-to-help-partners-improve-connectivity\/","url":"https:\/\/engineering.fb.com\/2018\/08\/10\/connectivity\/announcing-tools-to-help-partners-improve-connectivity\/","name":"Announcing tools to help partners improve connectivity - Engineering at Meta","isPartOf":{"@id":"https:\/\/engineering.fb.com\/#website"},"primaryImageOfPage":{"@id":"https:\/\/engineering.fb.com\/2018\/08\/10\/connectivity\/announcing-tools-to-help-partners-improve-connectivity\/#primaryimage"},"image":{"@id":"https:\/\/engineering.fb.com\/2018\/08\/10\/connectivity\/announcing-tools-to-help-partners-improve-connectivity\/#primaryimage"},"thumbnailUrl":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2018\/08\/Asset-1-green.png","datePublished":"2018-08-10T17:00:32+00:00","dateModified":"2026-01-29T21:33:06+00:00","breadcrumb":{"@id":"https:\/\/engineering.fb.com\/2018\/08\/10\/connectivity\/announcing-tools-to-help-partners-improve-connectivity\/#breadcrumb"},"inLanguage":"en-US","potentialAction":[{"@type":"ReadAction","target":["https:\/\/engineering.fb.com\/2018\/08\/10\/connectivity\/announcing-tools-to-help-partners-improve-connectivity\/"]}]},{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/engineering.fb.com\/2018\/08\/10\/connectivity\/announcing-tools-to-help-partners-improve-connectivity\/#primaryimage","url":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2018\/08\/Asset-1-green.png","contentUrl":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2018\/08\/Asset-1-green.png","width":1333,"height":751},{"@type":"BreadcrumbList","@id":"https:\/\/engineering.fb.com\/2018\/08\/10\/connectivity\/announcing-tools-to-help-partners-improve-connectivity\/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https:\/\/engineering.fb.com\/"},{"@type":"ListItem","position":2,"name":"Announcing tools to help partners improve connectivity"}]},{"@type":"WebSite","@id":"https:\/\/engineering.fb.com\/#website","url":"https:\/\/engineering.fb.com\/","name":"Engineering at Meta","description":"Engineering at Meta Blog","publisher":{"@id":"https:\/\/engineering.fb.com\/#organization"},"potentialAction":[{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https:\/\/engineering.fb.com\/?s={search_term_string}"},"query-input":{"@type":"PropertyValueSpecification","valueRequired":true,"valueName":"search_term_string"}}],"inLanguage":"en-US"},{"@type":"Organization","@id":"https:\/\/engineering.fb.com\/#organization","name":"Meta","url":"https:\/\/engineering.fb.com\/","logo":{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/engineering.fb.com\/#\/schema\/logo\/image\/","url":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2023\/08\/Meta_lockup_positive-primary_RGB.jpg","contentUrl":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2023\/08\/Meta_lockup_positive-primary_RGB.jpg","width":29011,"height":12501,"caption":"Meta"},"image":{"@id":"https:\/\/engineering.fb.com\/#\/schema\/logo\/image\/"},"sameAs":["https:\/\/www.facebook.com\/Engineering\/","https:\/\/x.com\/fb_engineering"]},[],{"@type":"Person","@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/bb774a749b062af76b20f3983a5a258c","name":"Vincent Gonguet","image":{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g23494c9101089ad44ae88ce9d2f56aac","url":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","contentUrl":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","caption":"Vincent Gonguet"},"url":"https:\/\/engineering.fb.com\/author\/vincent-gonguet\/"},{"@type":"Person","@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/7167c692371a46d5bb5879bbd971c6c0","name":"changigi649","image":{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/secure.gravatar.com\/avatar\/a090692c0af9b5ed6f8071e0a05e3147f0ba61b52a51c0671d073d9adb4e198e?s=96&d=mm&r=g8fd1e2b34e75c09c4aea578e73cbde79","url":"https:\/\/secure.gravatar.com\/avatar\/a090692c0af9b5ed6f8071e0a05e3147f0ba61b52a51c0671d073d9adb4e198e?s=96&d=mm&r=g","contentUrl":"https:\/\/secure.gravatar.com\/avatar\/a090692c0af9b5ed6f8071e0a05e3147f0ba61b52a51c0671d073d9adb4e198e?s=96&d=mm&r=g","caption":"changigi649"},"url":"https:\/\/engineering.fb.com\/author\/changigi649\/"}]}</script>
+	<!-- / Yoast SEO Premium plugin. -->
+
+
+<link rel="dns-prefetch" href="//secure.gravatar.com">
+<link rel="dns-prefetch" href="//v0.wordpress.com">
+<link rel="alternate" type="application/rss+xml" title="Engineering at Meta » Feed" href="https://engineering.fb.com/feed/">
+<link rel="alternate" type="application/rss+xml" title="Engineering at Meta » Comments Feed" href="https://engineering.fb.com/comments/feed/">
+	<script async="" src="https://www.googleoptimize.com/optimize.js?id=OPT-TPNDQC5" onerror="dataLayer.hide.end &amp;&amp; dataLayer.hide.end()"></script>
+	<link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed" href="https://engineering.fb.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fengineering.fb.com%2F2018%2F08%2F10%2Fconnectivity%2Fannouncing-tools-to-help-partners-improve-connectivity%2F">
+<link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed" href="https://engineering.fb.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fengineering.fb.com%2F2018%2F08%2F10%2Fconnectivity%2Fannouncing-tools-to-help-partners-improve-connectivity%2F&amp;format=xml">
+<style id="wp-img-auto-sizes-contain-inline-css">
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+<style id="wp-emoji-styles-inline-css">
+
+	img.wp-smiley, img.emoji {
+		display: inline !important;
+		border: none !important;
+		box-shadow: none !important;
+		height: 1em !important;
+		width: 1em !important;
+		margin: 0 0.07em !important;
+		vertical-align: -0.1em !important;
+		background: none !important;
+		padding: 0 !important;
+	}
+/*# sourceURL=wp-emoji-styles-inline-css */
+</style>
+<style id="wp-block-library-inline-css">
+:root{--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color);--wp-editor-canvas-background:#ddd;--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,160.5;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#020381,#2874fc)}:root{--wp--preset--font-size--normal:16px;--wp--preset--font-size--huge:42px}.has-regular-font-size{font-size:1em}.has-larger-font-size{font-size:2.625em}.has-normal-font-size{font-size:var(--wp--preset--font-size--normal)}.has-huge-font-size{font-size:var(--wp--preset--font-size--huge)}:root .has-text-align-center{text-align:center}:root .has-text-align-left{text-align:left}:root .has-text-align-right{text-align:right}.has-fit-text{white-space:nowrap!important}#end-resizable-editor-section{display:none}.aligncenter{clear:both}.items-justified-left{justify-content:flex-start}.items-justified-center{justify-content:center}.items-justified-right{justify-content:flex-end}.items-justified-space-between{justify-content:space-between}.screen-reader-text{word-wrap:normal!important;border:0;clip-path:inset(50%);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px;word-break:normal!important}.screen-reader-text:focus{background-color:#ddd;clip-path:none;color:#444;display:block;font-size:1em;height:auto;left:5px;line-height:normal;padding:15px 23px 14px;text-decoration:none;top:5px;width:auto;z-index:100000}html :where(.has-border-color){border-style:solid}html :where([style^=border-color],[style*=";border-color"],[style*="; border-color"]){border-style:solid}html :where([style^=border-top-color],[style*=";border-top-color"],[style*="; border-top-color"]){border-top-style:solid}html :where([style^=border-right-color],[style*=";border-right-color"],[style*="; border-right-color"]){border-right-style:solid}html :where([style^=border-bottom-color],[style*=";border-bottom-color"],[style*="; border-bottom-color"]){border-bottom-style:solid}html :where([style^=border-left-color],[style*=";border-left-color"],[style*="; border-left-color"]){border-left-style:solid}html :where([style^=border-width],[style*=";border-width"],[style*="; border-width"]){border-style:solid}html :where([style^=border-top-width],[style*=";border-top-width"],[style*="; border-top-width"]){border-top-style:solid}html :where([style^=border-right-width],[style*=";border-right-width"],[style*="; border-right-width"]){border-right-style:solid}html :where([style^=border-bottom-width],[style*=";border-bottom-width"],[style*="; border-bottom-width"]){border-bottom-style:solid}html :where([style^=border-left-width],[style*=";border-left-width"],[style*="; border-left-width"]){border-left-style:solid}html :where(img[class*=wp-image-]){height:auto;max-width:100%}:where(figure){margin:0 0 1em}html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:var(--wp-admin--admin-bar--height,0px)}@media screen and (max-width:600px){html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:0px}}
+
+/*# sourceURL=/wp-includes/css/dist/block-library/common.min.css */
+</style>
+<style id="classic-theme-styles-inline-css">
+/*! This file is auto-generated */
+.wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{background:#32373c;color:#fff;text-decoration:none}
+/*# sourceURL=/wp-includes/css/classic-themes.min.css */
+</style>
+
+<style id="global-styles-inline-css">
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgb(252,185,0) 0%,rgb(255,105,0) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgb(255,105,0) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgb(255, 255, 255), 6px 6px rgb(0, 0, 0);--wp--preset--shadow--crisp: 6px 6px 0px rgb(0, 0, 0);}.wp-block-button{--wp--preset--dimension--25: 25%;--wp--preset--dimension--50: 50%;--wp--preset--dimension--75: 75%;--wp--preset--dimension--100: 100%;}:where(body) { margin: 0; }:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}body{padding-top: 0px;padding-right: 0px;padding-bottom: 0px;padding-left: 0px;}:root :where(.wp-element-button, .wp-block-button__link){background-color: #32373c;border-width: 0;color: #fff;font-family: inherit;font-size: inherit;font-style: inherit;font-weight: inherit;letter-spacing: inherit;line-height: inherit;padding-top: calc(0.667em + 2px);padding-right: calc(1.333em + 2px);padding-bottom: calc(0.667em + 2px);padding-left: calc(1.333em + 2px);text-decoration: none;text-transform: inherit;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+/*# sourceURL=global-styles-inline-css */
+</style>
+
+<link rel="stylesheet" id="all-css-12" href="https://engineering.fb.com/_static/??-eJyNjUsOwjAMRC9EahUKhQXiKFVqhzSQn+pEiNuTFJBAbNjZTzNv4BYFBp+UTxBt1sYzFKQpzpVz5WQ4QSUv0CDzCj6KaVJOMWAgJc5jwe7ZKTnAyVgSS6Jxxv90XRbv3YtKUeJVtLtmDS5QtkXKk5wVSaL7chqv/1YMxiOMuewDBzTSCht04K+nyk7u2Pb7Q99t+m77AIpaY4w=" type="text/css" media="all">
+<script id="gdprconsent-js" src="https://engineering.fb.com/wp-content/plugins/wp-gdpr-consent/dist/gdprconsent.js?ver=2.0.0"></script>
+<script id="gdprconsent-js-after">
+if (window.gdprSafeTrack) {
+  						window.gdprSafeTrack('https://www.googletagmanager.com/gtag/js?id=391063774');
+						window.gdprSafeTrack(function() {
+							var google_analytics_g4  = decodeURIComponent( '391063774' );
+							window.dataLayer = window.dataLayer || [];
+							function gtag(){dataLayer.push(arguments);}
+							gtag('js', new Date());
+							gtag('config', google_analytics_g4);
+						});
+					}
+if (window.gdprSafeTrack) {
+						window.gdprSafeTrack(function() {
+							var google_tag_manager  = decodeURIComponent( 'GTM-KZRLGZ8' );
+							(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+							new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+							j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+							'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+							})(window,document,'script','dataLayer',google_tag_manager);
+						});
+					}
+if (window.gdprSafeTrack) {
+						window.gdprSafeTrack(function() {
+							var facebook_pixel  = decodeURIComponent( '660742068067366' );
+							!function(f,b,e,v,n,t,s)
+							{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+							n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+							if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+							n.queue=[];t=b.createElement(e);t.async=!0;
+							t.src=v;s=b.getElementsByTagName(e)[0];
+							s.parentNode.insertBefore(t,s)}(window, document,'script',
+							'https://connect.facebook.net/en_US/fbevents.js');
+							fbq('init', facebook_pixel);
+							fbq('track', 'PageView');
+						});
+					}
+//# sourceURL=gdprconsent-js-after
+</script>
+<script type="text/javascript" src="https://engineering.fb.com/_static/??-eJzTLy/QzcxLzilNSS3WzwKiwtLUokoopZebmaeXVayjj0+Rbm5melFiSSpUsX2uraG5haW5iZGFmWUWAK/xIjU="></script><script type="text/javascript" src="https://engineering.fb.com/wp-content/themes/understrap/js/popper.min.js?m=1773259670g"></script><link rel="https://api.w.org/" href="https://engineering.fb.com/wp-json/"><link rel="alternate" title="JSON" type="application/json" href="https://engineering.fb.com/wp-json/wp/v2/posts/9800"><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://engineering.fb.com/xmlrpc.php?rsd">
+<meta name="generator" content="WordPress 7.1.1">
+<link rel="shortlink" href="https://wp.me/pa0Lhq-2y4">
+<link rel="preload" href="https://engineering.fb.com/wp-content/themes/code-fb-com/fonts/FacebookReader-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous"><link rel="preload" href="https://engineering.fb.com/wp-content/themes/code-fb-com/fonts/FacebookReader-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous"><link rel="preload" href="https://engineering.fb.com/wp-content/themes/code-fb-com/fonts/Optimistic_Display_W_Md.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<!-- Jetpack Open Graph Tags -->
+<meta property="og:type" content="article">
+<meta property="og:title" content="Announcing tools to help partners improve connectivity">
+<meta property="og:url" content="https://engineering.fb.com/2018/08/10/connectivity/announcing-tools-to-help-partners-improve-connectivity/">
+<meta property="og:description" content="High quality internet access helps people communicate, share knowledge, and strengthen their communities and economies — yet billions of people still lack baseline connectivity. To address this pro…">
+<meta property="article:published_time" content="2018-08-10T17:00:32+00:00">
+<meta property="article:modified_time" content="2026-01-29T21:33:06+00:00">
+<meta property="og:site_name" content="Engineering at Meta">
+<meta property="og:image" content="https://engineering.fb.com/wp-content/uploads/2018/08/Asset-1-green.png">
+<meta property="og:image:width" content="1333">
+<meta property="og:image:height" content="751">
+<meta property="og:image:alt" content="">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:text:title" content="Announcing tools to help partners improve connectivity">
+<meta name="twitter:image" content="https://engineering.fb.com/wp-content/uploads/2018/08/Asset-1-green.png?w=640">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- End Jetpack Open Graph Tags -->
+<style id="wp-custom-css">
+.table-of-contents {
+  position: sticky;
+  top: 20px;
+  background: #fff;
+  padding: 1em;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-width: 250px;
+}
+</style>
+
+	<link rel="shortcut icon" href="https://engineering.fb.com/wp-content/themes/code-fb-com/favicon.ico">
+<script src="https://engineering.fb.com/wp-includes/js/wp-emoji-release.min.js?ver=7.1.1" defer=""></script><style type="text/css" data-fbcssmodules="css:fb.css.base css:fb.css.dialog css:fb.css.iframewidget">.fb_hidden{position:absolute;top:-10000px;z-index:10001}.fb_reposition{overflow:hidden;position:relative}.fb_invisible{display:none}.fb_reset{background:none;border:0px;border-spacing:0;color:#000;cursor:auto;direction:ltr;font-family:lucida grande,tahoma,verdana,arial,sans-serif;font-size:11px;font-style:normal;font-variant:normal;font-weight:400;letter-spacing:normal;line-height:1;margin:0;overflow:visible;padding:0;text-align:left;text-decoration:none;text-indent:0;text-shadow:none;text-transform:none;visibility:visible;white-space:normal;word-spacing:normal}.fb_reset>div{overflow:hidden}@keyframes fb_transform{0%{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}.fb_animate{animation:fb_transform .3s forwards}
+
+.fb_dialog{background:#525252b3;position:absolute;top:-10000px;z-index:10001}.fb_dialog_advanced{border-radius:8px;padding:10px}.fb_dialog_content{background:#fff;color:#373737}.fb_dialog_close_icon{background:url(https://connect.facebook.net/rsrc.php/v4/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 0 transparent;cursor:pointer;display:block;height:15px;position:absolute;right:18px;top:17px;width:15px}.fb_dialog_mobile .fb_dialog_close_icon{left:5px;right:auto;top:5px}.fb_dialog_padding{background-color:transparent;position:absolute;width:1px;z-index:-1}.fb_dialog_close_icon:hover{background:url(https://connect.facebook.net/rsrc.php/v4/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 -15px transparent}.fb_dialog_close_icon:active{background:url(https://connect.facebook.net/rsrc.php/v4/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 -30px transparent}.fb_dialog_iframe{line-height:0}.fb_dialog_content .dialog_title{background:#6d84b4;border:1px solid #365899;color:#fff;font-size:14px;font-weight:700;margin:0}.fb_dialog_content .dialog_title>span{background:url(https://connect.facebook.net/rsrc.php/v4/yd/r/Cou7n-nqK52.gif) no-repeat 5px 50%;float:left;padding:5px 0 7px 26px}body.fb_hidden{height:100%;left:0;margin:0;overflow:visible;position:absolute;top:-10000px;transform:none;width:100%}.fb_dialog.fb_dialog_mobile.loading{background:url(https://connect.facebook.net/rsrc.php/v4/ya/r/3rhSv5V8j3o.gif) #fff no-repeat 50% 50%;min-height:100%;min-width:100%;overflow:hidden;position:absolute;top:0;z-index:10001}.fb_dialog.fb_dialog_mobile.loading.centered{background:none;height:auto;min-height:initial;min-width:initial;width:auto}.fb_dialog.fb_dialog_mobile.loading.centered #fb_dialog_loader_spinner{width:100%}.fb_dialog.fb_dialog_mobile.loading.centered .fb_dialog_content{background:none}.loading.centered #fb_dialog_loader_close{clear:both;color:#fff;display:block;font-size:18px;padding-top:20px}#fb-root #fb_dialog_ipad_overlay{background:#0006;inset:0;min-height:100%;position:absolute;width:100%;z-index:10000}#fb-root #fb_dialog_ipad_overlay.hidden{display:none}.fb_dialog.fb_dialog_mobile.loading iframe{visibility:hidden}.fb_dialog_mobile .fb_dialog_iframe{position:sticky;top:0}.fb_dialog_content .dialog_header{background:linear-gradient(from(#738aba),to(#2c4987));border-bottom:1px solid;border-color:#043b87;box-shadow:#fff 0 1px 1px -1px inset;color:#fff;font:700 14px Helvetica,sans-serif;text-overflow:ellipsis;text-shadow:rgba(0,30,84,.296875) 0px -1px 0px;vertical-align:middle;white-space:nowrap}.fb_dialog_content .dialog_header table{height:43px;width:100%}.fb_dialog_content .dialog_header td.header_left{font-size:12px;padding-left:5px;vertical-align:middle;width:60px}.fb_dialog_content .dialog_header td.header_right{font-size:12px;padding-right:5px;vertical-align:middle;width:60px}.fb_dialog_content .touchable_button{background:linear-gradient(from(#4267B2),to(#2a4887));background-clip:padding-box;border:1px solid #29487d;border-radius:3px;display:inline-block;line-height:18px;margin-top:3px;max-width:85px;padding:4px 12px;position:relative}.fb_dialog_content .dialog_header .touchable_button input{background:none;border:none;color:#fff;font:700 12px Helvetica,sans-serif;margin:2px -12px;padding:2px 6px 3px;text-shadow:rgba(0,30,84,.296875) 0px -1px 0px}.fb_dialog_content .dialog_header .header_center{color:#fff;font-size:16px;font-weight:700;line-height:18px;text-align:center;vertical-align:middle}.fb_dialog_content .dialog_content{background:url(https://connect.facebook.net/rsrc.php/v4/y9/r/jKEcVPZFk-2.gif) no-repeat 50% 50%;border:1px solid #4A4A4A;border-bottom:0;border-top:0;height:150px}.fb_dialog_content .dialog_footer{background:#f5f6f7;border:1px solid #4A4A4A;border-top-color:#ccc;height:40px}#fb_dialog_loader_close{float:left}.fb_dialog.fb_dialog_mobile .fb_dialog_close_icon{visibility:hidden}#fb_dialog_loader_spinner{animation:rotateSpinner 1.2s linear infinite;background-color:transparent;background-image:url(https://connect.facebook.net/rsrc.php/v4/y2/r/onuUJj0tCqE.png);background-position:50% 50%;background-repeat:no-repeat;height:24px;width:24px}@keyframes rotateSpinner{0%{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+.fb_iframe_widget{display:inline-block;position:relative}.fb_iframe_widget span{display:inline-block;position:relative;text-align:justify}.fb_iframe_widget iframe{position:absolute}.fb_iframe_widget_fluid_desktop,.fb_iframe_widget_fluid_desktop span,.fb_iframe_widget_fluid_desktop iframe{max-width:100%}.fb_iframe_widget_fluid_desktop iframe{min-width:220px;position:relative}.fb_iframe_widget_lift{z-index:1}.fb_iframe_widget_fluid{display:inline}.fb_iframe_widget_fluid span{width:100%}
+</style></head>
+
+<body class="wp-singular post-template-default single single-post postid-9800 single-format-standard wp-theme-understrap wp-child-theme-code-fb-com group-blog">
+
+<div class="hfeed site" id="page">
+
+<!-- ******************* The Navbar Area ******************* -->
+<div class="wrapper-fluid wrapper-navbar" id="wrapper-navbar">
+	<a class="skip-link screen-reader-text sr-only" href="#content">
+	Skip to content	</a>
+
+	<nav class="navbar navbar-expand-std">
+
+			<div class="nav-container">
+	
+
+				<!-- Your site title as branding in the menu -->
+
+	<div class="nav-top-row">
+	
+		<h1 class="navbar-brand mb-0">
+			<a rel="home" href="https://engineering.fb.com/" title="Engineering at Meta">
+				<img class="navbar-brand-logo" src="https://engineering.fb.com/wp-content/themes/code-fb-com/img/logo-meta.svg" alt="Engineering at Meta" width="215" height="40" loading="lazy">
+			</a>
+		</h1>
+
+	<!-- end custom logo -->
+				<label for="search" class="screen-reader-text">Search this site</label>
+				<input type="text" id="search" name="search" class="form-control-lg navbar-search" autocomplete="off">
+
+				<button class="navbar-toggler navbar-searchbar-toggler" type="button" data-toggle="collapse" data-target="#searchbarDropdown" aria-controls="searchbarDropdown" aria-expanded="false" aria-label="Toggle navigation">
+					<img src="https://engineering.fb.com/wp-content/themes/code-fb-com/img/icon-search.svg" class="navbar-mobile-search-icon" loading="lazy" width="24" height="25">
+				</button>
+
+				<!-- desktop language menu (mobile language menu is implemented via jQuery)-->
+				<div class="notranslate nice-select navbar-language form-control">
+				</div>
+
+				<button class="navbar-toggler collapsed navbar-menu-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+
+			</div>
+
+			<div class="navbar-border"></div>
+
+			<!-- The WordPress Menu goes here -->
+	<div id="navbarNavDropdown" class="collapse navbar-collapse"><ul id="main-menu" class="navbar-nav"><li id="menu-item-60" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-60 dropdown"><a title="Open Source" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Open Source <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-12330" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-12330"><a title="Open Source" href="https://engineering.fb.com/category/open-source/" class="nav-link">Open Source</a></li>
+	<li id="menu-item-12331" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-12331"><a title="Meta Open Source" href="https://opensource.fb.com" class="nav-link" target="_blank" rel="noopener">Meta Open Source</a></li>
+</ul>
+</li>
+<li id="menu-item-2686" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-2686 dropdown"><a title="Platforms" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Platforms <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-65" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-65"><a title="Android" href="https://engineering.fb.com/category/android/" class="nav-link">Android</a></li>
+	<li id="menu-item-66" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-66"><a title="iOS" href="https://engineering.fb.com/category/ios/" class="nav-link">iOS</a></li>
+	<li id="menu-item-67" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-67"><a title="Web" href="https://engineering.fb.com/category/web/" class="nav-link">Web</a></li>
+</ul>
+</li>
+<li id="menu-item-2682" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-2682 dropdown"><a title="Infrastructure Systems" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Infrastructure Systems <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-218" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-218"><a title="Core Infra" href="https://engineering.fb.com/category/core-infra/" class="nav-link">Core Infra</a></li>
+	<li id="menu-item-219" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-219"><a title="Data Infrastructure" href="https://engineering.fb.com/category/data-infrastructure/" class="nav-link">Data Infrastructure</a></li>
+	<li id="menu-item-220" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-220"><a title="DevInfra" href="https://engineering.fb.com/category/developer-tools/" class="nav-link">DevInfra</a></li>
+	<li id="menu-item-226" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-226"><a title="Production Engineering" href="https://engineering.fb.com/category/production-engineering/" class="nav-link">Production Engineering</a></li>
+	<li id="menu-item-227" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-227"><a title="Security &amp; Privacy" href="https://engineering.fb.com/category/security/" class="nav-link">Security &amp; Privacy</a></li>
+	<li id="menu-item-18607" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-18607"><a title="Research Publications" href="https://research.facebook.com/publications/research-areas/systems-infrastructure/" class="nav-link" target="_blank" rel="noopener">Research Publications</a></li>
+</ul>
+</li>
+<li id="menu-item-2683" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-2683 dropdown"><a title="Physical Infrastructure" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Physical Infrastructure <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-215" class="menu-item menu-item-type-taxonomy menu-item-object-category current-post-ancestor current-menu-parent current-post-parent nav-item menu-item-215"><a title="Connectivity" href="https://engineering.fb.com/category/connectivity/" class="nav-link">Connectivity</a></li>
+	<li id="menu-item-216" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-216"><a title="Data Center Engineering" href="https://engineering.fb.com/category/data-center-engineering/" class="nav-link">Data Center Engineering</a></li>
+	<li id="menu-item-217" class="menu-item menu-item-type-taxonomy menu-item-object-category current-post-ancestor current-menu-parent current-post-parent nav-item menu-item-217"><a title="Networking &amp; Traffic" href="https://engineering.fb.com/category/networking-traffic/" class="nav-link">Networking &amp; Traffic</a></li>
+	<li id="menu-item-18608" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-18608"><a title="Research Publications" href="https://research.facebook.com/publications/research-areas/networking-connectivity/" class="nav-link" target="_blank" rel="noopener">Research Publications</a></li>
+</ul>
+</li>
+<li id="menu-item-2684" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-2684 dropdown"><a title="Video Engineering &amp; AR/VR" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Video Engineering &amp; AR/VR <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-225" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-225"><a title="Video Engineering" href="https://engineering.fb.com/category/video-engineering/" class="nav-link">Video Engineering</a></li>
+	<li id="menu-item-223" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-223"><a title="Virtual Reality" href="https://engineering.fb.com/category/virtual-reality/" class="nav-link">Virtual Reality</a></li>
+	<li id="menu-item-13388" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-13388"><a title="Research Publications" href="https://research.facebook.com/publications/research-areas/augmented-reality-virtual-reality/" class="nav-link" target="_blank" rel="noopener">Research Publications</a></li>
+</ul>
+</li>
+<li id="menu-item-2685" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-2685 dropdown"><a title="Artificial Intelligence" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Artificial Intelligence <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-222" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-222"><a title="ML Applications" href="https://engineering.fb.com/category/ml-applications/" class="nav-link">ML Applications</a></li>
+	<li id="menu-item-221" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-221"><a title="AI Research" href="https://engineering.fb.com/category/ai-research/" class="nav-link">AI Research</a></li>
+	<li id="menu-item-13387" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-13387"><a title="Research Publications" href="https://ai.facebook.com/results/?content_types%5B0%5D=publication" class="nav-link" target="_blank" rel="noopener">Research Publications</a></li>
+</ul>
+</li>
+<li id="menu-item-228" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-228"><a title="Watch Videos" href="/videos" class="nav-link">Watch Videos</a></li>
+</ul></div>		</div><!-- .container -->
+	
+		<div class="search-container collapse" id="searchbarDropdown">
+			<div class="searchbar-search">
+				<div class="searchbar-container">
+
+					<div class="navbar-mobile-search-margin"></div>
+					<input type="text" name="search" placeholder="Search" class="form-control-lg navbar-mobile-search" autofocus="" autocomplete="off">
+					<button class="searchbar-clear">
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+				</div>
+			</div>
+		</div>
+	</nav><!-- .site-navigation -->
+
+</div><!-- .wrapper-navbar end -->
+
+<div class="wrapper" id="single-wrapper">
+
+	<div class="single-container row" id="content" tabindex="-1">
+
+		<!-- Do the left sidebar check. -->
+		
+
+
+<div class="content-area col-lg-8_75" id="primary">
+		<main class="site-main" id="main">
+
+			
+				
+<article class="post-9800 post type-post status-publish format-standard has-post-thumbnail hentry category-connectivity category-networking-traffic" id="post-9800">
+
+	<header class="entry-header">
+		<div class="entry-meta">
+			POSTED ON <span class="posted-on entry-date"><time class="published updated" datetime="2018-08-10">AUGUST 10, 2018</time></span> TO <span class="cat-links"><a href="https://engineering.fb.com/category/connectivity/" rel="category tag">Connectivity</a>, <a href="https://engineering.fb.com/category/networking-traffic/" rel="category tag">Networking &amp; Traffic</a></span>
+			<h1 class="entry-title"><div>Announcing tools to help partners improve connectivity</div></h1>		</div><!-- .entry-meta -->
+
+	</header><!-- .entry-header -->
+
+			<figure id="post-feat-image-container">
+				<img width="1333" height="751" src="https://engineering.fb.com/wp-content/uploads/2018/08/Asset-1-green.png" class="wp-post-image" alt="" title="Asset 1 green">						</figure>
+		
+	<div class="entry-authors-social">
+					<div class="entry-authors">
+				By <a href="https://engineering.fb.com/author/vincent-gonguet/" title="Posts by Vincent Gonguet" class="author url fn" rel="author">Vincent Gonguet</a>			</div>
+			</div>
+
+	
+	<div class="entry-content">
+
+		<p>High quality internet access helps people communicate, share knowledge, and strengthen their communities and economies — yet billions of people still lack baseline connectivity. To address this problem, we are building a diverse set of technologies, products, and partnerships designed to expand the boundaries of existing connectivity quality and performance, catalyze new market segments, and bring better access to the unconnected.</p>
+<p>Facebook’s <a href="http://connectivity.fb.com" target="_blank" rel="noopener">connectivity efforts</a> focus on <a href="https://engineering.fb.com/connectivity/global-connectivity-working-together-to-bring-more-people-online/">accelerating the expansion</a> and improvement of connectivity around the world. This includes our work on developing technologies like Terragraph, OpenCellular, and High Altitude Platform Systems, in addition to our collaboration with operators on efforts like rural access, shared backhaul, the Telecom Infra Project, and internet.org programs like Free Basics.</p>
+<p>Together with our partners, we have helped to connect more than 100 million people via our efforts over the last five years, based on our best estimates. Along the way, we’ve listened, learned, and evolved our approach, and adopted a more comprehensive, partner-focused model. In our work with operators, internet service providers, and device makers we aim to find new, more efficient ways to deploy and maintain mobile network infrastructure. Recently, one of the ways we’ve been doing this is through the use of connectivity analytics with our <b>Advanced Network Planning</b> and <b>Actionable Insights</b> tools.</p>
+<p class="p1">People connect to Facebook from many parts of the world. By analyzing information from sources like Facebook, population density maps, LiDAR, or satellite imagery, we are able to help the ecosystem better understand the state of connectivity.</p>
+<div class="fb-video fb_iframe_widget fb_iframe_widget_fluid_desktop" data-allowfullscreen="true" data-href="https://www.facebook.com/Engineering/videos/10156610616397200/%20" style="background-color: rgb(255, 255, 255); display: inline-block; width: 100%;" fb-xfbml-state="rendered" fb-iframe-plugin-query="allowfullscreen=true&amp;app_id=249643311490&amp;container_width=769&amp;href=https%3A%2F%2Fwww.facebook.com%2FEngineering%2Fvideos%2F10156610616397200%2F%2520&amp;locale=en_US&amp;sdk=joey"><span style="vertical-align: bottom; width: 769px; height: 409px;"><iframe name="fe1bd4040faab12ed" width="1000px" height="1000px" data-testid="fb:video Facebook Social Plugin" title="fb:video Facebook Social Plugin" frameborder="0" allowtransparency="true" allowfullscreen="true" scrolling="no" allow="encrypted-media" src="https://www.facebook.com/v2.3/plugins/video.php?allowfullscreen=true&amp;app_id=249643311490&amp;channel=https%3A%2F%2Fstaticxx.facebook.com%2Fx%2Fconnect%2Fxd_arbiter%2F%3Fversion%3D46%23cb%3Dfa4e4b779c68a0c79%26domain%3Dengineering.fb.com%26is_canvas%3Dfalse%26origin%3Dhttps%253A%252F%252Fengineering.fb.com%252Ff8c698e28dc9a4b55%26relation%3Dparent.parent&amp;container_width=769&amp;href=https%3A%2F%2Fwww.facebook.com%2FEngineering%2Fvideos%2F10156610616397200%2F%2520&amp;locale=en_US&amp;sdk=joey" style="border-width: medium; border-style: none; border-color: currentcolor; border-image: none; visibility: visible; width: 769px; height: 409px;" class=""></iframe></span></div>
+<p><i>To power future urban networks leveraging millimeter wave, operators will need to leverage existing city infrastructure such as light poles. Advanced Network Planning identifies light poles with LiDAR data using computer vision. In this example, we help network planners identify relevant objects to help build their networks. For example, green identifies a straight line that is likely a light pole and red identifiies what could be the arm of a light pole.<br>
+</i></p>
+<p class="p1">Protecting our community is important to us, and that’s why we developed these tools in accord with the principles of privacy by design. The information we share is aggregated and de-identified, meaning that we do not share anyone’s individual information through these efforts.</p>
+<h2>Planning networks of the future</h2>
+<p>One of these new tools is <b>Advanced Network Planning</b>, which helps operators build new networks. Advanced Network Planning launched with a handful of partners earlier this year, and initial results have been promising. Operators have been able to use these tools to create plans in minutes that previously would have taken days, while providing a meaningful reduction in the cost of building new networks.</p>
+<p>To bring connectivity to new areas in emerging markets, operators often need to deploy thousands of kilometers of fiber, which takes months and can be very expensive. In developed markets, creating networks for the future requires a high number of network nodes to ensure that the system can handle higher-bandwidth traffic such as video streaming. Advanced Network Planning focuses on making the planning process faster, cheaper, and better designed to meet people’s needs. For example, it can help operators decide where to use fiber or alternatives for backhaul connectivity, or where to place cell towers to effectively connect the most people.</p>
+<p>This tool allows operators to optimize network design across rural and urban areas by:</p>
+<ul>
+<li><a href="https://code.facebook.com/posts/1676452492623525/connecting-the-world-with-better-maps/" target="_blank" rel="noopener"><b>Leveraging high-resolution satellite imagery</b></a><b> </b>combined with computer vision and machine-learning tools developed by Facebook to identify under-served areas around the world.</li>
+<li><b>Developing algorithms</b> to minimize the cost of expanding network coverage by helping operators do things more quickly and efficiently, such as planning fiber builds while ensuring the network is reliable.</li>
+<li><b>Evaluating the effectiveness of different technologies</b> — such as microwave, fiber, satellite, or millimeter wave — for a given network based on cost and performance constraints.<i></i></li>
+</ul>
+<p><img decoding="async" class="alignnone wp-image-9811 size-medium" src="https://engineering.fb.com/wp-content/uploads/2018/08/example1_new.gif?w=640" alt="" width="640" height="448" style="margin-bottom: 1rem;"></p>
+<p><em>Optimization algorithm iterating to find the cheapest redundant fiber network in an area of &gt;1,000 square km (larger than New York). Runtime less than 2 hours.</em></p>
+<p><img decoding="async" class="alignnone wp-image-9843 size-full" src="https://engineering.fb.com/wp-content/uploads/2018/08/Asset-4-merged1.png" alt="" width="2101" height="720" srcset="https://engineering.fb.com/wp-content/uploads/2018/08/Asset-4-merged1.png 2101w, https://engineering.fb.com/wp-content/uploads/2018/08/Asset-4-merged1.png?resize=916,314 916w, https://engineering.fb.com/wp-content/uploads/2018/08/Asset-4-merged1.png?resize=768,263 768w, https://engineering.fb.com/wp-content/uploads/2018/08/Asset-4-merged1.png?resize=1024,351 1024w, https://engineering.fb.com/wp-content/uploads/2018/08/Asset-4-merged1.png?resize=1536,526 1536w, https://engineering.fb.com/wp-content/uploads/2018/08/Asset-4-merged1.png?resize=2048,702 2048w, https://engineering.fb.com/wp-content/uploads/2018/08/Asset-4-merged1.png?resize=96,33 96w, https://engineering.fb.com/wp-content/uploads/2018/08/Asset-4-merged1.png?resize=192,66 192w" sizes="(max-width: 992px) 100vw, 62vw" style="margin-bottom: 1rem;"></p>
+<p><i>Comparison of manual and automated mesh network plans for mmWave using Terragraph technology. The automated network design on the right achieves results comparable to those from an expert analysis in a fraction of the time.</i></p>
+<h2>Optimizing the network of today</h2>
+<p>While planning for the future is a critical component for allowing operators to scale, optimizing their current operation is equally important. With this in mind, Facebook developed <b>Actionable Insights</b> to help connectivity partners improve business, network, and device efficiency. It has two components.</p>
+<p>The first, <b>Network Insights,</b> helps partners improve network coverage, speed, and latency for thousands of cell towers and millions of people across the globe. This tool provides network performance maps to help operators better understand and optimize the strength of their existing network in a given area. This helps ensure that operators are alerted to potential issues, such as when many people are experiencing a poor connection on a specific cell tower.</p>
+<p>Network Insights is based on information from people who have Location Services enabled for the Facebook mobile app. We look at connection type and network performance (such as download speed or network latency) at different locations and then aggregate and de-identify the information to produce performance maps.</p>
+<p>By analyzing network conditions, such as the quality and type of connection, mobile operators can monitor performance, compare network quality to other operators, and identify trends that can help improve a customer’s experience on the network. This could include identifying where they need to invest in more capacity or optimizing certain regions during peak times.</p>
+<p><img loading="lazy" decoding="async" class="alignnone wp-image-9835 size-medium" src="https://engineering.fb.com/wp-content/uploads/2018/08/table2.png?w=640" alt="" width="640" height="210" srcset="https://engineering.fb.com/wp-content/uploads/2018/08/table2.png 1900w, https://engineering.fb.com/wp-content/uploads/2018/08/table2.png?resize=916,300 916w, https://engineering.fb.com/wp-content/uploads/2018/08/table2.png?resize=768,251 768w, https://engineering.fb.com/wp-content/uploads/2018/08/table2.png?resize=1024,335 1024w, https://engineering.fb.com/wp-content/uploads/2018/08/table2.png?resize=1536,503 1536w, https://engineering.fb.com/wp-content/uploads/2018/08/table2.png?resize=96,31 96w, https://engineering.fb.com/wp-content/uploads/2018/08/table2.png?resize=192,63 192w" sizes="auto, (max-width: 992px) 100vw, 62vw" style="margin-bottom: 1rem;"><i>Average speeds on Facebook by quality of experience</i></p>
+<p><img loading="lazy" decoding="async" class="wp-image-9832 size-medium aligncenter" src="https://engineering.fb.com/wp-content/uploads/2018/08/Asset-6-latest.png?w=640" alt="" width="640" height="413" srcset="https://engineering.fb.com/wp-content/uploads/2018/08/Asset-6-latest.png 1459w, https://engineering.fb.com/wp-content/uploads/2018/08/Asset-6-latest.png?resize=916,591 916w, https://engineering.fb.com/wp-content/uploads/2018/08/Asset-6-latest.png?resize=768,495 768w, https://engineering.fb.com/wp-content/uploads/2018/08/Asset-6-latest.png?resize=1024,660 1024w, https://engineering.fb.com/wp-content/uploads/2018/08/Asset-6-latest.png?resize=96,62 96w, https://engineering.fb.com/wp-content/uploads/2018/08/Asset-6-latest.png?resize=192,124 192w" sizes="auto, (max-width: 992px) 100vw, 62vw" style="margin-bottom: 1rem;"><i>Cellular network congestion detected in Ibeshe (near Lagos, Nigeria). The areas highlighted in red represent areas where network speeds of a given carrier are below the best available network speed</i></p>
+<h2>Enabling better business decisions</h2>
+<p>The second component of Actionable Insights is <b>Market Insights</b>, which helps connectivity providers better understand their customer engagement. The analytics tools in Market Insights can help manufacturers and operators define product and service offerings for a particular audience. Using information from the Facebook app, Market Insights provide aggregated and de-identified metrics, such as market share or consumer device and SIM card switching rates for various segments and across operators. These insights can help partners better serve new and existing customers in high-growth regions, who increasingly choose providers based on network performance and affordability.</p>
+<p>Market Insights also helps device makers and operators develop more effective hardware planning strategies, as they have access to more information around what types of devices people are using. For example, a device manufacturer can better understand how quickly and where a new product is being adopted.</p>
+<p>Through helping connectivity partners understand shifts in market position and the competitive landscape, these insights help to inform their business and marketing decisions as well as customer acquisition strategies. Partners can use this to inform their ad campaigns, including ads on Facebook.</p>
+<p><img loading="lazy" decoding="async" class="alignnone size-medium wp-image-9861" src="https://engineering.fb.com/wp-content/uploads/2018/08/38931908_548839558866208_5196032330686267392_n.png?w=640" alt="" width="640" height="408" srcset="https://engineering.fb.com/wp-content/uploads/2018/08/38931908_548839558866208_5196032330686267392_n.png 1338w, https://engineering.fb.com/wp-content/uploads/2018/08/38931908_548839558866208_5196032330686267392_n.png?resize=916,583 916w, https://engineering.fb.com/wp-content/uploads/2018/08/38931908_548839558866208_5196032330686267392_n.png?resize=768,489 768w, https://engineering.fb.com/wp-content/uploads/2018/08/38931908_548839558866208_5196032330686267392_n.png?resize=1024,652 1024w, https://engineering.fb.com/wp-content/uploads/2018/08/38931908_548839558866208_5196032330686267392_n.png?resize=96,61 96w, https://engineering.fb.com/wp-content/uploads/2018/08/38931908_548839558866208_5196032330686267392_n.png?resize=192,122 192w" sizes="auto, (max-width: 992px) 100vw, 62vw" style="margin-bottom: 1rem;"></p>
+<p class="p2"><i>Operator SIM switching monthly rate, per primary network type used by people. Example of a Latin American mobile operator.</i></p>
+<p class="p2">We know that expanding global connectivity is a complex challenge that won’t be solved by any one company alone. That’s why we’re working on a portfolio of technologies and tools like connectivity analytics to help our partners plan for future needs, optimize their current networks, and make better business decisions. We’re committed to connectivity and encouraged by the progress we’ve seen so far. We’re looking forward to continuing to work with the mobile ecosystem to enable better connectivity for more people around the world.</p>
+<p class="p2"><i>To learn more about Facebook’s Connectivity efforts, visit <a href="https://www.connectivity.fb.com" target="_blank" rel="noopener">connectivity.fb.com</a>.</i></p>
+<div class="sharedaddy sd-sharing-enabled"><div class="robots-nocontent sd-block sd-social sd-social-icon-text sd-sharing"><h3 class="sd-title">Share this:</h3><div class="sd-content"><ul data-sharing-events-added="true"><li class="share-facebook"><a rel="nofollow noopener noreferrer" data-shared="sharing-facebook-9800" class="share-facebook sd-button share-icon" href="https://engineering.fb.com/2018/08/10/connectivity/announcing-tools-to-help-partners-improve-connectivity/?share=facebook&amp;nb=1" target="_blank" aria-labelledby="sharing-facebook-9800">
+				<span id="sharing-facebook-9800" hidden="">Share on Facebook (Opens in new window)</span>
+				<span>Facebook</span>
+			</a></li><li class="share-threads"><a rel="nofollow noopener noreferrer" data-shared="sharing-threads-9800" class="share-threads sd-button share-icon" href="https://engineering.fb.com/2018/08/10/connectivity/announcing-tools-to-help-partners-improve-connectivity/?share=threads&amp;nb=1" target="_blank" aria-labelledby="sharing-threads-9800">
+				<span id="sharing-threads-9800" hidden="">Share on Threads (Opens in new window)</span>
+				<span>Threads</span>
+			</a></li><li class="share-jetpack-whatsapp"><a rel="nofollow noopener noreferrer" data-shared="sharing-whatsapp-9800" class="share-jetpack-whatsapp sd-button share-icon" href="https://engineering.fb.com/2018/08/10/connectivity/announcing-tools-to-help-partners-improve-connectivity/?share=jetpack-whatsapp&amp;nb=1" target="_blank" aria-labelledby="sharing-whatsapp-9800">
+				<span id="sharing-whatsapp-9800" hidden="">Share on WhatsApp (Opens in new window)</span>
+				<span>WhatsApp</span>
+			</a></li><li class="share-linkedin"><a rel="nofollow noopener noreferrer" data-shared="sharing-linkedin-9800" class="share-linkedin sd-button share-icon" href="https://engineering.fb.com/2018/08/10/connectivity/announcing-tools-to-help-partners-improve-connectivity/?share=linkedin&amp;nb=1" target="_blank" aria-labelledby="sharing-linkedin-9800">
+				<span id="sharing-linkedin-9800" hidden="">Share on LinkedIn (Opens in new window)</span>
+				<span>LinkedIn</span>
+			</a></li><li class="share-reddit"><a rel="nofollow noopener noreferrer" data-shared="sharing-reddit-9800" class="share-reddit sd-button share-icon" href="https://engineering.fb.com/2018/08/10/connectivity/announcing-tools-to-help-partners-improve-connectivity/?share=reddit&amp;nb=1" target="_blank" aria-labelledby="sharing-reddit-9800">
+				<span id="sharing-reddit-9800" hidden="">Share on Reddit (Opens in new window)</span>
+				<span>Reddit</span>
+			</a></li><li class="share-x"><a rel="nofollow noopener noreferrer" data-shared="sharing-x-9800" class="share-x sd-button share-icon" href="https://engineering.fb.com/2018/08/10/connectivity/announcing-tools-to-help-partners-improve-connectivity/?share=x&amp;nb=1" target="_blank" aria-labelledby="sharing-x-9800">
+				<span id="sharing-x-9800" hidden="">Share on X (Opens in new window)</span>
+				<span>X</span>
+			</a></li><li class="share-bluesky"><a rel="nofollow noopener noreferrer" data-shared="sharing-bluesky-9800" class="share-bluesky sd-button share-icon" href="https://engineering.fb.com/2018/08/10/connectivity/announcing-tools-to-help-partners-improve-connectivity/?share=bluesky&amp;nb=1" target="_blank" aria-labelledby="sharing-bluesky-9800">
+				<span id="sharing-bluesky-9800" hidden="">Share on Bluesky (Opens in new window)</span>
+				<span>Bluesky</span>
+			</a></li><li class="share-mastodon"><a rel="nofollow noopener noreferrer" data-shared="sharing-mastodon-9800" class="share-mastodon sd-button share-icon" href="https://engineering.fb.com/2018/08/10/connectivity/announcing-tools-to-help-partners-improve-connectivity/?share=mastodon&amp;nb=1" target="_blank" aria-labelledby="sharing-mastodon-9800">
+				<span id="sharing-mastodon-9800" hidden="">Share on Mastodon (Opens in new window)</span>
+				<span>Mastodon</span>
+			</a></li><li class="share-custom share-custom-hackernews"><a rel="nofollow noopener noreferrer" data-shared="sharing-custom-9800" class="share-custom share-custom-hackernews sd-button share-icon" href="https://engineering.fb.com/2018/08/10/connectivity/announcing-tools-to-help-partners-improve-connectivity/?share=custom-1699562127&amp;nb=1" target="_blank" aria-labelledby="sharing-custom-9800">
+				<span id="sharing-custom-9800" hidden="">Share on Hacker News (Opens in new window)</span>
+				<span style="background-image:url(&quot;https://news.ycombinator.com/y18.svg&quot;);">Hacker News</span>
+			</a></li><li class="share-email share-service-visible"><a rel="noopener" data-shared="sharing-email-9800" class="share-email sd-button share-icon" href="mailto:?subject=%5BShared%20Post%5D%20Announcing%20tools%20to%20help%20partners%20improve%20connectivity&amp;body=https%3A%2F%2Fengineering.fb.com%2F2018%2F08%2F10%2Fconnectivity%2Fannouncing-tools-to-help-partners-improve-connectivity%2F&amp;share=email&amp;nb=1" target="_blank" aria-labelledby="sharing-email-9800" data-email-share-error-title="Do you have email set up?" data-email-share-error-text="If you're having problems sharing via email, you might not have email set up for your browser. You may need to create a new email yourself." data-email-share-nonce="10558eab42" data-email-share-track-url="https://engineering.fb.com/2018/08/10/connectivity/announcing-tools-to-help-partners-improve-connectivity/?share=email" jetpack-share-click-count="0">
+				<span id="sharing-email-9800" hidden="">Email a link to a friend (Opens in new window)</span>
+				<span>Email</span>
+			</a></li><li class="share-end"></li></ul></div></div></div>
+		
+	</div><!-- .entry-content -->
+
+
+</article><!-- #post-## -->
+
+<footer class="entry-footer">
+
+	
+</footer><!-- .entry-footer -->
+
+<div class="fb-like fb_iframe_widget" data-href="https://engineering.fb.com/2018/08/10/connectivity/announcing-tools-to-help-partners-improve-connectivity/" data-width="" data-layout="standard" data-action="like" data-size="small" data-share="true" fb-xfbml-state="rendered" fb-iframe-plugin-query="action=like&amp;app_id=249643311490&amp;container_width=0&amp;href=https%3A%2F%2Fengineering.fb.com%2F2018%2F08%2F10%2Fconnectivity%2Fannouncing-tools-to-help-partners-improve-connectivity%2F&amp;layout=standard&amp;locale=en_US&amp;sdk=joey&amp;share=true&amp;size=small&amp;width="><span style="vertical-align: bottom; width: 0px; height: 0px;"><iframe name="f38f8ee0c1b58fced" width="1000px" height="1000px" data-testid="fb:like Facebook Social Plugin" title="fb:like Facebook Social Plugin" frameborder="0" allowtransparency="true" allowfullscreen="true" scrolling="no" allow="encrypted-media" src="https://www.facebook.com/v2.3/plugins/like.php?action=like&amp;app_id=249643311490&amp;channel=https%3A%2F%2Fstaticxx.facebook.com%2Fx%2Fconnect%2Fxd_arbiter%2F%3Fversion%3D46%23cb%3Df53ab3a5f26cec105%26domain%3Dengineering.fb.com%26is_canvas%3Dfalse%26origin%3Dhttps%253A%252F%252Fengineering.fb.com%252Ff8c698e28dc9a4b55%26relation%3Dparent.parent&amp;container_width=0&amp;href=https%3A%2F%2Fengineering.fb.com%2F2018%2F08%2F10%2Fconnectivity%2Fannouncing-tools-to-help-partners-improve-connectivity%2F&amp;layout=standard&amp;locale=en_US&amp;sdk=joey&amp;share=true&amp;size=small&amp;width=" style="border-width: medium; border-style: none; border-color: currentcolor; border-image: none; visibility: visible; width: 0px; height: 0px;" class=""></iframe></span></div>
+
+
+<div class="more-articles"><a class="prev" aria-label="View the previous article: Deploying TLS 1.3 at scale with Fizz, a performant open source TLS library" href="https://engineering.fb.com/2018/08/06/security/fizz/"><div class="prev__thumb-wrapper"><img src="https://engineering.fb.com/wp-content/uploads/2018/07/fizz.png?w=580&amp;h=326&amp;crop=1" width="580" height="326" alt="Deploying TLS 1.3 at scale with Fizz, a performant open source TLS library" class="prev__thumb"></div><div class="prev__details"><span class="prev__details__btn">Prev</span><br><span class="prev__details__title">Deploying TLS 1.3 at scale with Fizz, a performant open source TLS library</span></div></a><a class="next" aria-label="View the next article: Open-sourcing Facebook&amp;#039;s Solar-Powered Aircraft Design Tools" href="https://engineering.fb.com/2018/08/17/connectivity/open-sourcing-facebooks-solar-powered-aircraft-design-tools/"><div class="next__thumb-wrapper"><img src="https://engineering.fb.com/wp-content/uploads/2018/08/flapping61.gif?w=580&amp;h=326&amp;crop=1" width="580" height="326" alt="Open-sourcing Facebook&amp;#039;s Solar-Powered Aircraft Design Tools" class="next__thumb"></div><div class="next__details"><span class="next__details__btn">Next</span><br><span class="next__details__title">Open-sourcing Facebook&amp;#039;s Solar-Powered Aircraft Design Tools</span></div></a></div><div class="related-articles">
+	<div class="related-articles__header">
+		<h3 class="related-articles__header__headline">Read More in Connectivity</h3>
+		<a aria-label="View all articles in this Connectivity" class="related-articles__header__link" href="https://engineering.fb.com/category/connectivity/">
+			View All		</a>
+	</div>
+
+	<div class="article-grids related-articles__grid">
+		<div class="row">
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-9800 type-post status-publish format-standard has-post-thumbnail hentry category-connectivity category-networking-traffic" id="post-23313">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2025/11/2Africa-Completion-Hero.png?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2025-11-17T22:00:58-08:00">
+					NOV 17, 2025				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2025/11/17/connectivity/core-2africa-system-completion-future-connectivity/" rel="bookmark" aria-label="Read More about Announcing the Completion of the Core 2Africa System: Building the Future of Connectivity Together">
+					Announcing the Completion of the Core 2Africa System: Building the Future of Connectivity Together				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-9800 type-post status-publish format-standard has-post-thumbnail hentry category-connectivity category-networking-traffic" id="post-23046">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2025/10/APAC_Subsea_Cables_Blog_Post_Visual_2025_01_updated_10012025.png?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2025-10-05T19:30:07-07:00">
+					OCT 5, 2025				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2025/10/05/connectivity/introducing-the-candle-subsea-cable-updates-to-our-asia-pacific-connectivity-projects/" rel="bookmark" aria-label="Read More about Introducing the Candle Subsea Cable, Updates to Our Asia-Pacific Connectivity Projects">
+					Introducing the Candle Subsea Cable, Updates to Our Asia-Pacific Connectivity Projects				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-9800 type-post status-publish format-standard has-post-thumbnail hentry category-connectivity category-networking-traffic" id="post-22560">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2025/05/Rio-de-Janeiro-landing.png?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2025-05-22T09:00:08-07:00">
+					MAY 22, 2025				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2025/05/22/connectivity/extending-malbec-subsea-cable-southern-brazil/" rel="bookmark" aria-label="Read More about Extending the Malbec subsea cable to Southern Brazil">
+					Extending the Malbec subsea cable to Southern Brazil				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-9800 type-post status-publish format-standard has-post-thumbnail hentry category-connectivity category-networking-traffic" id="post-22481">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2025/05/MTP74_FBLI_1200_630-1.png?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy" title="MTP74_FBLI_1200_630 (1)">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2025-05-01T11:48:02-07:00">
+					MAY 1, 2025				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2025/05/01/connectivity/taking-the-plunge-the-engineering-journey-of-building-a-subsea-cable/" rel="bookmark" aria-label="Read More about Taking the plunge: The engineering journey of building a subsea cable">
+					Taking the plunge: The engineering journey of building a subsea cable				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-9800 type-post status-publish format-standard has-post-thumbnail hentry category-connectivity category-networking-traffic" id="post-22278">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2025/02/Cable-Landing_Project-Waterworth.png?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2025-02-14T08:28:06-08:00">
+					FEB 14, 2025				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2025/02/14/connectivity/project-waterworth-ai-subsea-infrastructure/" rel="bookmark" aria-label="Read More about Unlocking global AI potential with next-generation subsea infrastructure">
+					Unlocking global AI potential with next-generation subsea infrastructure				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-9800 type-post status-publish format-standard has-post-thumbnail hentry category-connectivity category-networking-traffic" id="post-22128">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2025/01/Meta-ILA-Evo-HERO-Render-SMALL.jpg?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2025-01-10T09:00:20-08:00">
+					JAN 10, 2025				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2025/01/10/production-engineering/ila-evo-in-line-amplifier-sites-meta/" rel="bookmark" aria-label="Read More about ILA Evo: Meta’s journey to reimagine fiber optic in-line amplifier sites">
+					ILA Evo: Meta’s journey to reimagine fiber optic in-line amplifier sites				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+					</div><!-- /.row -->
+	</div><!--/.article-grids -->
+
+</div><!-- /.related-articles -->
+
+					
+	 <!-- include the carousel nav here. -->
+
+		
+				
+			
+		</main><!-- #main -->
+
+	</div><!-- #primary -->
+
+		<!-- Do the right sidebar check. -->
+	
+
+
+  
+<div class="widget-area col-lg-3 offset-lg-0_25" id="right-sidebar" role="complementary">
+	<aside id="fb_related_post_widget-4" class="widget widget_fb_related_post_widget"><h3 class="widget-title">Related Posts</h3><hr></aside><aside id="wpb_widget-3" class="widget widget_wpb_widget"><h3 class="widget-title">Related Positions</h3><hr><ul class="available-positions-list"><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/2018238108857051/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Network Production Engineer, Network.AI
+                      		</div>
+                      		<div class="job-location">
+                      			MENLO PARK, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/2018238108857051/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Network Production Engineer, Network.AI
+                      		</div>
+                      		<div class="job-location">
+                      			SEATTLE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1675040284335608/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Engineering Manager, ML Compilers (Triton / Kernel DSLs) 
+                      		</div>
+                      		<div class="job-location">
+                      			BELLEVUE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1610304617506347/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			ASIC Engineer, Design Verification
+                      		</div>
+                      		<div class="job-location">
+                      			BANGALORE, IN
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/2186963648750076/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Production Systems Engineer, Automation
+                      		</div>
+                      		<div class="job-location">
+                      			MENLO PARK, US
+                      		</div>
+                          </a>
+                      	</li>		</ul>
+		<a href="https://www.metacareers.com" target="_blank" rel="noopener">
+			<div class="btn available-positions-btn">
+				See All Jobs			</div>
+		</a>
+		</aside>
+</div><!-- #secondary -->
+
+
+
+	<!-- <php get_template_part('content-single-side-bar'); ?> -->
+
+	<!-- Do the right sidebar check. -->
+	
+</div><!-- Container end -->
+
+</div><!-- Wrapper end -->
+
+</div>
+
+	<!-- ******************* The Footer Full-width Widget Area ******************* -->
+
+	<div class="wrapper wrapper-community-outer">
+		<div class="wrapper-community">
+
+			<div class="community" tabindex="-1">
+
+				<div class="row">
+					<!-- community section is generated through WordPress widget -->
+					<div id="wpb_widget-2" class="footer-widget widget_wpb_widget widget-count-3 col-md-4"><h3 class="widget-title">Available Positions</h3><hr><ul class="available-positions-list"><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/2018238108857051/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Network Production Engineer, Network.AI
+                      		</div>
+                      		<div class="job-location">
+                      			MENLO PARK, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/2018238108857051/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Network Production Engineer, Network.AI
+                      		</div>
+                      		<div class="job-location">
+                      			SEATTLE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1675040284335608/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Engineering Manager, ML Compilers (Triton / Kernel DSLs) 
+                      		</div>
+                      		<div class="job-location">
+                      			BELLEVUE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1610304617506347/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			ASIC Engineer, Design Verification
+                      		</div>
+                      		<div class="job-location">
+                      			BANGALORE, IN
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/2186963648750076/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Production Systems Engineer, Automation
+                      		</div>
+                      		<div class="job-location">
+                      			MENLO PARK, US
+                      		</div>
+                          </a>
+                      	</li>		</ul>
+		<a href="https://www.metacareers.com" target="_blank" rel="noopener">
+			<div class="btn available-positions-btn">
+				See All Jobs			</div>
+		</a>
+		</div><!-- .footer-widget --><div id="custom_html-2" class="widget_text footer-widget widget_custom_html widget-count-3 col-md-4"><h3 class="widget-title">Technology at Meta</h3><div class="textwidget custom-html-widget"><ul class="stay-connected-lists">
+	<li class="stay-connected-item">
+<img class="footer-fb-engineering stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/meta_logo.png" alt="footer-fb-engineering" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				Engineering at Meta - X
+			</div>
+			<a onclick="return twitterFollow(&quot;Meta_Engineers&quot;)" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Follow
+				</button>
+			</a>
+		</div>
+	</li>
+	<li class="stay-connected-item">
+<img class="footer-fb-engineering stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/meta_logo.png" alt="footer-AI" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				AI at Meta
+			</div>
+			<a href="https://ai.meta.com/blog/" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Read
+			</button>
+			</a>
+		</div>
+	</li>
+<li class="stay-connected-item">
+<img class="footer-fb-engineering stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/meta_logo.png" alt="footer-developers" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				Meta Quest Blog
+			</div>
+			<a href="https://www.meta.com/blog/quest/" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Read
+			</button>
+			</a>
+		</div>
+	</li>
+
+	<li class="stay-connected-item">
+<img class="footer-fb-engineering stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/meta_logo.png" alt="footer-developers" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				Meta for Developers
+			</div>
+			<a href="https://developers.facebook.com/" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Read
+			</button>
+			</a>
+		</div>
+	</li>
+	<li class="stay-connected-item">
+<img class="footer-fb-engineering stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/meta_logo.png" alt="footer-bug-bounty" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				Meta Bug Bounty
+			</div>
+			<a href="https://bugbounty.meta.com/" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Learn more
+			</button>
+			</a>
+		</div>
+	</li>
+
+	<li class="stay-connected-item">
+		<img class="stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/rss.png" alt="footer-rss" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				RSS
+			</div>
+			<a href="https://code.facebook.com/posts/rss/" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Subscribe
+			</button>
+			</a>
+		</div>
+	</li>
+</ul>
+</div></div><!-- .footer-widget --><div id="custom_html-3" class="widget_text footer-widget widget_custom_html widget-count-3 col-md-4"><h3 class="widget-title">Open Source</h3><div class="textwidget custom-html-widget"><p class="opensource-desc">
+	Meta believes in building community through open source technology. Explore our latest projects in Artificial Intelligence, Data Infrastructure, Development Tools, Front End, Languages, Platforms, Security, Virtual Reality, and more.
+</p>
+<ul class="opensource-cats">
+	<li class="opensource-cat">
+		<img src="/wp-content/themes/code-fb-com/img/android.png" alt="android" loading="lazy" width="50" height="59">
+		<div class="opensource-cap">
+			ANDROID
+		</div>
+	</li>
+	<li class="opensource-cat">
+		<img src="/wp-content/themes/code-fb-com/img/ios.png" alt="ios" loading="lazy" width="48" height="58">
+		<div class="opensource-cap">
+			iOS
+		</div>
+	</li>
+	<li class="opensource-cat">
+		<img src="/wp-content/themes/code-fb-com/img/web.png" alt="web" loading="lazy" width="55" height="49">
+		<div class="opensource-cap">		
+			WEB
+		</div>
+	</li>
+	<li class="opensource-cat">
+		<img src="/wp-content/themes/code-fb-com/img/backend.png" alt="backend" loading="lazy" width="56" height="51">
+		<div class="opensource-cap">
+			BACKEND
+		</div>
+	</li>
+	<li class="opensource-cat">
+		<img src="/wp-content/themes/code-fb-com/img/hardware.png" alt="hardware" loading="lazy" width="55" height="44">
+		<div class="opensource-cap">
+			HARDWARE
+		</div>
+	</li>
+</ul>
+
+<button class="btn opensource-btn" onclick="window.location.href='https://opensource.fb.com/'">
+	Learn More
+</button>
+
+</div></div><!-- .footer-widget -->
+				</div>
+
+			</div>
+			</div>
+
+	</div><!-- #wrapper-footer-full -->
+
+
+<div class="wrapper-footer" id="wrapper-footer">
+	<div class="inner-container">
+		<div class="footer">
+			<div class="row">
+				<div class="col-md-12">
+					<footer class="meta-footer" id="meta-footer">
+						<div class="site-info row justify-content-between">
+							<div class="col-md-5 meta-logo-container">
+								<a href="https://about.facebook.com/" target="_blank" rel="noopener">
+									<img src="https://engineering.fb.com/wp-content/themes/code-fb-com/img/meta_logo_full.svg" width="89" height="18" alt="Meta">
+								</a>
+								<div id="text-2" class="widget widget_text">			<div class="textwidget"><p>Engineering at Meta is a technical news resource for engineers interested in how we solve large-scale technical challenges at Meta.</p>
+</div>
+		</div>							</div>
+							<div class="col-md-6 footer-meta-links-container">
+														<ul class="meta-footer-links">
+									<li class="footer-link"><a href="https://engineering.fb.com">Home</a></li><li class="footer-link"><a href="https://about.meta.com/" target="_blank" rel="noopener">Company Info</a></li><li class="footer-link"><a href="https://www.metacareers.com/?ref=engineering.fb.com" target="_blank" rel="noopener">Careers</a></li>								</ul>
+							</div>
+						</div>
+					</footer>
+				</div>
+			</div>
+		</div>
+	</div>
+
+		<div class="footer">
+			<div class="row">
+
+				<div class="col-md-12">
+
+					<footer class="site-footer" id="colophon">
+						<div class="inner-container">
+							<div class="site-info row justify-content-between">
+
+								<div class="col-md-4 copyright-container">
+									<div class="copyright"> © 2026 Meta</div>
+								</div>
+
+								<!-- static footer -->
+								<div class="col-md-7 footer-links-container">
+									<ul class="footer-links">
+										<li class="footer-link"><a href="https://www.facebook.com/policies" target="_blank" rel="noopener">Terms</a></li><li class="footer-link"><a href="https://www.facebook.com/privacy/policy" target="_blank" rel="noopener">Privacy</a></li><li class="footer-link"><a href="/privacy">Cookies</a></li><li class="footer-link"><a href="https://www.facebook.com/help" target="_blank" rel="noopener">Help</a></li>									</ul>
+								</div>
+							</div>
+						</div><!-- .site-info -->
+
+					</footer><!-- #colophon -->
+
+				</div><!--col end -->
+
+			</div><!-- row end -->
+
+	</div><!-- //.inner-container -->
+</div><!-- wrapper end -->
+
+<!-- #page we need this extra closing tag here -->
+
+<script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/code-fb-com/*","/wp-content/themes/understrap/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+  <div class="gdprconsent-container" id="GDPRConsentBar" style="display: block;">
+    <div class="gdprconsent-wrapper">
+      <div class="gdprconsent-content">
+        <p>To help personalize content, tailor and measure ads and provide a safer experience, we use cookies. By clicking or navigating the site, you agree to allow our collection of information on and off Facebook through cookies. Learn more, including about available controls: <a href="/privacy">Cookie Policy</a></p>
+                <div class="gdprconsent-button">
+          <button type="button" data-gdpr-accept="">Accept</button>
+        </div>
+              </div>
+    </div>
+  </div>
+  	
+	<!-- Twitter universal website tag code -->
+	<script>
+		if (window.gdprSafeTrack) {
+			window.gdprSafeTrack(function() {
+				!function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments);
+				},s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='//static.ads-twitter.com/uwt.js',
+				a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,'script');
+				// Insert Twitter Pixel ID and Standard Event data below
+				twq('init','o31u0');
+				twq('track','PageView');
+			});
+		}
+	</script>
+	<!-- End Twitter universal website tag code -->
+
+	
+	<script type="text/javascript">
+		window.WPCOM_sharing_counts = {"https://engineering.fb.com/2018/08/10/connectivity/announcing-tools-to-help-partners-improve-connectivity/":9800};
+	</script>
+				
+					<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KZRLGZ8" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+		
+					<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=660742068067366&ev=PageView&noscript=1"/></noscript>
+		<script id="child-understrap-scripts-js-extra">
+var loadmore_params = {"restfulURL":"https://engineering.fb.com/wp-json/fb/v1/loadmore","searchText":"","posts":"{\"page\":0,\"year\":2018,\"monthnum\":8,\"day\":10,\"name\":\"announcing-tools-to-help-partners-improve-connectivity\",\"category_name\":\"connectivity\",\"error\":\"\",\"m\":\"\",\"p\":0,\"post_parent\":\"\",\"subpost\":\"\",\"subpost_id\":\"\",\"attachment\":\"\",\"attachment_id\":0,\"pagename\":\"\",\"page_id\":0,\"second\":\"\",\"minute\":\"\",\"hour\":\"\",\"w\":0,\"tag\":\"\",\"cat\":\"\",\"tag_id\":\"\",\"author\":\"\",\"author_name\":\"\",\"feed\":\"\",\"tb\":\"\",\"paged\":0,\"meta_key\":\"\",\"meta_value\":\"\",\"preview\":\"\",\"s\":\"\",\"sentence\":\"\",\"title\":\"\",\"fields\":\"all\",\"menu_order\":\"\",\"embed\":\"\",\"category__in\":[],\"category__not_in\":[],\"category__and\":[],\"post__in\":[],\"post__not_in\":[],\"post_name__in\":[],\"tag__in\":[],\"tag__not_in\":[],\"tag__and\":[],\"tag_slug__in\":[],\"tag_slug__and\":[],\"post_parent__in\":[],\"post_parent__not_in\":[],\"author__in\":[],\"author__not_in\":[],\"search_columns\":[],\"ignore_sticky_posts\":false,\"suppress_filters\":false,\"cache_results\":true,\"update_post_term_cache\":true,\"update_menu_item_cache\":false,\"lazy_load_term_meta\":true,\"update_post_meta_cache\":true,\"post_type\":\"\",\"posts_per_page\":12,\"nopaging\":false,\"comments_per_page\":\"50\",\"no_found_rows\":false,\"order\":\"DESC\"}","current_page":"1","max_page":"0","post_type":"post"};
+var search_params = {"ajaxurl":"https://engineering.fb.com/wp-admin/admin-ajax.php","posts":"{\"page\":0,\"year\":2018,\"monthnum\":8,\"day\":10,\"name\":\"announcing-tools-to-help-partners-improve-connectivity\",\"category_name\":\"connectivity\",\"error\":\"\",\"m\":\"\",\"p\":0,\"post_parent\":\"\",\"subpost\":\"\",\"subpost_id\":\"\",\"attachment\":\"\",\"attachment_id\":0,\"pagename\":\"\",\"page_id\":0,\"second\":\"\",\"minute\":\"\",\"hour\":\"\",\"w\":0,\"tag\":\"\",\"cat\":\"\",\"tag_id\":\"\",\"author\":\"\",\"author_name\":\"\",\"feed\":\"\",\"tb\":\"\",\"paged\":0,\"meta_key\":\"\",\"meta_value\":\"\",\"preview\":\"\",\"s\":\"\",\"sentence\":\"\",\"title\":\"\",\"fields\":\"all\",\"menu_order\":\"\",\"embed\":\"\",\"category__in\":[],\"category__not_in\":[],\"category__and\":[],\"post__in\":[],\"post__not_in\":[],\"post_name__in\":[],\"tag__in\":[],\"tag__not_in\":[],\"tag__and\":[],\"tag_slug__in\":[],\"tag_slug__and\":[],\"post_parent__in\":[],\"post_parent__not_in\":[],\"author__in\":[],\"author__not_in\":[],\"search_columns\":[],\"ignore_sticky_posts\":false,\"suppress_filters\":false,\"cache_results\":true,\"update_post_term_cache\":true,\"update_menu_item_cache\":false,\"lazy_load_term_meta\":true,\"update_post_meta_cache\":true,\"post_type\":\"\",\"posts_per_page\":12,\"nopaging\":false,\"comments_per_page\":\"50\",\"no_found_rows\":false,\"order\":\"DESC\"}","current_page":"1","max_page":"0","article_filter":"89380bf628"};
+var more_articles = {"next_article":{"label":"Next","permalink":"https://engineering.fb.com/2018/08/17/connectivity/open-sourcing-facebooks-solar-powered-aircraft-design-tools/","title":"Open-sourcing Facebook&#039;s Solar-Powered Aircraft Design Tools","thumbnail":["https://engineering.fb.com/wp-content/uploads/2018/08/flapping61.gif?w=580&h=326&crop=1",580,326,true]},"prev_article":{"label":"Prev","permalink":"https://engineering.fb.com/2018/08/06/security/fizz/","title":"Deploying TLS 1.3 at scale with Fizz, a performant open source TLS library","thumbnail":["https://engineering.fb.com/wp-content/uploads/2018/07/fizz.png?w=580&h=326&crop=1",580,326,true]}};
+//# sourceURL=child-understrap-scripts-js-extra
+</script>
+<script id="jetpack-facebook-embed-js-extra">
+var jpfbembed = {"appid":"249643311490","locale":"en_US"};
+//# sourceURL=jetpack-facebook-embed-js-extra
+</script>
+<script type="text/javascript" src="https://engineering.fb.com/_static/??-eJx9jUEOwiAQAD/ksqlW0YPxKabA1i7tLkQgfl9iPHnwOpnJ4CuDT1pJK9aFhAr6FAhm17Fg4FIxdrbwFuAjGGE1sezwf9mj/OQiv6o0yFt7sBaMVPPkVxhOZo93Vo+u9Q3OkyeX0gokjsL3d5PrYM8XOx7seIxv/GdA6Q=="></script><div id="fb-root" class=" fb_reset"><div style="position: absolute; top: -10000px; width: 0px; height: 0px;"><div></div></div></div><script id="sharing-js-js-extra">
+var sharing_js_options = {"lang":"en","counts":"1","is_stats_active":""};
+//# sourceURL=sharing-js-js-extra
+</script>
+<script id="sharing-js-js" src="https://engineering.fb.com/wp-content/mu-plugins/jetpack-16.2/_inc/build/sharedaddy/sharing.min.js?ver=16.2"></script>
+<script id="sharing-js-js-after">
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "facebook" ] = "menubar=1,resizable=1,width=600,height=400";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "threads" ] = "menubar=1,resizable=1,width=600,height=400";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "linkedin" ] = "menubar=1,resizable=1,width=580,height=450";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "x" ] = "menubar=1,resizable=1,width=600,height=350";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "bluesky" ] = "menubar=1,resizable=1,width=600,height=400";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "mastodon" ] = "menubar=1,resizable=1,width=460,height=400";
+//# sourceURL=sharing-js-js-after
+</script>
+<script id="video-analytics-js-after">
+if (window.gdprSafeTrack) {
+					window.gdprSafeTrack(function() {
+						let youtube = document.querySelectorAll('[src*="youtube-nocookie"]');
+						for (let i = 0; i < youtube.length; i++) {
+							youtube[i].src = youtube[i].src.replace('youtube-nocookie.com', 'youtube.com');
+						}
+						let vimeo = document.querySelectorAll('[src*="vimeo"]');
+						for (let i = 0; i < vimeo.length; i++) {
+							vimeo[i].src = vimeo[i].src.replace('&dnt=true', '');
+						}
+					});
+				}
+//# sourceURL=video-analytics-js-after
+</script>
+<script id="wp-emoji-settings" type="application/json">
+{"baseUrl":"https://s.w.org/images/core/emoji/17.0.2/72x72/","ext":".png","svgUrl":"https://s.w.org/images/core/emoji/17.0.2/svg/","svgExt":".svg","source":{"concatemoji":"https://engineering.fb.com/wp-includes/js/wp-emoji-release.min.js?ver=7.1.1"}}
+</script>
+<script type="module">
+/*! This file is auto-generated */
+var e="script#wp-emoji-settings",t=document.querySelector(e);if(!(t instanceof HTMLScriptElement))throw new Error("Element missing: "+e);const r=JSON.parse(t.text),s=(window._wpemojiSettings=r,"wpEmojiSettingsSupports"),o=["flag","emoji"];function i(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(s,JSON.stringify(t))}catch(e){}}function c(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0);const r=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);return t.every((e,t)=>e===r[t])}function p(e,t){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var n=e.getImageData(16,16,1,1);for(let e=0;e<n.data.length;e++)if(0!==n.data[e])return!1;return!0}function u(e,t,n,r){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\udde8\ud83c\uddf6","\ud83c\udde8\u200b\ud83c\uddf6")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!r(e,"\ud83e\u1fac8")}return!1}function f(e,t,n,r){let a;const s=(a="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):document.createElement("canvas")).getContext("2d",{willReadFrequently:!0}),o=(s.textBaseline="top",s.font="600 32px Arial",{});return e.forEach(e=>{o[e]=t(s,e,n,r)}),o}function a(e){var t=document.createElement("script");t.src=e,t.defer=!0,document.head.appendChild(t)}r.supports={everything:!0,everythingExceptFlag:!0},new Promise(t=>{let n=function(){try{var e=JSON.parse(sessionStorage.getItem(s));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+f.toString()+"("+[JSON.stringify(o),u.toString(),c.toString(),p.toString()].join(",")+"));",r=new Blob([e],{type:"text/javascript"});const a=new Worker(URL.createObjectURL(r),{name:"wpTestEmojiSupports"});return void(a.onmessage=e=>{i(n=e.data),a.terminate(),t(n)})}catch(e){}i(n=f(o,u,c,p))}t(n)}).then(e=>{for(const n in e)r.supports[n]=e[n],r.supports.everything=r.supports.everything&&r.supports[n],"flag"!==n&&(r.supports.everythingExceptFlag=r.supports.everythingExceptFlag&&r.supports[n]);var t;r.supports.everythingExceptFlag=r.supports.everythingExceptFlag&&!r.supports.flag,r.supports.everything||((t=r.source||{}).concatemoji?a(t.concatemoji):t.wpemoji&&t.twemoji&&(a(t.twemoji),a(t.wpemoji)))});
+//# sourceURL=https://engineering.fb.com/wp-includes/js/wp-emoji-loader.min.js
+</script>
+
+
+
+
+</body></html>

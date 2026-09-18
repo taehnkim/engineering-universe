@@ -1,0 +1,816 @@
+<html lang="en"><head>
+        <meta charset="utf-8">
+        
+        <title>
+            
+            Developers Share How They Build with Google Tools and Bard
+            
+            
+            - Google Developers Blog
+            
+        </title>
+        <meta property="og:title" content="Developers Share How They Build with Google Tools and Bard- Google Developers Blog">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+	<meta name="description" content="Developer Journey is a monthly series highlighting diverse and global developers sharing relatable c...">
+  <meta content="summary_large_image" name="twitter:card">
+  <meta content="Google for Developers Blog - News about Web, Mobile, AI and Cloud" property="twitter:title">
+  <meta property="og:title" content="Developers Share How They Build with Google Tools and Bard">
+  <script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-H733Y2BZES&amp;cx=c&amp;gtm=4e69g1" nonce=""></script><script async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-WVTLDSL"></script><script type="text/javascript" id="www-widgetapi-script" src="https://www.youtube.com/s/player/4fd832e7/www-widgetapi.vflset/www-widgetapi.js" async="" nonce=""></script><script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [{
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Google for Developers Blog",
+      "item": "https://developers.googleblog.com/"
+    },{
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Developers Share How They Build with Google Tools and Bard",
+      "item": "https://developers.googleblog.com/developers-share-how-they-build-with-google-tools-and-bard/"
+    }]
+  }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Developers Share How They Build with Google Tools and Bard",
+      "description": "",
+      "image": "https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/70.2e16d0ba.fill-800x400.png",
+      "datePublished": "2023-08-15",
+      "author": [
+        
+        
+          { "@type": "Person", "name": "Lyanne Alfaro", "url": "/search/?author=Lyanne+Alfaro" }
+        
+        
+      ]
+    }
+  </script>
+  
+  <meta content="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/70.2e16d0ba.fill-1200x600.png" property="og:image">
+  
+
+
+        
+        
+
+        <!-- Google Tag Manager -->
+        <script type="text/javascript" nonce="" src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/analytics.js"></script>
+        <!-- End Google Tag Manager -->
+
+        
+        <link href="//www.gstatic.com/glue/v27_1/glue.min.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/dgc_blog.css">
+        <link rel="icon" href="https://storage.googleapis.com/gweb-developer-goog-blog-assets/meta/favicon.ico" type="image/x-icon">
+        <link rel="apple-touch-icon" href="https://storage.googleapis.com/gweb-developer-goog-blog-assets/meta/apple-touch-icon.png">
+
+        
+				<link rel="preconnect" href="https://fonts.googleapis.com">
+				<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+				<link rel="preload" href="https://fonts.googleapis.com/css2?family=Product+Sans&amp;family=Google+Sans+Display:ital@0;1&amp;family=Google+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;family=Google+Sans+Text:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;display=swap" as="style">
+				<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Product+Sans&amp;family=Google+Sans+Display:ital@0;1&amp;family=Google+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;family=Google+Sans+Text:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;display=swap">
+        <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&amp;family=Google+Sans+Flex:opsz,wght@6..144,1..1000&amp;display=swap" rel="stylesheet" data-page-link="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&amp;display=swap">
+
+        
+        <link href="https://www.gstatic.com/glue/cookienotificationbar/cookienotificationbar.min.css" rel="stylesheet">
+
+        
+  <link rel="stylesheet" type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/blog_detail.css">
+  <link type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/prism.css" rel="stylesheet">
+
+    </head>
+
+    <body id="main-content" class="glue-body ">
+        <!-- Google Tag Manager (noscript) -->
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVTLDSL "
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
+
+        
+
+				
+        
+
+<!-- HTML -->
+<header class="dgc-header">
+  <div class="dgc-header-inner">
+    <button class="hamburger" aria-haspopup="true" aria-expanded="false" aria-label="Open Menu">
+      <svg role="presentation" aria-hidden="true" class="glue-icon">
+        <use href="/glue-icon/#menu"></use>
+      </svg>
+    </button>
+    <div class="product-name-wrapper">
+      <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+        <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+      </a>
+    </div>
+    <div class="desktop-nav-wrapper">
+      <div class="upper-tabs-wrapper">
+        <div class="upper-tabs">
+          <nav class="tabs" aria-label="Upper Tabs">
+            <div class="tab">
+              <a href="//developers.google.com/community" class="top-nav-title">
+                Community/Events
+              </a>
+            </div>
+            <div class="tab">
+              <a href="//developers.google.com/solutions/catalog" class="top-nav-title">
+                Learn
+              </a>
+            </div>
+            <div class="tab">
+              <a href="//developers.googleblog.com" class="top-nav-title">
+                Blog
+              </a>
+            </div>
+            <div class="tab">
+              <a href="https://www.youtube.com/user/GoogleDevelopers" class="top-nav-title">
+                YouTube
+              </a>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dgc-header-search">
+    <div class="search-wrapper glue-page">
+      <div class="glue-grid">
+        <form id="search-form" action="/search/" method="get" class="search-content glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-9-md glue-grid__col--span-7-lg">
+          <div class="search-input-wrapper">
+            <svg role="presentation" aria-hidden="true" class="glue-icon search-icon">
+              <use href="/glue-icon/#search"></use>
+            </svg>
+            <input type="text" name="query" placeholder="Search all articles..." aria-label="Search" class="search-input-field">
+          </div>
+          <button class="glue-button glue-button--high-emphasis">
+            Search
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-drawer" top-level-nav="">
+  <nav class="nav-content" aria-label="Side menu">
+    <div class="mobile-header">
+      <button class="nav-close-btn nav-btn" aria-label="Close navigation">
+        <svg role="presentation" aria-hidden="true" class="glue-icon">
+          <use href="/glue-icon/#close"></use>
+        </svg>
+      </button>
+      <button class="nav-back-btn nav-btn hidden" aria-label="Back to Menu">
+        <svg role="presentation" aria-hidden="true" class="glue-icon">
+          <use href="/glue-icon/#arrow-back"></use>
+        </svg>
+      </button>
+      <div class="product-name-wrapper">
+        <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+          <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+        </a>
+      </div>
+    </div>
+    <div class="nav-wrapper">
+      <div class="mobile-nav-top">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="//developers.google.com/community" class="nav-title" data-label="Tab: Community/Events">
+              <span class="nav-text" tooltip="">
+                Community/Events
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="//developers.google.com/solutions/catalog" class="nav-title" data-label="Tab: Learn">
+              <span class="nav-text" tooltip="">
+                Learn
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="//developers.googleblog.com" class="nav-title" data-label="Tab: Blog">
+              <span class="nav-text" tooltip="">
+                Blog
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="https://www.youtube.com/user/GoogleDevelopers" class="nav-title" data-label="Tab: YouTube">
+              <span class="nav-text" tooltip="">
+                YouTube
+             </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<div class="backdrop"></div>
+
+        
+  <div class="blog-detail-container">
+
+    
+      <section class="tags-container glue-page glue-spacer-5-top">
+        <div class="glue-eyebrow"><a href="/search/?product_categories=Firebase">Firebase</a></div>
+      </section>
+    
+
+    <section class="heading-container glue-page  glue-spacer-1-top">
+      <h1 class="glue-headline glue-headline--headline-1">Developers Share How They Build with Google Tools and Bard</h1>
+    </section>
+
+    <section class="summary-container glue-page glue-spacer-4-top">
+      <div class="date-time">
+        <div class="published-date glue-font-weight-medium">AUG. 15, 2023</div>
+      </div>
+    </section>
+
+    <section class="glue-page glue-grid glue-spacer-1-top">
+
+      <section class="author-container glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-10-md">
+      
+        
+          <div class="author-obj">
+            <a class="glue-font-weight-medium" href="/search/?author=Lyanne+Alfaro">Lyanne Alfaro</a>
+            
+              <span class="glue-font-weight-medium role">DevRel Program Manager</span>
+            
+            
+              <span class="glue-font-weight-medium team">Google Developer Studio</span>
+            
+          </div>
+        
+
+      
+      </section>
+      <section class="social-container glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-2-md">
+        <button id="social-button" class="glue-button glue-button--low-emphasis glue-button--icon" aria-haspopup="true" aria-expanded="false">
+          <svg role="presentation" aria-hidden="true" class="glue-icon">
+            <use href="/glue-icon/#share"></use>
+          </svg>
+          <span>Share</span>
+        </button>
+        <ul id="social-menu" class="glue-elevation-level-1" role="menu" aria-labelledby="social-button">
+          <li>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=https://developers.googleblog.com/developers-share-how-they-build-with-google-tools-and-bard/" title="Share on Facebook" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#post-facebook"></use>
+              </svg>
+              <span>Facebook</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://twitter.com/intent/tweet?text=https://developers.googleblog.com/developers-share-how-they-build-with-google-tools-and-bard/" title="Share on Twitter" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#twitter-x"></use>
+              </svg>
+              <span>Twitter</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://www.linkedin.com/shareArticle?url=https://developers.googleblog.com/developers-share-how-they-build-with-google-tools-and-bard/&amp;mini=true" title="Share on LinkedIn" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#post-linkedin"></use>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
+          </li>
+          <li>
+            <a href="mailto:name@example.com?subject=Check%20out%20this%20site&amp;body=Check%20out%20https://developers.googleblog.com/developers-share-how-they-build-with-google-tools-and-bard/" title="Send via Email">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#email"></use>
+              </svg>
+              <span>Mail</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" title="Get shareable link" data-link="https://developers.googleblog.com/developers-share-how-they-build-with-google-tools-and-bard/" data-copy-text="Copy Link" data-copied-text="Copied!">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#link"></use>
+              </svg>
+              <span></span>
+            </a>
+          </li>
+        </ul>
+      </section>
+    </section>
+
+    
+    <section class="blocks-container glue-page glue-spacer-3-top">
+      <div class="block">
+          
+
+<img class="banner-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Dev-Journey-2023-08-Editorial-Header_2_khYnjN4.original.jpg" alt="Dev-Journey-2023-08-Editorial-Header (2).jpg">  <div class="inner-block-content rich-content">
+    <p data-block-key="w21ak"></p><p data-block-key="rybm0">Developer Journey is a monthly series highlighting diverse and global developers sharing relatable challenges, opportunities, and wins in their journey. Every month, we will spotlight developers around the world, the Google tools they leverage, and the kind of products they are building.</p><p data-block-key="nbb09">This month, we spoke with several <a href="https://developers.google.com/community/experts">Google Developer Experts</a> to learn more about their path.</p><hr><h3 data-block-key="8cw0f"></h3><h2 data-block-key="827gi">Eslam Medhat Fathy</h2>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/eslam.original.png" alt="eslam">
+            
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <p data-block-key="ael2i"><b>Giza, Egypt</b></p><p data-block-key="4g6jo"><b>Google Developer Expert, Firebase</b></p><p data-block-key="22p4p"><b>Technical and Design Mentor at Google for Startups Accelerator Program</b></p><p data-block-key="3vg4k"><b>Google Developer Group Organizer</b></p><p data-block-key="9liar"><b>Senior Flutter Developer at Sarmad</b></p><p data-block-key="6kabf"><a href="https://twitter.com/madahetooo"><b>Twitter</b></a></p><p data-block-key="4nkjl"><a href="https://www.linkedin.com/in/ieslammedhat/"><b>LinkedIn</b></a></p><p data-block-key="1ckie"><a href="https://www.youtube.com/channel/UCzvY9A7v6iQuii1G4GZFzLw"><b>YouTube</b></a></p><h4 data-block-key="aubp3"><b>What Google tools have you used to build?</b></h4><p data-block-key="qsth0">I have used many tools like Firebase, Flutter, Android, Kotlin, Dart, Assistant, and Bard, of course.</p><h4 data-block-key="95933"><b>Which tool has been your favorite to use? Why?</b></h4><p data-block-key="2xmf3">My favorite tool is Firebase, because of how easy it is to set up and use. It also provides a serverless architecture, easy-to-use services, real-time synchronization, and cross-platform support, among other features. These benefits can help you build robust and scalable applications quickly and easily.</p><h4 data-block-key="y2kmf"><b>Tell us about something you've built in the past using Google tools.</b></h4><p data-block-key="i0lwh">I have more than 10 apps in the store created in Android native with Kotlin, Flutter and Dart. A few examples are <a href="https://play.google.com/store/apps/details?id=com.rehla.rehlatech">Rehlatech</a> and <a href="https://play.google.com/store/apps/details?id=al7ezpala3zam3.com.al7ezpala3zam3">AzkarApp</a>.</p><h4 data-block-key="e28wh"><b>What will you create with Google Bard?</b></h4><p data-block-key="553dw">I use Bard every day for generating, debugging, explaining, learning code, and more.</p><h4 data-block-key="axel6"><b>What advice would you give someone starting in their developer journey?</b></h4><p data-block-key="57kga">I advise everyone about to start their developer journey to:</p><p data-block-key="k7b63"></p><ul><li data-block-key="2rh1h"><b>Start with the basics:</b> It's important to have a solid foundation in programming fundamentals. Learn the basics of a programming language, such as syntax, data types, control structures, and functions.</li><li data-block-key="ukd1z"><b>Practice coding:</b> Practice makes perfect. The more you practice coding, the better you'll become. Start with small projects and gradually move on to more complex projects.</li><li data-block-key="x4nas"><b>Learn from others:</b> Join online communities, attend meetups, and participate in forums. Learning from others can help you improve your skills.</li><li data-block-key="swdio"><b>Read the documentation:</b> Documentation is your friend. Read the documentation of the programming language or tools you're using. It can help you understand how to use them properly and solve problems.</li><li data-block-key="sg9vc"><b>Be patient:</b> Learning to code takes time and patience. Don't get discouraged if you don't understand something right away. Keep practicing and asking questions.</li><li data-block-key="eun2h"><b>Build projects:</b> Building projects is a great way to learn new skills and apply what you've learned. Start small and gradually build more complex projects.</li><li data-block-key="8geg9"><b>Stay up-to-date:</b> Technology is constantly evolving. Stay up-to-date on the latest trends and updates in the programming world. Attend conferences, read blogs, and follow experts on social media.</li><li data-block-key="rmoqa"><b>Have fun:</b> Coding should be fun. Don't take it too seriously and enjoy the process of learning and building new things.</li></ul><hr><h3 data-block-key="6ata5"></h3><h2 data-block-key="65vio"><b>Carmen Ansio</b></h2>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/carmen.original.png" alt="carmen">
+            
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <h4 data-block-key="s9iex"><b>What Google tools have you used to build?</b></h4><p data-block-key="jyamb">I have used various Google tools to build projects including Angular, Dart, and Firebase.</p><h4 data-block-key="89vbd"><b>Which tool has been your favorite to use? Why?</b></h4><p data-block-key="feoao">My favorite tool has been Chrome DevTools because of its versatile suite of debugging tools and its network panel, which I often use to optimize web performance. DevTools is an essential part of my daily development process as it allows me to test, experiment, and debug code directly in the browser.</p><h4 data-block-key="gisns"><b>What will you create with Google Bard?</b></h4><p data-block-key="du46t">With Google Bard, I plan to develop a Figma plugin for creating dynamic design prototypes. Leveraging the natural language processing and understanding capabilities of Google Bard, the plugin will allow designers to quickly convert textual descriptions into visual design elements. This can significantly streamline the design process, bridging the gap between ideation and visual representation, while enabling non-designers to contribute effectively to the design process.</p><h4 data-block-key="s915s"><b>What advice would you give someone starting in their developer journey?</b></h4><p data-block-key="sdfxx">For those beginning their developer journey, my advice would be: Always stay curious and never stop learning. Technology evolves quickly, and it's important to be adaptable. Also, never undervalue the importance of good UI/UX design. It's not only about writing code, but also about creating a great user experience.</p><hr><h3 data-block-key="y71hm"></h3><h2 data-block-key="326qm">Stéphanie Walter</h2>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/stephanie.original.png" alt="stephanie">
+            
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <h4 data-block-key="xls62"><b>What Google tools have you used to build?</b></h4><p data-block-key="8n4az">The main tools I use are the <a href="https://developer.chrome.com/docs/devtools/">Chrome inspect tool</a> and <a href="https://developer.chrome.com/docs/lighthouse/overview/">Lighthouse</a>. I’m using Material UI a lot and the <a href="https://material.io/blog/material-3-figma-design-kit">M3 design kit for Figma</a> is a great time saver.</p><h4 data-block-key="jd745"><b>Which tool has been your favorite to use? Why?</b></h4><p data-block-key="28dxv">Performance is important where I work, so Lighthouse is definitely in my favorite list. The function to get a quick report, which also shows main accessibility issues, is very nice. Of course it won’t show all accessibility issues, but it’s a good place to start improving a website.</p><h4 data-block-key="u5flf"><b>Please share with us about something you’ve built in the past using Google tools.</b></h4><p data-block-key="g5t4c">Both Lighthouse and the Chrome inspect tool are lifesavers when building websites like <a href="https://stephaniewalter.design/">my blog</a>. There’s still improvement to be made on some pages on performance, but it’s getting there.</p><h4 data-block-key="7mmf8"><b>What will you create with Google Bard?</b></h4><p data-block-key="kkcox">To be honest, it only has been recently made available for my country, so I haven’t had time to really play with it. For now, I use AI chatbots as glorified assistants. English isn’t my native language, so asking such tools to help translate some things and improve grammar in some sentences is very helpful. I might use it to help me with sharing knowledge: to improve my articles, conference slides, and training material.</p><h4 data-block-key="zi1h2"><b>What advice would you give someone starting in their developer journey?</b></h4><p data-block-key="cdafm">Start with a project you are passionate about, something that would help you, or something you wish existed. It doesn’t have to be perfect. It also doesn’t have to be something that will bring money. And remember, you also don’t have to finish it. It’s nice if you can share it with peers to get feedback but you can also share unfinished projects. It’s all about learning while working on something that you like.But remember to also step away from the computer. Developing should not be your whole life - otherwise, you will burn out really fast.</p>
+</div> 
+      </div>
+    </section>
+    
+
+    <section class="navigation-container glue-page glue-spacer-6-top">
+      <div class="posted-in-section">
+        <div class="posted-in-section__heading">
+          <span class="glue-caption">
+            posted in:
+          </span>
+        </div>
+        <div class="posted-in-section__tags">
+          <ul>
+              
+                  <li>
+                      <a href="/search/?product_categories=Firebase" class="glue-caption">Firebase</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?technology_categories=Mobile" class="glue-caption">Mobile</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?technology_categories=Web" class="glue-caption">Web</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?technology_categories=Cloud" class="glue-caption">Cloud</a>
+                  </li>
+              
+              
+                  <li>
+                      <a href="/search/?tag=web" class="glue-caption">web</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=community" class="glue-caption">community</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=Influence" class="glue-caption">Influence</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=Google Developer Expert" class="glue-caption">Google Developer Expert</a>
+                  </li>
+              
+          </ul>
+      </div>
+      </div>
+      <div class="buttons-section">
+        <div class="buttons-section__left">
+          <a href="/google-developer-groups-ecosystem-partners-bring-startup-success-days-to-15-indian-cities/" class="glue-button--icon glue-elevation-level-1 " aria-label="Previous">
+            <svg role="presentation" aria-hidden="true" class="glue-icon">
+              <use href="/glue-icon/#chevron-left"></use>
+            </svg>
+          </a>
+          <span class="caption ">Previous</span>
+        </div>
+        <div class="buttons-section__right">
+          <span class="caption ">Next</span>
+          <a href="/mediapipe-for-raspberry-pi-and-ios/" class="glue-button--icon glue-elevation-level-1 " aria-label="Next">
+            <svg role="presentation" aria-hidden="true" class="glue-icon">
+              <use href="/glue-icon/#chevron-right"></use>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class="related-posts-container glue-page glue-spacer-6-top glue-spacer-3-bottom">
+      <span class="glue-headline glue-headline--headline-3">Related Posts</span>
+      <div class="related-posts-container__carousel glue-page glue-spacer-5-top">
+        <div class="glue-carousel glue-carousel--cards glue-carousel-related-posts glue-carousel--peek-out glue-carousel--has-navigation" aria-label="Related Posts">
+          <!-- Previous -->
+          <button class="glue-carousel__button glue-carousel__button--prev glue-is-inactive" aria-label="Go to the previous slide" aria-controls="">
+            <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--32px">
+              <use href="/glue-icon/#chevron-left"></use>
+            </svg>
+          </button>
+          <!-- Next -->
+          <button class="glue-carousel__button glue-carousel__button--next" aria-label="Go to the next slide" aria-controls="">
+            <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--32px">
+              <use href="/glue-icon/#chevron-right"></use>
+            </svg>
+          </button>
+          <!-- List -->
+          <div class="glue-carousel__viewport">
+            <div class="glue-carousel__list" aria-live="polite" style="width: 2004px; grid-template-columns: repeat(4, 1fr); transform: translate3d(0px, 0px, 0px);">
+              
+                <a class="glue-card glue-carousel__item" href="/introducing-credentio-open-source-c-library-for-c2pa-content-credentials-from-google/" tabindex="0">
+                  <div aria-label="Introducing Credentio: Open Source C++ Library for C2PA Content Credentials from Google" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Introducing Credentio: Open Source C++ Library for C2PA Content Credentials from Google" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/credentio-hero-updated.2e16d0ba.fill-800x400.png">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">Mobile</span>
+                            
+                            <span class="glue-label">Web</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                            <span class="glue-label">Solutions</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Introducing Credentio: Open Source C++ Library for C2PA Content Credentials from Google</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">AUG. 13, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+                <a class="glue-card glue-carousel__item" href="/advancing-agentic-ai-development-with-firebase-studio/" tabindex="-1">
+                  <div aria-label="Advancing agentic AI development with Firebase Studio" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Advancing agentic AI development with Firebase Studio" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Firebase-Studio-meta.2e16d0ba.fill-800x400.png">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            <span class="glue-label">Cloud</span>
+                            
+                            <span class="glue-label">Firebase</span>
+                            
+                            
+                            <span class="glue-label">Mobile</span>
+                            
+                            <span class="glue-label">Web</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Advancing agentic AI development with Firebase Studio</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">JULY 10, 2025</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+                <a class="glue-card glue-carousel__item" href="/new-ai-capabilities-for-popular-frameworks-in-firebase-studio/" aria-hidden="true" tabindex="-1">
+                  <div aria-label="Unleashing new AI capabilities for popular frameworks in Firebase Studio" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Unleashing new AI capabilities for popular frameworks in Firebase Studio" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/firebase-studio-io-connect-india.2e16d0ba.fill-800x400.png">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            <span class="glue-label">Firebase</span>
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            <span class="glue-label">Cloud</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                            <span class="glue-label">Industry Trends</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Unleashing new AI capabilities for popular frameworks in Firebase Studio</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">JULY 23, 2025</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+                <a class="glue-card glue-carousel__item" href="/announcing-adk-for-kotlin-10-building-production-ready-ai-agents-in-kotlin-android-and-beyond/" aria-hidden="true" tabindex="-1">
+                  <div aria-label="Announcing ADK for Kotlin 1.0: Building Production-Ready AI Agents in Kotlin, Android, and Beyond" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Announcing ADK for Kotlin 1.0: Building Production-Ready AI Agents in Kotlin, Android, and Beyond" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/banner-1080p.2e16d0ba.fill-800x400.png">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">Mobile</span>
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Announcing ADK for Kotlin 1.0: Building Production-Ready AI Agents in Kotlin, Android, and Beyond</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">SEPT. 9, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+            </div>
+          </div>
+          <!-- Navigation dots -->
+          <div class="glue-carousel__navigation" aria-label="Choose a page" data-glue-carousel-navigation-label="Selected tab $glue_carousel_page_number$ of $glue_carousel_page_total$">
+          <button class="glue-carousel__dot glue-is-active" data-dot="1" aria-controls="" aria-label="Selected tab 1 of 2" tabindex="0" aria-current="true"></button><button class="glue-carousel__dot" data-dot="2" aria-controls="" aria-label="Selected tab 2 of 2" tabindex="-1" aria-current="false"></button></div>
+        </div>
+      </div>
+    </section>
+    
+  </div>
+
+
+				
+				
+
+<div class="footer-linkboxes__wrapper">
+  <nav class="footer-linkboxes" aria-label="Footer links">
+    <ul class="footer-linkboxes__list">
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Connect
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//googledevelopers.blogspot.com" class="footer-linkbox-list__link">
+                Blog
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/3FReQXN" class="footer-linkbox-list__link">
+                Bluesky
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/googlefordevs" class="footer-linkbox-list__link">
+                Instagram
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/gdevs-li" class="footer-linkbox-list__link">
+                LinkedIn
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/gdevs-tw" class="footer-linkbox-list__link">
+                X (Twitter)
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/developers" class="footer-linkbox-list__link">
+                YouTube
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Programs
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/program" class="footer-linkbox-list__link">
+                Google Developer Program
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/gdg" class="footer-linkbox-list__link">
+                Google Developer Groups
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/experts" class="footer-linkbox-list__link">
+                Google Developer Experts
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/accelerators" class="footer-linkbox-list__link">
+                Accelerators
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//www.womentechmakers.com" class="footer-linkbox-list__link">
+                Women Techmakers
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/nvidia" class="footer-linkbox-list__link">
+                Google Cloud &amp; NVIDIA
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Developer consoles
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.developers.google.com" class="footer-linkbox-list__link">
+                Google API Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.cloud.google.com" class="footer-linkbox-list__link">
+                Google Cloud Platform Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//play.google.com/apps/publish" class="footer-linkbox-list__link">
+                Google Play Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.firebase.google.com" class="footer-linkbox-list__link">
+                Firebase Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.actions.google.com" class="footer-linkbox-list__link">
+                Actions on Google Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//cast.google.com/publish" class="footer-linkbox-list__link">
+                Cast SDK Developer Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//chrome.google.com/webstore/developer/dashboard" class="footer-linkbox-list__link">
+                Chrome Web Store Dashboard
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.home.google.com/" class="footer-linkbox-list__link">
+                Google Home Developer Console
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+    </ul>
+  </nav>
+</div>
+<div class="footer-utility__wrapper">
+  <div>
+    <nav class="footer-sites" aria-label="Other Google Developers websites">
+      <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+        <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+      </a>
+      <ul class="footer-sites-list">
+        <li class="footer-sites-item">
+          <a href="//developer.android.com" class="footer-sites-link">
+            Android
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//developer.chrome.com/home" class="footer-sites-link">
+            Chrome
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//firebase.google.com" class="footer-sites-link">
+            Firebase
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//cloud.google.com" class="footer-sites-link">
+            Google Cloud Platform
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//developers.google.com/products" class="footer-sites-link">
+            All products
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <button aria-hidden="true" class="glue-cookie-notification-bar-control footer-sites-link">
+            Manage cookies
+          </button>
+        </li>
+      </ul>
+    </nav>
+    <nav class="footer-utility-links">
+      <ul class="footer-utility-list">
+        <li class="footer-utility-item">
+          <a href="//developers.google.com/terms/site-terms" class="footer-utility-link">
+            Terms
+          </a>
+        </li>
+        <li class="footer-utility-item">
+          <a href="//policies.google.com/privacy" class="footer-utility-link">
+            Privacy
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+
+        
+				
+
+        
+        <script nonce="" src="https://www.youtube.com/player_api"></script>
+        <script nonce="" src="//www.gstatic.com/glue/v27_1/glue.min.js"></script>
+        <script nonce="" type="text/javascript" src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/dgc_blog.js"></script>
+
+        <script nonce="" src="https://www.gstatic.com/glue/cookienotificationbar/cookienotificationbar.min.js" data-glue-cookie-notification-bar-category="2A" data-glue-cookie-notification-bar-site-id="developers.googleblog.com"></script>
+
+        
+  <script src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/blog_detail.js" nonce=""></script>
+  <script src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/prism.js" nonce=""></script>
+
+    
+
+</body></html>

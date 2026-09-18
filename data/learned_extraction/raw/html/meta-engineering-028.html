@@ -1,0 +1,1030 @@
+<html lang="en-US"><head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-title" content="Engineering at Meta - Engineering at Meta Blog">
+	<meta property="fb:app_id" content="1425766027653270">
+	<link rel="profile" href="http://gmpg.org/xfn/11">
+	<link rel="pingback" href="https://engineering.fb.com/xmlrpc.php">
+	<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+		<script src="https://connect.facebook.net/en_US/bundle/sdk.js/" async="" crossorigin="anonymous"></script><script src="//connect.facebook.net/en_US/sdk.js#xfbml=1&amp;appId=249643311490&amp;version=v2.3"></script><script id="facebook-jssdk" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&amp;version=v2.6"></script><script async="" src="https://engineering.fb.com/wp-content/themes/code-fb-com/dist/js/optimize.min.js"></script>
+	
+	<!-- This site is optimized with the Yoast SEO Premium plugin v19.3 (Yoast SEO v27.3) - https://yoast.com/product/yoast-seo-premium-wordpress/ -->
+	<title>How Meta brought AV1 to Reels - Engineering at Meta</title>
+	<meta name="description" content="We’re sharing how we’re enabling production and delivery of AV1 for Facebook Reels and Instagram Reels.">
+	<link rel="canonical" href="https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/">
+	<meta name="twitter:label1" content="Written by">
+	<meta name="twitter:data1" content="Ryan Lei, Haixia Shi, Haoteng Chen, Ali Monfared, Cheng Shi">
+	<meta name="twitter:label2" content="Est. reading time">
+	<meta name="twitter:data2" content="14 minutes">
+	<script type="application/ld+json" class="yoast-schema-graph">{"@context":"https:\/\/schema.org","@graph":[{"@type":"Article","@id":"https:\/\/engineering.fb.com\/2023\/02\/21\/video-engineering\/av1-codec-facebook-instagram-reels\/#article","isPartOf":{"@id":"https:\/\/engineering.fb.com\/2023\/02\/21\/video-engineering\/av1-codec-facebook-instagram-reels\/"},"author":[{"@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/1be6ea134a45080a3b39e8811aa9a250"},{"@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/1cffc9d4ae97f84548fa35ff069ee395"},{"@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/78ae7a6766baede62bbe9b8b936b347f"},{"@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/822895795dfcfb309a13121125e5bdf0"},{"@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/eccf7dc963d93471926ce60232900299"}],"headline":"How Meta brought AV1 to Reels","datePublished":"2023-02-21T13:00:09+00:00","mainEntityOfPage":{"@id":"https:\/\/engineering.fb.com\/2023\/02\/21\/video-engineering\/av1-codec-facebook-instagram-reels\/"},"wordCount":2720,"publisher":{"@id":"https:\/\/engineering.fb.com\/#organization"},"image":{"@id":"https:\/\/engineering.fb.com\/2023\/02\/21\/video-engineering\/av1-codec-facebook-instagram-reels\/#primaryimage"},"thumbnailUrl":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2023\/02\/Eng-Blog-Self-Serve-Hero-Images-FIBER-301-Navy.jpg","articleSection":["Open Source","Video Engineering"],"inLanguage":"en-US"},{"@type":"WebPage","@id":"https:\/\/engineering.fb.com\/2023\/02\/21\/video-engineering\/av1-codec-facebook-instagram-reels\/","url":"https:\/\/engineering.fb.com\/2023\/02\/21\/video-engineering\/av1-codec-facebook-instagram-reels\/","name":"How Meta brought AV1 to Reels - Engineering at Meta","isPartOf":{"@id":"https:\/\/engineering.fb.com\/#website"},"primaryImageOfPage":{"@id":"https:\/\/engineering.fb.com\/2023\/02\/21\/video-engineering\/av1-codec-facebook-instagram-reels\/#primaryimage"},"image":{"@id":"https:\/\/engineering.fb.com\/2023\/02\/21\/video-engineering\/av1-codec-facebook-instagram-reels\/#primaryimage"},"thumbnailUrl":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2023\/02\/Eng-Blog-Self-Serve-Hero-Images-FIBER-301-Navy.jpg","datePublished":"2023-02-21T13:00:09+00:00","description":"We’re sharing how we’re enabling production and delivery of AV1 for Facebook Reels and Instagram Reels.","breadcrumb":{"@id":"https:\/\/engineering.fb.com\/2023\/02\/21\/video-engineering\/av1-codec-facebook-instagram-reels\/#breadcrumb"},"inLanguage":"en-US","potentialAction":[{"@type":"ReadAction","target":["https:\/\/engineering.fb.com\/2023\/02\/21\/video-engineering\/av1-codec-facebook-instagram-reels\/"]}]},{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/engineering.fb.com\/2023\/02\/21\/video-engineering\/av1-codec-facebook-instagram-reels\/#primaryimage","url":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2023\/02\/Eng-Blog-Self-Serve-Hero-Images-FIBER-301-Navy.jpg","contentUrl":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2023\/02\/Eng-Blog-Self-Serve-Hero-Images-FIBER-301-Navy.jpg","width":1920,"height":1080},{"@type":"BreadcrumbList","@id":"https:\/\/engineering.fb.com\/2023\/02\/21\/video-engineering\/av1-codec-facebook-instagram-reels\/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https:\/\/engineering.fb.com\/"},{"@type":"ListItem","position":2,"name":"How Meta brought AV1 to Reels"}]},{"@type":"WebSite","@id":"https:\/\/engineering.fb.com\/#website","url":"https:\/\/engineering.fb.com\/","name":"Engineering at Meta","description":"Engineering at Meta Blog","publisher":{"@id":"https:\/\/engineering.fb.com\/#organization"},"potentialAction":[{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https:\/\/engineering.fb.com\/?s={search_term_string}"},"query-input":{"@type":"PropertyValueSpecification","valueRequired":true,"valueName":"search_term_string"}}],"inLanguage":"en-US"},{"@type":"Organization","@id":"https:\/\/engineering.fb.com\/#organization","name":"Meta","url":"https:\/\/engineering.fb.com\/","logo":{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/engineering.fb.com\/#\/schema\/logo\/image\/","url":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2023\/08\/Meta_lockup_positive-primary_RGB.jpg","contentUrl":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2023\/08\/Meta_lockup_positive-primary_RGB.jpg","width":29011,"height":12501,"caption":"Meta"},"image":{"@id":"https:\/\/engineering.fb.com\/#\/schema\/logo\/image\/"},"sameAs":["https:\/\/www.facebook.com\/Engineering\/","https:\/\/x.com\/fb_engineering"]},[],{"@type":"Person","@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/1be6ea134a45080a3b39e8811aa9a250","name":"Ryan Lei","image":{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g23494c9101089ad44ae88ce9d2f56aac","url":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","contentUrl":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","caption":"Ryan Lei"},"url":"https:\/\/engineering.fb.com\/author\/ryan-lei\/"},{"@type":"Person","@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/1cffc9d4ae97f84548fa35ff069ee395","name":"Haixia Shi","image":{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g23494c9101089ad44ae88ce9d2f56aac","url":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","contentUrl":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","caption":"Haixia Shi"},"url":"https:\/\/engineering.fb.com\/author\/haixia-shi\/"},{"@type":"Person","@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/78ae7a6766baede62bbe9b8b936b347f","name":"Haoteng Chen","image":{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g23494c9101089ad44ae88ce9d2f56aac","url":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","contentUrl":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","caption":"Haoteng Chen"},"url":"https:\/\/engineering.fb.com\/author\/haoteng-chen\/"},{"@type":"Person","@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/822895795dfcfb309a13121125e5bdf0","name":"Ali Monfared","image":{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g23494c9101089ad44ae88ce9d2f56aac","url":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","contentUrl":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","caption":"Ali Monfared"},"url":"https:\/\/engineering.fb.com\/author\/ali-monfared\/"},{"@type":"Person","@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/eccf7dc963d93471926ce60232900299","name":"Cheng Shi","image":{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g23494c9101089ad44ae88ce9d2f56aac","url":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","contentUrl":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","caption":"Cheng Shi"},"url":"https:\/\/engineering.fb.com\/author\/cheng-shi\/"}]}</script>
+	<!-- / Yoast SEO Premium plugin. -->
+
+
+<link rel="dns-prefetch" href="//secure.gravatar.com">
+<link rel="dns-prefetch" href="//v0.wordpress.com">
+<link rel="alternate" type="application/rss+xml" title="Engineering at Meta » Feed" href="https://engineering.fb.com/feed/">
+<link rel="alternate" type="application/rss+xml" title="Engineering at Meta » Comments Feed" href="https://engineering.fb.com/comments/feed/">
+	<script async="" src="https://www.googleoptimize.com/optimize.js?id=OPT-TPNDQC5" onerror="dataLayer.hide.end &amp;&amp; dataLayer.hide.end()"></script>
+	<link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed" href="https://engineering.fb.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fengineering.fb.com%2F2023%2F02%2F21%2Fvideo-engineering%2Fav1-codec-facebook-instagram-reels%2F">
+<link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed" href="https://engineering.fb.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fengineering.fb.com%2F2023%2F02%2F21%2Fvideo-engineering%2Fav1-codec-facebook-instagram-reels%2F&amp;format=xml">
+<style id="wp-img-auto-sizes-contain-inline-css">
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+<style id="wp-emoji-styles-inline-css">
+
+	img.wp-smiley, img.emoji {
+		display: inline !important;
+		border: none !important;
+		box-shadow: none !important;
+		height: 1em !important;
+		width: 1em !important;
+		margin: 0 0.07em !important;
+		vertical-align: -0.1em !important;
+		background: none !important;
+		padding: 0 !important;
+	}
+/*# sourceURL=wp-emoji-styles-inline-css */
+</style>
+<style id="wp-block-library-inline-css">
+:root{--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color);--wp-editor-canvas-background:#ddd;--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,160.5;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#020381,#2874fc)}:root{--wp--preset--font-size--normal:16px;--wp--preset--font-size--huge:42px}.has-regular-font-size{font-size:1em}.has-larger-font-size{font-size:2.625em}.has-normal-font-size{font-size:var(--wp--preset--font-size--normal)}.has-huge-font-size{font-size:var(--wp--preset--font-size--huge)}:root .has-text-align-center{text-align:center}:root .has-text-align-left{text-align:left}:root .has-text-align-right{text-align:right}.has-fit-text{white-space:nowrap!important}#end-resizable-editor-section{display:none}.aligncenter{clear:both}.items-justified-left{justify-content:flex-start}.items-justified-center{justify-content:center}.items-justified-right{justify-content:flex-end}.items-justified-space-between{justify-content:space-between}.screen-reader-text{word-wrap:normal!important;border:0;clip-path:inset(50%);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px;word-break:normal!important}.screen-reader-text:focus{background-color:#ddd;clip-path:none;color:#444;display:block;font-size:1em;height:auto;left:5px;line-height:normal;padding:15px 23px 14px;text-decoration:none;top:5px;width:auto;z-index:100000}html :where(.has-border-color){border-style:solid}html :where([style^=border-color],[style*=";border-color"],[style*="; border-color"]){border-style:solid}html :where([style^=border-top-color],[style*=";border-top-color"],[style*="; border-top-color"]){border-top-style:solid}html :where([style^=border-right-color],[style*=";border-right-color"],[style*="; border-right-color"]){border-right-style:solid}html :where([style^=border-bottom-color],[style*=";border-bottom-color"],[style*="; border-bottom-color"]){border-bottom-style:solid}html :where([style^=border-left-color],[style*=";border-left-color"],[style*="; border-left-color"]){border-left-style:solid}html :where([style^=border-width],[style*=";border-width"],[style*="; border-width"]){border-style:solid}html :where([style^=border-top-width],[style*=";border-top-width"],[style*="; border-top-width"]){border-top-style:solid}html :where([style^=border-right-width],[style*=";border-right-width"],[style*="; border-right-width"]){border-right-style:solid}html :where([style^=border-bottom-width],[style*=";border-bottom-width"],[style*="; border-bottom-width"]){border-bottom-style:solid}html :where([style^=border-left-width],[style*=";border-left-width"],[style*="; border-left-width"]){border-left-style:solid}html :where(img[class*=wp-image-]){height:auto;max-width:100%}:where(figure){margin:0 0 1em}html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:var(--wp-admin--admin-bar--height,0px)}@media screen and (max-width:600px){html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:0px}}
+
+/*# sourceURL=/wp-includes/css/dist/block-library/common.min.css */
+</style>
+<style id="classic-theme-styles-inline-css">
+/*! This file is auto-generated */
+.wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{background:#32373c;color:#fff;text-decoration:none}
+/*# sourceURL=/wp-includes/css/classic-themes.min.css */
+</style>
+
+<link rel="stylesheet" id="all-css-0" href="https://engineering.fb.com/_static/??-eJzTLy/QzcxLzilNSS3WzyrWz01NyUxMzUnNTc0rQeEU5CRWphbp5qSmJyZX6uVm5uklFxfr6OPTDpRD5sM02efaGppbWJqbGFmYWQIARSQu+A==" type="text/css" media="all">
+
+<style id="global-styles-inline-css">
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgb(252,185,0) 0%,rgb(255,105,0) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgb(255,105,0) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgb(255, 255, 255), 6px 6px rgb(0, 0, 0);--wp--preset--shadow--crisp: 6px 6px 0px rgb(0, 0, 0);}.wp-block-button{--wp--preset--dimension--25: 25%;--wp--preset--dimension--50: 50%;--wp--preset--dimension--75: 75%;--wp--preset--dimension--100: 100%;}:where(body) { margin: 0; }:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}body{padding-top: 0px;padding-right: 0px;padding-bottom: 0px;padding-left: 0px;}:root :where(.wp-element-button, .wp-block-button__link){background-color: #32373c;border-width: 0;color: #fff;font-family: inherit;font-size: inherit;font-style: inherit;font-weight: inherit;letter-spacing: inherit;line-height: inherit;padding-top: calc(0.667em + 2px);padding-right: calc(1.333em + 2px);padding-bottom: calc(0.667em + 2px);padding-left: calc(1.333em + 2px);text-decoration: none;text-transform: inherit;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+/*# sourceURL=global-styles-inline-css */
+</style>
+
+<link rel="stylesheet" id="all-css-12" href="https://engineering.fb.com/_static/??-eJyNjUsOwjAMRC9EahUKhQXiKFVqhzSQn+pEiNuTFJBAbNjZTzNv4BYFBp+UTxBt1sYzFKQpzpVz5WQ4QSUv0CDzCj6KaVJOMWAgJc5jwe7ZKTnAyVgSS6Jxxv90XRbv3YtKUeJVtLtmDS5QtkXKk5wVSaL7chqv/1YMxiOMuewDBzTSCht04K+nyk7u2Pb7Q99t+m77AIpaY4w=" type="text/css" media="all">
+<script id="gdprconsent-js" src="https://engineering.fb.com/wp-content/plugins/wp-gdpr-consent/dist/gdprconsent.js?ver=2.0.0"></script>
+<script id="gdprconsent-js-after">
+if (window.gdprSafeTrack) {
+  						window.gdprSafeTrack('https://www.googletagmanager.com/gtag/js?id=391063774');
+						window.gdprSafeTrack(function() {
+							var google_analytics_g4  = decodeURIComponent( '391063774' );
+							window.dataLayer = window.dataLayer || [];
+							function gtag(){dataLayer.push(arguments);}
+							gtag('js', new Date());
+							gtag('config', google_analytics_g4);
+						});
+					}
+if (window.gdprSafeTrack) {
+						window.gdprSafeTrack(function() {
+							var google_tag_manager  = decodeURIComponent( 'GTM-KZRLGZ8' );
+							(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+							new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+							j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+							'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+							})(window,document,'script','dataLayer',google_tag_manager);
+						});
+					}
+if (window.gdprSafeTrack) {
+						window.gdprSafeTrack(function() {
+							var facebook_pixel  = decodeURIComponent( '660742068067366' );
+							!function(f,b,e,v,n,t,s)
+							{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+							n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+							if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+							n.queue=[];t=b.createElement(e);t.async=!0;
+							t.src=v;s=b.getElementsByTagName(e)[0];
+							s.parentNode.insertBefore(t,s)}(window, document,'script',
+							'https://connect.facebook.net/en_US/fbevents.js');
+							fbq('init', facebook_pixel);
+							fbq('track', 'PageView');
+						});
+					}
+//# sourceURL=gdprconsent-js-after
+</script>
+<script type="text/javascript" src="https://engineering.fb.com/_static/??-eJzTLy/QzcxLzilNSS3WzwKiwtLUokoopZebmaeXVayjj0+Rbm5melFiSSpUsX2uraG5haW5iZGFmWUWAK/xIjU="></script><script type="text/javascript" src="https://engineering.fb.com/wp-content/themes/understrap/js/popper.min.js?m=1773259670g"></script><link rel="https://api.w.org/" href="https://engineering.fb.com/wp-json/"><link rel="alternate" title="JSON" type="application/json" href="https://engineering.fb.com/wp-json/wp/v2/posts/20105"><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://engineering.fb.com/xmlrpc.php?rsd">
+<meta name="generator" content="WordPress 7.1.1">
+<link rel="shortlink" href="https://wp.me/pa0Lhq-5eh">
+<link rel="preload" href="https://engineering.fb.com/wp-content/themes/code-fb-com/fonts/FacebookReader-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous"><link rel="preload" href="https://engineering.fb.com/wp-content/themes/code-fb-com/fonts/FacebookReader-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous"><link rel="preload" href="https://engineering.fb.com/wp-content/themes/code-fb-com/fonts/Optimistic_Display_W_Md.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<!-- Jetpack Open Graph Tags -->
+<meta property="og:type" content="article">
+<meta property="og:title" content="How Meta brought AV1 to Reels">
+<meta property="og:url" content="https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/">
+<meta property="og:description" content="We’re sharing how we’re enabling production and delivery of AV1 for Facebook Reels and Instagram Reels. We believe AV1 is the most viable codec for Meta for the coming years. It offers higher quali…">
+<meta property="article:published_time" content="2023-02-21T13:00:09+00:00">
+<meta property="article:modified_time" content="2023-02-17T21:43:45+00:00">
+<meta property="og:site_name" content="Engineering at Meta">
+<meta property="og:image" content="https://engineering.fb.com/wp-content/uploads/2023/02/Eng-Blog-Self-Serve-Hero-Images-FIBER-301-Navy.jpg">
+<meta property="og:image:width" content="1920">
+<meta property="og:image:height" content="1080">
+<meta property="og:image:alt" content="">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:text:title" content="How Meta brought AV1 to Reels">
+<meta name="twitter:image" content="https://engineering.fb.com/wp-content/uploads/2023/02/Eng-Blog-Self-Serve-Hero-Images-FIBER-301-Navy.jpg?w=640">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- End Jetpack Open Graph Tags -->
+<style id="wp-custom-css">
+.table-of-contents {
+  position: sticky;
+  top: 20px;
+  background: #fff;
+  padding: 1em;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-width: 250px;
+}
+</style>
+
+	<link rel="shortcut icon" href="https://engineering.fb.com/wp-content/themes/code-fb-com/favicon.ico">
+<script src="https://engineering.fb.com/wp-includes/js/wp-emoji-release.min.js?ver=7.1.1" defer=""></script><style type="text/css" data-fbcssmodules="css:fb.css.base css:fb.css.dialog css:fb.css.iframewidget">.fb_hidden{position:absolute;top:-10000px;z-index:10001}.fb_reposition{overflow:hidden;position:relative}.fb_invisible{display:none}.fb_reset{background:none;border:0px;border-spacing:0;color:#000;cursor:auto;direction:ltr;font-family:lucida grande,tahoma,verdana,arial,sans-serif;font-size:11px;font-style:normal;font-variant:normal;font-weight:400;letter-spacing:normal;line-height:1;margin:0;overflow:visible;padding:0;text-align:left;text-decoration:none;text-indent:0;text-shadow:none;text-transform:none;visibility:visible;white-space:normal;word-spacing:normal}.fb_reset>div{overflow:hidden}@keyframes fb_transform{0%{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}.fb_animate{animation:fb_transform .3s forwards}
+
+.fb_dialog{background:#525252b3;position:absolute;top:-10000px;z-index:10001}.fb_dialog_advanced{border-radius:8px;padding:10px}.fb_dialog_content{background:#fff;color:#373737}.fb_dialog_close_icon{background:url(https://connect.facebook.net/rsrc.php/v4/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 0 transparent;cursor:pointer;display:block;height:15px;position:absolute;right:18px;top:17px;width:15px}.fb_dialog_mobile .fb_dialog_close_icon{left:5px;right:auto;top:5px}.fb_dialog_padding{background-color:transparent;position:absolute;width:1px;z-index:-1}.fb_dialog_close_icon:hover{background:url(https://connect.facebook.net/rsrc.php/v4/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 -15px transparent}.fb_dialog_close_icon:active{background:url(https://connect.facebook.net/rsrc.php/v4/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 -30px transparent}.fb_dialog_iframe{line-height:0}.fb_dialog_content .dialog_title{background:#6d84b4;border:1px solid #365899;color:#fff;font-size:14px;font-weight:700;margin:0}.fb_dialog_content .dialog_title>span{background:url(https://connect.facebook.net/rsrc.php/v4/yd/r/Cou7n-nqK52.gif) no-repeat 5px 50%;float:left;padding:5px 0 7px 26px}body.fb_hidden{height:100%;left:0;margin:0;overflow:visible;position:absolute;top:-10000px;transform:none;width:100%}.fb_dialog.fb_dialog_mobile.loading{background:url(https://connect.facebook.net/rsrc.php/v4/ya/r/3rhSv5V8j3o.gif) #fff no-repeat 50% 50%;min-height:100%;min-width:100%;overflow:hidden;position:absolute;top:0;z-index:10001}.fb_dialog.fb_dialog_mobile.loading.centered{background:none;height:auto;min-height:initial;min-width:initial;width:auto}.fb_dialog.fb_dialog_mobile.loading.centered #fb_dialog_loader_spinner{width:100%}.fb_dialog.fb_dialog_mobile.loading.centered .fb_dialog_content{background:none}.loading.centered #fb_dialog_loader_close{clear:both;color:#fff;display:block;font-size:18px;padding-top:20px}#fb-root #fb_dialog_ipad_overlay{background:#0006;inset:0;min-height:100%;position:absolute;width:100%;z-index:10000}#fb-root #fb_dialog_ipad_overlay.hidden{display:none}.fb_dialog.fb_dialog_mobile.loading iframe{visibility:hidden}.fb_dialog_mobile .fb_dialog_iframe{position:sticky;top:0}.fb_dialog_content .dialog_header{background:linear-gradient(from(#738aba),to(#2c4987));border-bottom:1px solid;border-color:#043b87;box-shadow:#fff 0 1px 1px -1px inset;color:#fff;font:700 14px Helvetica,sans-serif;text-overflow:ellipsis;text-shadow:rgba(0,30,84,.296875) 0px -1px 0px;vertical-align:middle;white-space:nowrap}.fb_dialog_content .dialog_header table{height:43px;width:100%}.fb_dialog_content .dialog_header td.header_left{font-size:12px;padding-left:5px;vertical-align:middle;width:60px}.fb_dialog_content .dialog_header td.header_right{font-size:12px;padding-right:5px;vertical-align:middle;width:60px}.fb_dialog_content .touchable_button{background:linear-gradient(from(#4267B2),to(#2a4887));background-clip:padding-box;border:1px solid #29487d;border-radius:3px;display:inline-block;line-height:18px;margin-top:3px;max-width:85px;padding:4px 12px;position:relative}.fb_dialog_content .dialog_header .touchable_button input{background:none;border:none;color:#fff;font:700 12px Helvetica,sans-serif;margin:2px -12px;padding:2px 6px 3px;text-shadow:rgba(0,30,84,.296875) 0px -1px 0px}.fb_dialog_content .dialog_header .header_center{color:#fff;font-size:16px;font-weight:700;line-height:18px;text-align:center;vertical-align:middle}.fb_dialog_content .dialog_content{background:url(https://connect.facebook.net/rsrc.php/v4/y9/r/jKEcVPZFk-2.gif) no-repeat 50% 50%;border:1px solid #4A4A4A;border-bottom:0;border-top:0;height:150px}.fb_dialog_content .dialog_footer{background:#f5f6f7;border:1px solid #4A4A4A;border-top-color:#ccc;height:40px}#fb_dialog_loader_close{float:left}.fb_dialog.fb_dialog_mobile .fb_dialog_close_icon{visibility:hidden}#fb_dialog_loader_spinner{animation:rotateSpinner 1.2s linear infinite;background-color:transparent;background-image:url(https://connect.facebook.net/rsrc.php/v4/y2/r/onuUJj0tCqE.png);background-position:50% 50%;background-repeat:no-repeat;height:24px;width:24px}@keyframes rotateSpinner{0%{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+.fb_iframe_widget{display:inline-block;position:relative}.fb_iframe_widget span{display:inline-block;position:relative;text-align:justify}.fb_iframe_widget iframe{position:absolute}.fb_iframe_widget_fluid_desktop,.fb_iframe_widget_fluid_desktop span,.fb_iframe_widget_fluid_desktop iframe{max-width:100%}.fb_iframe_widget_fluid_desktop iframe{min-width:220px;position:relative}.fb_iframe_widget_lift{z-index:1}.fb_iframe_widget_fluid{display:inline}.fb_iframe_widget_fluid span{width:100%}
+</style></head>
+
+<body class="wp-singular post-template-default single single-post postid-20105 single-format-standard wp-theme-understrap wp-child-theme-code-fb-com group-blog">
+
+<div class="hfeed site" id="page">
+
+<!-- ******************* The Navbar Area ******************* -->
+<div class="wrapper-fluid wrapper-navbar" id="wrapper-navbar">
+	<a class="skip-link screen-reader-text sr-only" href="#content">
+	Skip to content	</a>
+
+	<nav class="navbar navbar-expand-std">
+
+			<div class="nav-container">
+	
+
+				<!-- Your site title as branding in the menu -->
+
+	<div class="nav-top-row">
+	
+		<h1 class="navbar-brand mb-0">
+			<a rel="home" href="https://engineering.fb.com/" title="Engineering at Meta">
+				<img class="navbar-brand-logo" src="https://engineering.fb.com/wp-content/themes/code-fb-com/img/logo-meta.svg" alt="Engineering at Meta" width="215" height="40" loading="lazy">
+			</a>
+		</h1>
+
+	<!-- end custom logo -->
+				<label for="search" class="screen-reader-text">Search this site</label>
+				<input type="text" id="search" name="search" class="form-control-lg navbar-search" autocomplete="off">
+
+				<button class="navbar-toggler navbar-searchbar-toggler" type="button" data-toggle="collapse" data-target="#searchbarDropdown" aria-controls="searchbarDropdown" aria-expanded="false" aria-label="Toggle navigation">
+					<img src="https://engineering.fb.com/wp-content/themes/code-fb-com/img/icon-search.svg" class="navbar-mobile-search-icon" loading="lazy" width="24" height="25">
+				</button>
+
+				<!-- desktop language menu (mobile language menu is implemented via jQuery)-->
+				<div class="notranslate nice-select navbar-language form-control">
+				</div>
+
+				<button class="navbar-toggler collapsed navbar-menu-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+
+			</div>
+
+			<div class="navbar-border"></div>
+
+			<!-- The WordPress Menu goes here -->
+	<div id="navbarNavDropdown" class="collapse navbar-collapse"><ul id="main-menu" class="navbar-nav"><li id="menu-item-60" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-60 dropdown"><a title="Open Source" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Open Source <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-12330" class="menu-item menu-item-type-taxonomy menu-item-object-category current-post-ancestor current-menu-parent current-post-parent nav-item menu-item-12330"><a title="Open Source" href="https://engineering.fb.com/category/open-source/" class="nav-link">Open Source</a></li>
+	<li id="menu-item-12331" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-12331"><a title="Meta Open Source" href="https://opensource.fb.com" class="nav-link" target="_blank" rel="noopener">Meta Open Source</a></li>
+</ul>
+</li>
+<li id="menu-item-2686" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-2686 dropdown"><a title="Platforms" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Platforms <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-65" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-65"><a title="Android" href="https://engineering.fb.com/category/android/" class="nav-link">Android</a></li>
+	<li id="menu-item-66" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-66"><a title="iOS" href="https://engineering.fb.com/category/ios/" class="nav-link">iOS</a></li>
+	<li id="menu-item-67" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-67"><a title="Web" href="https://engineering.fb.com/category/web/" class="nav-link">Web</a></li>
+</ul>
+</li>
+<li id="menu-item-2682" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-2682 dropdown"><a title="Infrastructure Systems" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Infrastructure Systems <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-218" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-218"><a title="Core Infra" href="https://engineering.fb.com/category/core-infra/" class="nav-link">Core Infra</a></li>
+	<li id="menu-item-219" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-219"><a title="Data Infrastructure" href="https://engineering.fb.com/category/data-infrastructure/" class="nav-link">Data Infrastructure</a></li>
+	<li id="menu-item-220" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-220"><a title="DevInfra" href="https://engineering.fb.com/category/developer-tools/" class="nav-link">DevInfra</a></li>
+	<li id="menu-item-226" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-226"><a title="Production Engineering" href="https://engineering.fb.com/category/production-engineering/" class="nav-link">Production Engineering</a></li>
+	<li id="menu-item-227" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-227"><a title="Security &amp; Privacy" href="https://engineering.fb.com/category/security/" class="nav-link">Security &amp; Privacy</a></li>
+	<li id="menu-item-18607" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-18607"><a title="Research Publications" href="https://research.facebook.com/publications/research-areas/systems-infrastructure/" class="nav-link" target="_blank" rel="noopener">Research Publications</a></li>
+</ul>
+</li>
+<li id="menu-item-2683" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-2683 dropdown"><a title="Physical Infrastructure" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Physical Infrastructure <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-215" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-215"><a title="Connectivity" href="https://engineering.fb.com/category/connectivity/" class="nav-link">Connectivity</a></li>
+	<li id="menu-item-216" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-216"><a title="Data Center Engineering" href="https://engineering.fb.com/category/data-center-engineering/" class="nav-link">Data Center Engineering</a></li>
+	<li id="menu-item-217" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-217"><a title="Networking &amp; Traffic" href="https://engineering.fb.com/category/networking-traffic/" class="nav-link">Networking &amp; Traffic</a></li>
+	<li id="menu-item-18608" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-18608"><a title="Research Publications" href="https://research.facebook.com/publications/research-areas/networking-connectivity/" class="nav-link" target="_blank" rel="noopener">Research Publications</a></li>
+</ul>
+</li>
+<li id="menu-item-2684" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-2684 dropdown"><a title="Video Engineering &amp; AR/VR" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Video Engineering &amp; AR/VR <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-225" class="menu-item menu-item-type-taxonomy menu-item-object-category current-post-ancestor current-menu-parent current-post-parent nav-item menu-item-225"><a title="Video Engineering" href="https://engineering.fb.com/category/video-engineering/" class="nav-link">Video Engineering</a></li>
+	<li id="menu-item-223" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-223"><a title="Virtual Reality" href="https://engineering.fb.com/category/virtual-reality/" class="nav-link">Virtual Reality</a></li>
+	<li id="menu-item-13388" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-13388"><a title="Research Publications" href="https://research.facebook.com/publications/research-areas/augmented-reality-virtual-reality/" class="nav-link" target="_blank" rel="noopener">Research Publications</a></li>
+</ul>
+</li>
+<li id="menu-item-2685" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-2685 dropdown"><a title="Artificial Intelligence" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Artificial Intelligence <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-222" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-222"><a title="ML Applications" href="https://engineering.fb.com/category/ml-applications/" class="nav-link">ML Applications</a></li>
+	<li id="menu-item-221" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-221"><a title="AI Research" href="https://engineering.fb.com/category/ai-research/" class="nav-link">AI Research</a></li>
+	<li id="menu-item-13387" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-13387"><a title="Research Publications" href="https://ai.facebook.com/results/?content_types%5B0%5D=publication" class="nav-link" target="_blank" rel="noopener">Research Publications</a></li>
+</ul>
+</li>
+<li id="menu-item-228" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-228"><a title="Watch Videos" href="/videos" class="nav-link">Watch Videos</a></li>
+</ul></div>		</div><!-- .container -->
+	
+		<div class="search-container collapse" id="searchbarDropdown">
+			<div class="searchbar-search">
+				<div class="searchbar-container">
+
+					<div class="navbar-mobile-search-margin"></div>
+					<input type="text" name="search" placeholder="Search" class="form-control-lg navbar-mobile-search" autofocus="" autocomplete="off">
+					<button class="searchbar-clear">
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+				</div>
+			</div>
+		</div>
+	</nav><!-- .site-navigation -->
+
+</div><!-- .wrapper-navbar end -->
+
+<div class="wrapper" id="single-wrapper">
+
+	<div class="single-container row" id="content" tabindex="-1">
+
+		<!-- Do the left sidebar check. -->
+		
+
+
+<div class="content-area col-lg-8_75" id="primary">
+		<main class="site-main" id="main">
+
+			
+				
+<article class="post-20105 post type-post status-publish format-standard has-post-thumbnail hentry category-open-source category-video-engineering fb_content_type-article" id="post-20105">
+
+	<header class="entry-header">
+		<div class="entry-meta">
+			POSTED ON <span class="posted-on entry-date"><time class="published updated" datetime="2023-02-21">FEBRUARY 21, 2023</time></span> TO <span class="cat-links"><a href="https://engineering.fb.com/category/open-source/" rel="category tag">Open Source</a>, <a href="https://engineering.fb.com/category/video-engineering/" rel="category tag">Video Engineering</a></span>
+			<h1 class="entry-title"><div>How Meta brought AV1 to Reels</div></h1>		</div><!-- .entry-meta -->
+
+	</header><!-- .entry-header -->
+
+			<figure id="post-feat-image-container">
+				<img width="1920" height="1080" src="https://engineering.fb.com/wp-content/uploads/2023/02/Eng-Blog-Self-Serve-Hero-Images-FIBER-301-Navy.jpg" class="wp-post-image" alt="" title="Eng-Blog-Self-Serve-Hero-Images-FIBER-301-Navy">						</figure>
+		
+	<div class="entry-authors-social">
+					<div class="entry-authors">
+				By <a href="https://engineering.fb.com/author/ryan-lei/" title="Posts by Ryan Lei" class="author url fn" rel="author">Ryan Lei</a>, <a href="https://engineering.fb.com/author/haixia-shi/" title="Posts by Haixia Shi" class="author url fn" rel="author">Haixia Shi</a>, <a href="https://engineering.fb.com/author/haoteng-chen/" title="Posts by Haoteng Chen" class="author url fn" rel="author">Haoteng Chen</a>, <a href="https://engineering.fb.com/author/ali-monfared/" title="Posts by Ali Monfared" class="author url fn" rel="author">Ali Monfared</a>, <a href="https://engineering.fb.com/author/cheng-shi/" title="Posts by Cheng Shi" class="author url fn" rel="author">Cheng Shi</a>			</div>
+			</div>
+
+	
+	<div class="entry-content">
+
+		<ul>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">We’re sharing how we’re enabling production and delivery of AV1 for Facebook Reels and Instagram Reels.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">We believe <a href="https://engineering.fb.com/2018/04/24/video-engineering/facebook-video-adds-av1-support/" target="_blank" rel="noopener">AV1 is the most viable codec for Meta</a> for the coming years. It offers higher quality at a much lower bit rate compared with previous generations of video codecs.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Meta has worked closely with the open source community to optimize AV1 software encoder and decoder implementations for real-world, global-scale deployment.</span></li>
+</ul>
+<p><span style="font-weight: 400;">As people create, share, and consume an ever-increasing volume of online videos, Meta is working to develop the most bandwidth-efficient ways to <a href="https://engineering.fb.com/2022/11/04/video-engineering/instagram-video-processing-encoding-reduction/" target="_blank" rel="noopener">transcode content</a> while maintaining reasonable compute and power consumption levels. Choosing the most appropriate video coding formats — the algorithms for compressing and decompressing the file — is crucial. Over the past two decades, researchers have developed video coding standards with ever-higher compression efficiency, including AVC, HEVC, and VVC, developed by MPEG/JVET, and VP9 and AV1, developed by Google and the Alliance for Open Media (<a href="https://aomedia.org/" target="_blank" rel="noopener">AOM</a>). Newer-generation standard typically can reduce the bandwidth by about 30 percent to 50 percent compared with its predecessor while maintaining similar visual quality. At the same time, however, each new standard has consumed substantially more energy and compute than the last, while necessitating encoders that were many times more complex.</span></p>
+<p><span style="font-weight: 400;">We believe AV1 will be the most viable codec for Meta over the next several years. AV1 is the first-generation royalty-free video coding standard developed by AOM, of which Meta is a founding member. It delivers about 30 percent better coding efficiency than</span> <a href="https://engineering.fb.com/2018/04/10/video-engineering/av1-beats-x264-and-libvpx-vp9-in-practical-use-case/" target="_blank" rel="noopener"><span style="font-weight: 400;">VP9</span></a><span style="font-weight: 400;"> and</span> <a href="https://doi.org/10.1117/12.2632905" target="_blank" rel="noopener"><span style="font-weight: 400;">HEVC</span></a><span style="font-weight: 400;"> — allowing people who use our apps to enjoy high-quality video at much lower bandwidth, and enabling us to maximize storage efficiency and reduce egress traffic, CDN prefetching/caching, and network congestion. AV1 also has a much richer feature set than other video coding standards and can support most of Meta’s typical production usages. AV1 is royalty-free, and both the encoder and decoder implementations are open sourced, with very active development and good support.</span></p>
+<p><span style="font-weight: 400;">Over the past few years, Meta has worked closely with the open source community to optimize AV1 software encoder and decoder implementations for real-world, global-scale deployment. Our goal is to improve playback from what we currently offer with AVC and VP9. We want to ensure that as we roll out AV1, it delivers real value to the people who use our apps.</span></p>
+<div class="fb-video fb_iframe_widget fb_iframe_widget_fluid_desktop" data-allowfullscreen="true" data-href="https://www.facebook.com/watch/?v=426857719643340" style="background-color: rgb(255, 255, 255); display: inline-block; width: 100%;" fb-xfbml-state="rendered" fb-iframe-plugin-query="allowfullscreen=true&amp;app_id=249643311490&amp;container_width=769&amp;href=https%3A%2F%2Fwww.facebook.com%2Fwatch%2F%3Fv%3D426857719643340&amp;locale=en_US&amp;sdk=joey"><span style="vertical-align: bottom; width: 769px; height: 433px;"><iframe name="f3c26c2f1bb77936a" width="1000px" height="1000px" data-testid="fb:video Facebook Social Plugin" title="fb:video Facebook Social Plugin" frameborder="0" allowtransparency="true" allowfullscreen="true" scrolling="no" allow="encrypted-media" src="https://www.facebook.com/v2.3/plugins/video.php?allowfullscreen=true&amp;app_id=249643311490&amp;channel=https%3A%2F%2Fstaticxx.facebook.com%2Fx%2Fconnect%2Fxd_arbiter%2F%3Fversion%3D46%23cb%3Df638819365f6388b3%26domain%3Dengineering.fb.com%26is_canvas%3Dfalse%26origin%3Dhttps%253A%252F%252Fengineering.fb.com%252Ffaba8b8eee0b52dd5%26relation%3Dparent.parent&amp;container_width=769&amp;href=https%3A%2F%2Fwww.facebook.com%2Fwatch%2F%3Fv%3D426857719643340&amp;locale=en_US&amp;sdk=joey" style="border-width: medium; border-style: none; border-color: currentcolor; border-image: none; visibility: visible; width: 769px; height: 433px;" class=""></iframe></span></div>
+<h2><span style="font-weight: 400;">Finding the right AV1 encoders and decoders</span></h2>
+<p><span style="font-weight: 400;">Several open source and closed-source encoder implementations are ready for production, all almost as efficient as the AV1 reference encoder. In a</span>&nbsp;<span style="font-weight: 400;">paper, “</span><span style="font-weight: 400;"><a href="https://doi.org/10.1117/12.2595598" target="_blank" rel="noopener">Towards much better SVT-AV1 quality-cycles tradeoffs for VOD applications</a>,” jointly published with Intel at last year’s SPIE conference, we benchmarked multiple open source encoders — including</span> <a href="https://code.videolan.org/videolan/x264" target="_blank" rel="noopener"><span style="font-weight: 400;">x264</span></a><span style="font-weight: 400;">,</span> <a href="https://www.videolan.org/developers/x265.html" target="_blank" rel="noopener"><span style="font-weight: 400;">x265</span></a><span style="font-weight: 400;">,</span> <a href="https://github.com/webmproject/libvpx" target="_blank" rel="noopener"><span style="font-weight: 400;">libvp9</span></a><span style="font-weight: 400;">,</span> <a href="https://aomedia.googlesource.com/aom/" target="_blank" rel="noopener"><span style="font-weight: 400;">libaom</span></a><span style="font-weight: 400;">,</span> <a href="https://gitlab.com/AOMediaCodec/SVT-AV1" target="_blank" rel="noopener"><span style="font-weight: 400;">SVT AV1</span></a><span style="font-weight: 400;">, and</span> <a href="https://github.com/fraunhoferhhi/vvenc" target="_blank" rel="noopener"><span style="font-weight: 400;">VVC reference encoder (vvenc)</span></a><span style="font-weight: 400;"> — for a video on demand (VOD) use case. The graph below illustrates the trade-off between encoder quality (vertical axis) and complexity (horizontal axis). Every point on the graph corresponds to an encoder preset. The y-axis represents the average BD-rate relative to libaom cpu-used=0; lower values indicate better coding efficiency. The x-axis represents the encoding time in seconds in logarithmic scale.</span></p>
+<p><img decoding="async" class="alignnone size-large wp-image-20115" src="https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Computation-Tradeoffs.jpg?w=1024" alt="" width="1024" height="650" srcset="https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Computation-Tradeoffs.jpg 1920w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Computation-Tradeoffs.jpg?resize=916,581 916w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Computation-Tradeoffs.jpg?resize=768,487 768w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Computation-Tradeoffs.jpg?resize=1024,650 1024w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Computation-Tradeoffs.jpg?resize=1536,974 1536w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Computation-Tradeoffs.jpg?resize=96,61 96w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Computation-Tradeoffs.jpg?resize=192,122 192w" sizes="(max-width: 992px) 100vw, 62vw" style="margin-bottom: 1rem;"></p>
+<p><span style="font-weight: 400;">A few highlights from this graph:</span></p>
+<ul>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">SVT-AV1, the productization encoder for the AV1 coding standard, maintains consistent performance across a wide range of complexity levels. With a total of 13 presets, SVT-AV1 can cover a complexity range that extends from the higher quality AV1 to the higher speeds AVC presets corresponding to more than 1000x change in complexity. This complexity range covers all open source software encoders used in production systems.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">At any given point on the x-axis, SVT-AV1 can maximize coding efficiency compared with any other production encoder. For example, the M12 preset has similar complexity performance to the x264 veryfast preset, but M12 is about 30 percent more efficient.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">At any given point on the y-axis, SVT-AV1 can maximize encoding speed compared with any other production encoder. For example, the M8 preset is about as efficient as libvp9 preset 0, but M8 is almost 10 times faster.</span></li>
+</ul>
+<p><span style="font-weight: 400;">SVT-AV1 offers 13 presets, allowing a fine-grained trade-off between quality and speed. More importantly, SVT-AV1 now includes a “-fast-decode” option, which accelerates software decoding — with only a slight drop in efficiency — by automatically limiting or disabling the use of AV1 coding tools that are not software-decoder friendly. SVT-AV1 also provides thread management parameters to balance density and speed — critical for large-scale production — potentially enabling a one- or two-second delay for live video streaming. Many parameters can be adjusted to improve coding efficiency or to support certain production scenarios. Some AV1 coding tools that were proposed for use cases in deployment, such as reference frame scaling, super resolution, film grain synthesis, and switch frames, are also supported in SVT-AV1.</span></p>
+<p><span style="font-weight: 400;">Our biggest challenge will be client-side decoding of AV1. Many</span> <span style="font-weight: 400;">hardware</span> <span style="font-weight: 400;">vendors, </span><span style="font-weight: 400;">including <a href="https://www.intel.com/content/dam/www/central-libraries/us/en/documents/2022-04/handbrake-av1-solution-brief-final-version.pdf" target="_blank" rel="noopener">Intel </a>and <a href="https://developer.nvidia.com/blog/av1-encoding-and-fruc-video-performance-boosts-and-higher-fidelity-on-the-nvidia-ada-architecture/" target="_blank" rel="noopener">NVIDIA</a>, have begun to support AV1 hardware decoding on PC. However, we are serving video primarily to mobile phones, most of which don’t include AV1 hardware decoders. For now, we must rely primarily on software decoders. Two major open source software decoders are compatible with multiple platforms:</span> <a href="https://code.videolan.org/videolan/dav1d" target="_blank" rel="noopener"><span style="font-weight: 400;">dav1d</span></a><span style="font-weight: 400;"> was developed by VideoLAN and the open source community and can serve as an app-level decoder, while Google’s</span> <a href="https://chromium.googlesource.com/codecs/libgav1/" target="_blank" rel="noopener"><span style="font-weight: 400;">libgav1</span></a><span style="font-weight: 400;"> is integrated into the Android SDK.</span></p>
+<p><span style="font-weight: 400;">After extensively benchmarking the decoders’ performance, focusing on facets such as resource requirements, crashes and responsiveness, and frame drops, we decided to integrate dav1d into the player for both iOS and Android platforms. We have been working closely with the open source community to optimize dav1d’s performance. In the last year, we also worked with Ittiam to conduct a</span>&nbsp;<a href="https://doi.org/10.1117/12.2633692" target="_blank" rel="noopener"><span style="font-weight: 400;">benchmark test</span></a><span style="font-weight: 400;"> on Android phones. dav1d can support 720p30 real-time playback on most of the devices in our sample, achieving 1080p30 on certain mid-range and high-end models.</span></p>
+<p><span style="font-weight: 400;">Some Android phones, such as the Google Pixel 6 Pro and Samsung Galaxy S21, already support hardware AV1 decoding. In the near future, we expect that a growing number of high-end Android models will support AV1 hardware decoding, with mid-tier devices following eventually.</span></p>
+<h2><span style="font-weight: 400;">Deploying AV1 encoding on Facebook Reels and Instagram Reels</span></h2>
+<p><span style="font-weight: 400;">Early in 2022, we deployed AV1 encoding for Facebook and Instagram Reels. When someone uploads a video, the platform generates multiple bit-rate encodings tailored to the video’s projected watch time. To prevent stalling caused by changes in bandwidth, clients can select the version that best fits their connection speed — a technique called</span> <a href="https://howvideo.works/#adaptive-bitrate-streaming" target="_blank" rel="noopener"><span style="font-weight: 400;">adaptive bit rate (ABR) streaming</span></a><span style="font-weight: 400;">. For videos with high projected watch time, we use advanced ABR encoding based on the convex hull dynamic optimizer algorithm. For each uploaded video, we produce multiple down-scaled versions and encode each with multiple quantization parameters (QPs) and Constant Rate Factors (CRFs). For example, for a 1080p video, we might create seven resolutions and five CRFs, for a total of 35 encodings. After encoding, the system upscales decoded videos to the original resolution and calculates the quality score.</span></p>
+<p><span style="font-weight: 400;">In the graph of rate distortion (RD) curves below, the x-axis represents the encoding bit rate and the y-axis the quality score, expressed in</span> <a href="https://doi.org/10.1117/12.2569920" target="_blank" rel="noopener"><span style="font-weight: 400;">FB-MOS</span></a><span style="font-weight: 400;"> units on a scale of 0 to 100.</span></p>
+<p><img decoding="async" class="alignnone size-large wp-image-20108" src="https://engineering.fb.com/wp-content/uploads/2023/02/Advanced-ABR-Encoding-Based-on-Convex-Hull-3.jpg?w=1024" alt="" width="1024" height="654" srcset="https://engineering.fb.com/wp-content/uploads/2023/02/Advanced-ABR-Encoding-Based-on-Convex-Hull-3.jpg 1920w, https://engineering.fb.com/wp-content/uploads/2023/02/Advanced-ABR-Encoding-Based-on-Convex-Hull-3.jpg?resize=916,585 916w, https://engineering.fb.com/wp-content/uploads/2023/02/Advanced-ABR-Encoding-Based-on-Convex-Hull-3.jpg?resize=768,490 768w, https://engineering.fb.com/wp-content/uploads/2023/02/Advanced-ABR-Encoding-Based-on-Convex-Hull-3.jpg?resize=1024,654 1024w, https://engineering.fb.com/wp-content/uploads/2023/02/Advanced-ABR-Encoding-Based-on-Convex-Hull-3.jpg?resize=1536,981 1536w, https://engineering.fb.com/wp-content/uploads/2023/02/Advanced-ABR-Encoding-Based-on-Convex-Hull-3.jpg?resize=96,61 96w, https://engineering.fb.com/wp-content/uploads/2023/02/Advanced-ABR-Encoding-Based-on-Convex-Hull-3.jpg?resize=192,123 192w" sizes="(max-width: 992px) 100vw, 62vw" style="margin-bottom: 1rem;"></p>
+<p><span style="font-weight: 400;">From these 35 RD points, we calculate the convex hull, a curve that connects the RD points on the upper left boundary. (Theoretically, if we could use all possible encoding resolutions and CRFs to produce a much denser plot, any point on the convex hull will be the most optimal encoding option for this video in terms of resolution and CRF value.) As illustrated above, we can then select the best encoding for delivery based on the target quality or bit rate.</span></p>
+<p><img loading="lazy" decoding="async" class="alignnone size-large wp-image-20111" src="https://engineering.fb.com/wp-content/uploads/2023/02/Enabling-AV1-Production-and-Delivery-at-Scale-1.jpg?w=1024" alt="" width="1024" height="460" srcset="https://engineering.fb.com/wp-content/uploads/2023/02/Enabling-AV1-Production-and-Delivery-at-Scale-1.jpg 1907w, https://engineering.fb.com/wp-content/uploads/2023/02/Enabling-AV1-Production-and-Delivery-at-Scale-1.jpg?resize=916,412 916w, https://engineering.fb.com/wp-content/uploads/2023/02/Enabling-AV1-Production-and-Delivery-at-Scale-1.jpg?resize=768,345 768w, https://engineering.fb.com/wp-content/uploads/2023/02/Enabling-AV1-Production-and-Delivery-at-Scale-1.jpg?resize=1024,460 1024w, https://engineering.fb.com/wp-content/uploads/2023/02/Enabling-AV1-Production-and-Delivery-at-Scale-1.jpg?resize=1536,690 1536w, https://engineering.fb.com/wp-content/uploads/2023/02/Enabling-AV1-Production-and-Delivery-at-Scale-1.jpg?resize=96,43 96w, https://engineering.fb.com/wp-content/uploads/2023/02/Enabling-AV1-Production-and-Delivery-at-Scale-1.jpg?resize=192,86 192w" sizes="auto, (max-width: 992px) 100vw, 62vw" style="margin-bottom: 1rem;"></p>
+<p><span style="font-weight: 400;">We have simplified this complicated process. In</span> <a href="https://doi.org/10.1109/PCS50896.2021.9477488" target="_blank" rel="noopener"><span style="font-weight: 400;">previous </span></a><a href="https://doi.org/10.1117/12.2567502" target="_blank" rel="noopener"><span style="font-weight: 400;">studies</span></a><span style="font-weight: 400;">, we found that we could use the high-speed preset for first-pass encoding and to produce the convex hull, and then take a second pass to encode the selected (resolution, CRF) points with the high-quality preset. Even though this approach requires additional encoding, it’s faster because the first pass can be done much more quickly. (Coding efficiency drops only slightly.) This approach works even if the first and second passes use different encoders. For example, we can use AVC or VP9 in the first pass and AV1 in the second. We can also leverage the hardware encoder in our internally designed ASICs to accelerate this process.</span></p>
+<p><span style="font-weight: 400;">In the end, </span><span style="font-weight: 400;">we decided on a two-stage hybrid hardware/software ABR encoding approach. Hardware AVC encoding is triggered at video upload time; for this stage, we store only the quality and bit rate information but not encoded bitstreams. </span><span style="font-weight: 400;">When projected watch time of the video exceeds the threshold, second stage encoding is triggered with software AVC, VP9 or AV1 encoder based on the selected (resolution, CRF) on the convex hull. </span></p>
+<p><img loading="lazy" decoding="async" class="alignnone size-large wp-image-20109" src="https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Production-at-Meta-with-SVT-AV1.jpg?w=1024" alt="" width="1024" height="615" srcset="https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Production-at-Meta-with-SVT-AV1.jpg 1920w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Production-at-Meta-with-SVT-AV1.jpg?resize=916,551 916w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Production-at-Meta-with-SVT-AV1.jpg?resize=768,462 768w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Production-at-Meta-with-SVT-AV1.jpg?resize=1024,615 1024w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Production-at-Meta-with-SVT-AV1.jpg?resize=1536,923 1536w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Production-at-Meta-with-SVT-AV1.jpg?resize=96,58 96w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Production-at-Meta-with-SVT-AV1.jpg?resize=192,115 192w" sizes="auto, (max-width: 992px) 100vw, 62vw" style="margin-bottom: 1rem;"></p>
+<p><span style="font-weight: 400;">We can easily add AV1 as one of the second-stage encoders; it is already deployed for Facebook Reels. We have implemented a similar heuristic-based approach for Instagram Reels. For one example video shown in the graph above, three encoding families with AVC, VP9, and AV1 have been produced. Their RD curves closely follow the convex hull from the first-stage encoding. For this particular video example,&nbsp; the best-quality AV1 encoding rivals those of the other two standards, but with a bit rate 65 percent lower than AVC’s and 48 percent lower than VP9’s. In addition, AV1 achieves the desired quality within a very narrow bit rate range, so we can further reduce compute and storage costs by producing fewer encodings during the second stage. As a result, people who use our products can enjoy high-quality video at much lower bandwidth.</span></p>
+<h2><span style="font-weight: 400;">AV1 decoder integration and testing</span></h2>
+<p><span style="font-weight: 400;">It was relatively easy to enable AV1 decoding and playback on the iOS devices. After just a few rounds of tests, we started delivery. To integrate the dav1d decoder on iOS, we found that two to four threads would meet most of our production needs; any additional threads would waste memory and power without boosting performance.</span></p>
+<p><span style="font-weight: 400;">dav1d has two modes: synchronous and asynchronous. In synchronous mode, dav1d decodes one frame at a time but enables low-latency decoding for each frame. In asynchronous mode, dav1d decodes multiple compressed frames in parallel, postponing rendering until all frames are decoded. In theory, asynchronous mode provides higher throughput and faster decoding. For now, we adopt synchronous mode on iOS since it fits the existing player stack, but we are looking into migrating to asynchronous mode in the future.</span></p>
+<p><span style="font-weight: 400;">To support the decoding of 10-bit AV1-encoded HDR video, we built a single dav1d binary that supports both 8- and 10-bit decoding and ensures that color information is preserved in the transcoding process.</span></p>
+<p><span style="font-weight: 400;">The Android platform presented bigger challenges. First, because people engage with our apps on a vast number of Android models, we had to run local and large-scale A/B tests on various devices to find the optimal decoder configurations. To help debug and triage problems from the AV1 decoder library, we added extensive logging that propagated back error messages from throughout the player stack. This critical step helped us quickly identify and resolve issues in the integration process.</span></p>
+<p><span style="font-weight: 400;">Second, because we are using app level software decoders, we used the hardware VP9 decoder and software AV1 decoder together when playing the same video stream, to correctly support mixed codec manifest and in-stream ABR lane switch. We needed to make sure they interacted with the render engine correctly.</span></p>
+<p><span style="font-weight: 400;">We also needed to support devices with low performance and display resolution. (This was not a problem with iPhones.) Although AV1 can encode high-resolution videos at a much lower bit rate than VP9, bit rate reduction is smaller for low-resolution videos. That makes it difficult to show improvement in top-line delivery metrics for low-performance Android phones. We responded by using higher-quality encoding presets to boost coding efficiency in low-resolution ABR lanes.</span></p>
+<p><span style="font-weight: 400;">Another challenge was that memory allocation and thread creation increased the decoding latency of the first few video frames, prolonging the software decoder start time, delaying player startup, and causing in-play stalls. This was most challenging with Reels, because people typically scroll across multiple Reels videos in quick succession. To improve scrolling performance, we prefetched multiple Reels videos earlier, before they were played.</span></p>
+<p><span style="font-weight: 400;">Before we conduct a large-scale A/B delivery test, we have to check whether the end device is powerful enough for real-time decoding and playback of AV1 bitstreams. However, there is no easy way to classify Android phone performance. We cannot test every model that exists, as there are thousands of them. And characteristics such as core counts, chipset vendors, RAM size, and year and model are not sufficient indicators of capability. We eventually decided to run a small benchmarking test to measure performance and give each phone a performance score. This benchmarking test consisted of basic compute operations, including Gaussian blur, memory allocation, memory copy, and 3D rendering. </span><span style="font-weight: 400;">With this approach, w</span><span style="font-weight: 400;">e could assign scores to any existing or upcoming mobile phones and group them based on those numbers. Our A/B tests then identified the models that could support 720p, 1080p, and 10-bit HDR playback.</span></p>
+<p><span style="font-weight: 400;">After the initial Android rollout, we started to enable AV1 hardware decoding for the few Android phones that support it. We expect hardware decoding to improve AV1 performance, and we plan to perform large-scale tests when a larger number of capable phones become available.</span></p>
+<h2><span style="font-weight: 400;">Latest delivery status</span></h2>
+<p><span style="font-weight: 400;">We started the AV1 delivery for Facebook Reels on iPhone in early 2022 and observed the benefits within the first week of the rollout.&nbsp;</span></p>
+<p><span style="font-weight: 400;">The following graph shows the week-over-week average playback FB-MOS for all Facebook Reels videos played on iPhones. Playback FB-MOS improved by about 0.6 points after we deployed AV1.&nbsp;</span></p>
+<p><img loading="lazy" decoding="async" class="alignnone size-large wp-image-20114" src="https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-playback-MOS-improved-by-0.6.jpg?w=1024" alt="" width="1024" height="523" srcset="https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-playback-MOS-improved-by-0.6.jpg 1920w, https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-playback-MOS-improved-by-0.6.jpg?resize=916,468 916w, https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-playback-MOS-improved-by-0.6.jpg?resize=768,392 768w, https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-playback-MOS-improved-by-0.6.jpg?resize=1024,523 1024w, https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-playback-MOS-improved-by-0.6.jpg?resize=1536,784 1536w, https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-playback-MOS-improved-by-0.6.jpg?resize=96,49 96w, https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-playback-MOS-improved-by-0.6.jpg?resize=192,98 192w" sizes="auto, (max-width: 992px) 100vw, 62vw" style="margin-bottom: 1rem;"></p>
+<p><span style="font-weight: 400;">This second graph shows the average bit rate for all Facebook Reels videos played on iPhones. AV1 reduced the average bit rate by 12 percent.&nbsp;</span></p>
+<p><img loading="lazy" decoding="async" class="alignnone size-large wp-image-20113" src="https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-bitrate-reduced-by-12_.jpg?w=1024" alt="" width="1024" height="501" srcset="https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-bitrate-reduced-by-12_.jpg 1920w, https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-bitrate-reduced-by-12_.jpg?resize=916,448 916w, https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-bitrate-reduced-by-12_.jpg?resize=768,376 768w, https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-bitrate-reduced-by-12_.jpg?resize=1024,501 1024w, https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-bitrate-reduced-by-12_.jpg?resize=1536,751 1536w, https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-bitrate-reduced-by-12_.jpg?resize=96,47 96w, https://engineering.fb.com/wp-content/uploads/2023/02/Week-over-week-bitrate-reduced-by-12_.jpg?resize=192,94 192w" sizes="auto, (max-width: 992px) 100vw, 62vw" style="margin-bottom: 1rem;"></p>
+<p><span style="font-weight: 400;">This last graph shows the watch time of different codecs for Facebook Reels on iPhone. AV1 watch time rose to about 70 percent during the first week of rollout.</span></p>
+<p><img loading="lazy" decoding="async" class="alignnone size-large wp-image-20110" src="https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Watch-Time-Coverage-on-iPhone_-70_.jpg?w=1024" alt="" width="1024" height="564" srcset="https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Watch-Time-Coverage-on-iPhone_-70_.jpg 1920w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Watch-Time-Coverage-on-iPhone_-70_.jpg?resize=916,505 916w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Watch-Time-Coverage-on-iPhone_-70_.jpg?resize=768,423 768w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Watch-Time-Coverage-on-iPhone_-70_.jpg?resize=1024,564 1024w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Watch-Time-Coverage-on-iPhone_-70_.jpg?resize=1536,846 1536w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Watch-Time-Coverage-on-iPhone_-70_.jpg?resize=96,53 96w, https://engineering.fb.com/wp-content/uploads/2023/02/AV1-Watch-Time-Coverage-on-iPhone_-70_.jpg?resize=192,106 192w" sizes="auto, (max-width: 992px) 100vw, 62vw" style="margin-bottom: 1rem;"></p>
+<p><span style="font-weight: 400;">We have continued to enable new features for iPhone, including 1080p30 8-bit AV1 delivery for iPhone 8 and beyond, 10-bit HDR delivery up to 1080p30 for models of iPhone X and beyond that support HDR display, and 1080p60 8-bit AV1 delivery for iPhone 11 and beyond. AV1 encodes a high percentage of the Facebook Reels and Instagram Reels videos watched on iPhones. We have also enabled 8-bit AV1 delivery to select midrange to high-end Android phones. The watch time percentage on Android for AV1 is relatively small but growing.</span></p>
+<h2><span style="font-weight: 400;">What’s next for AV1 at Meta?</span></h2>
+<p><span style="font-weight: 400;">AV1 delivers real value to the people who use our products. It offers higher quality at a much lower bit rate compared with previous generations of video codecs. For example, in the video below, there is an obvious difference in quality between AVC, VP9, and AV1 at roughly the same bit rate.</span></p>
+<div style="width: 640px;" class="wp-video"><span class="mejs-offscreen">Video Player</span><div id="mep_0" class="mejs-container mejs-container-keyboard-inactive wp-video-shortcode mejs-video" tabindex="0" role="application" aria-label="Video Player" style="width: 640px; height: 320px; min-width: 217px;"><div class="mejs-inner"><div class="mejs-mediaelement"><mediaelementwrapper id="video-20105-1"><video class="wp-video-shortcode" id="video-20105-1_html5" width="640" height="360" preload="metadata" src="https://engineering.fb.com/wp-content/uploads/2023/02/Alley-Oop-AVI-VP9-H264.mp4?_=1" style="width: 640px; height: 320px;"><source type="video/mp4" src="https://engineering.fb.com/wp-content/uploads/2023/02/Alley-Oop-AVI-VP9-H264.mp4?_=1"><a href="https://engineering.fb.com/wp-content/uploads/2023/02/Alley-Oop-AVI-VP9-H264.mp4">https://engineering.fb.com/wp-content/uploads/2023/02/Alley-Oop-AVI-VP9-H264.mp4</a></video></mediaelementwrapper></div><div class="mejs-layers"><div class="mejs-poster mejs-layer" style="display: none; width: 100%; height: 100%;"></div><div class="mejs-overlay mejs-layer" style="width: 100%; height: 100%; display: none;"><div class="mejs-overlay-loading"><span class="mejs-overlay-loading-bg-img"></span></div></div><div class="mejs-overlay mejs-layer" style="display: none; width: 100%; height: 100%;"><div class="mejs-overlay-error"></div></div><div class="mejs-overlay mejs-layer mejs-overlay-play" style="width: 100%; height: 100%;"><div class="mejs-overlay-button" role="button" tabindex="0" aria-label="Play" aria-pressed="false"></div></div></div><div class="mejs-controls"><div class="mejs-button mejs-playpause-button mejs-play"><button type="button" aria-controls="mep_0" title="Play" aria-label="Play" tabindex="0"></button></div><div class="mejs-time mejs-currenttime-container" role="timer" aria-live="off"><span class="mejs-currenttime">00:00</span></div><div class="mejs-time-rail"><span class="mejs-time-total mejs-time-slider" role="slider" tabindex="0" aria-label="Time Slider" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="00:00"><span class="mejs-time-buffering" style="display: none;"></span><span class="mejs-time-loaded"></span><span class="mejs-time-current" style="transform: scaleX(0);"></span><span class="mejs-time-hovered no-hover"></span><span class="mejs-time-handle" style="transform: translateX(0px);"><span class="mejs-time-handle-content"></span></span><span class="mejs-time-float"><span class="mejs-time-float-current">00:00</span><span class="mejs-time-float-corner"></span></span></span></div><div class="mejs-time mejs-duration-container"><span class="mejs-duration">00:05</span></div><div class="mejs-button mejs-volume-button mejs-mute"><button type="button" aria-controls="mep_0" title="Mute" aria-label="Mute" tabindex="0"></button><a href="javascript:void(0);" class="mejs-volume-slider" aria-label="Volume Slider" aria-valuemin="0" aria-valuemax="100" role="slider" aria-orientation="vertical" aria-valuenow="80" aria-valuetext="80%"><span class="mejs-offscreen">Use Up/Down Arrow keys to increase or decrease volume.</span><div class="mejs-volume-total"><div class="mejs-volume-current" style="bottom: 0px; height: 80%;"></div><div class="mejs-volume-handle" style="bottom: 80%; margin-bottom: -3px;"></div></div></a></div><div class="mejs-button mejs-fullscreen-button"><button type="button" aria-controls="mep_0" title="Fullscreen" aria-label="Fullscreen" tabindex="0"></button></div></div></div></div></div>
+<p><span style="font-weight: 400;"><br>
+Going forward, we will continue to expand AV1 delivery for Android phones and enable hardware decoding in new devices that support it.</span></p>
+<p><span style="font-weight: 400;">For low-end Android phones, it remains challenging to play back high-resolution AV1 bitstreams. To address this, we are currently experimenting with mixed codec manifest support. On the server side, the ABR delivery algorithm generates a mixed codec manifest that contains multiple video adaptation sets with bitstreams encoded using different codecs, such as VP9 and AV1. It also specifies which AV1 and VP9 lanes the device should choose from based on its performance score. For example, a low-end phone can play AV1 up to 540p and switch to VP9 for higher resolution lanes.&nbsp;</span></p>
+<p><span style="font-weight: 400;">With more and more hardware vendors implementing AV1 decoders in mobile SOCs, we expect the number of AV1 capable devices to continue to grow in the next few years, allowing more end users to enjoy the benefits of AV1.</span></p>
+<h2><span style="font-weight: 400;">Acknowledgements</span></h2>
+<p><i><span style="font-weight: 400;">This work is a collective effort by the Video Infra team and Instagram team at Meta, along with external partners, including the Intel SVT team, VideoLAN, Ittiam, Two Orioles, and the open source community. The authors would like to thank </span></i><i><span style="font-weight: 400;">Jamie Chen, Syed Emran, Xinyu Jin, Ioannis Katsavounidis, Denise Noyes, Mohanish Penta, Nam Pham, Srinath Reddy, Shankar Regunathan, David Ronca, Zafar Shahid, Nidhi Singh, Yassir Solomah, Cosmin Stejerean, Wai Lun Tam, Hassene Tmar, and Haixiong Wang </span></i><i><span style="font-weight: 400;">for their contributions and support.</span></i></p>
+<div class="sharedaddy sd-sharing-enabled"><div class="robots-nocontent sd-block sd-social sd-social-icon-text sd-sharing"><h3 class="sd-title">Share this:</h3><div class="sd-content"><ul data-sharing-events-added="true"><li class="share-facebook"><a rel="nofollow noopener noreferrer" data-shared="sharing-facebook-20105" class="share-facebook sd-button share-icon" href="https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/?share=facebook&amp;nb=1" target="_blank" aria-labelledby="sharing-facebook-20105">
+				<span id="sharing-facebook-20105" hidden="">Share on Facebook (Opens in new window)</span>
+				<span>Facebook</span>
+			</a></li><li class="share-threads"><a rel="nofollow noopener noreferrer" data-shared="sharing-threads-20105" class="share-threads sd-button share-icon" href="https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/?share=threads&amp;nb=1" target="_blank" aria-labelledby="sharing-threads-20105">
+				<span id="sharing-threads-20105" hidden="">Share on Threads (Opens in new window)</span>
+				<span>Threads</span>
+			</a></li><li class="share-jetpack-whatsapp"><a rel="nofollow noopener noreferrer" data-shared="sharing-whatsapp-20105" class="share-jetpack-whatsapp sd-button share-icon" href="https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/?share=jetpack-whatsapp&amp;nb=1" target="_blank" aria-labelledby="sharing-whatsapp-20105">
+				<span id="sharing-whatsapp-20105" hidden="">Share on WhatsApp (Opens in new window)</span>
+				<span>WhatsApp</span>
+			</a></li><li class="share-linkedin"><a rel="nofollow noopener noreferrer" data-shared="sharing-linkedin-20105" class="share-linkedin sd-button share-icon" href="https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/?share=linkedin&amp;nb=1" target="_blank" aria-labelledby="sharing-linkedin-20105">
+				<span id="sharing-linkedin-20105" hidden="">Share on LinkedIn (Opens in new window)</span>
+				<span>LinkedIn</span>
+			</a></li><li class="share-reddit"><a rel="nofollow noopener noreferrer" data-shared="sharing-reddit-20105" class="share-reddit sd-button share-icon" href="https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/?share=reddit&amp;nb=1" target="_blank" aria-labelledby="sharing-reddit-20105">
+				<span id="sharing-reddit-20105" hidden="">Share on Reddit (Opens in new window)</span>
+				<span>Reddit</span>
+			</a></li><li class="share-x"><a rel="nofollow noopener noreferrer" data-shared="sharing-x-20105" class="share-x sd-button share-icon" href="https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/?share=x&amp;nb=1" target="_blank" aria-labelledby="sharing-x-20105">
+				<span id="sharing-x-20105" hidden="">Share on X (Opens in new window)</span>
+				<span>X</span>
+			</a></li><li class="share-bluesky"><a rel="nofollow noopener noreferrer" data-shared="sharing-bluesky-20105" class="share-bluesky sd-button share-icon" href="https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/?share=bluesky&amp;nb=1" target="_blank" aria-labelledby="sharing-bluesky-20105">
+				<span id="sharing-bluesky-20105" hidden="">Share on Bluesky (Opens in new window)</span>
+				<span>Bluesky</span>
+			</a></li><li class="share-mastodon"><a rel="nofollow noopener noreferrer" data-shared="sharing-mastodon-20105" class="share-mastodon sd-button share-icon" href="https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/?share=mastodon&amp;nb=1" target="_blank" aria-labelledby="sharing-mastodon-20105">
+				<span id="sharing-mastodon-20105" hidden="">Share on Mastodon (Opens in new window)</span>
+				<span>Mastodon</span>
+			</a></li><li class="share-custom share-custom-hackernews"><a rel="nofollow noopener noreferrer" data-shared="sharing-custom-20105" class="share-custom share-custom-hackernews sd-button share-icon" href="https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/?share=custom-1699562127&amp;nb=1" target="_blank" aria-labelledby="sharing-custom-20105">
+				<span id="sharing-custom-20105" hidden="">Share on Hacker News (Opens in new window)</span>
+				<span style="background-image:url(&quot;https://news.ycombinator.com/y18.svg&quot;);">Hacker News</span>
+			</a></li><li class="share-email share-service-visible"><a rel="noopener" data-shared="sharing-email-20105" class="share-email sd-button share-icon" href="mailto:?subject=%5BShared%20Post%5D%20How%20Meta%20brought%20AV1%20to%20Reels&amp;body=https%3A%2F%2Fengineering.fb.com%2F2023%2F02%2F21%2Fvideo-engineering%2Fav1-codec-facebook-instagram-reels%2F&amp;share=email&amp;nb=1" target="_blank" aria-labelledby="sharing-email-20105" data-email-share-error-title="Do you have email set up?" data-email-share-error-text="If you're having problems sharing via email, you might not have email set up for your browser. You may need to create a new email yourself." data-email-share-nonce="2c83803259" data-email-share-track-url="https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/?share=email" jetpack-share-click-count="0">
+				<span id="sharing-email-20105" hidden="">Email a link to a friend (Opens in new window)</span>
+				<span>Email</span>
+			</a></li><li class="share-end"></li></ul></div></div></div>
+		
+	</div><!-- .entry-content -->
+
+
+</article><!-- #post-## -->
+
+<footer class="entry-footer">
+
+	
+</footer><!-- .entry-footer -->
+
+<div class="fb-like fb_iframe_widget" data-href="https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/" data-width="" data-layout="standard" data-action="like" data-size="small" data-share="true" fb-xfbml-state="rendered" fb-iframe-plugin-query="action=like&amp;app_id=249643311490&amp;container_width=0&amp;href=https%3A%2F%2Fengineering.fb.com%2F2023%2F02%2F21%2Fvideo-engineering%2Fav1-codec-facebook-instagram-reels%2F&amp;layout=standard&amp;locale=en_US&amp;sdk=joey&amp;share=true&amp;size=small&amp;width="><span style="vertical-align: bottom; width: 0px; height: 0px;"><iframe name="f20a442b247461a36" width="1000px" height="1000px" data-testid="fb:like Facebook Social Plugin" title="fb:like Facebook Social Plugin" frameborder="0" allowtransparency="true" allowfullscreen="true" scrolling="no" allow="encrypted-media" src="https://www.facebook.com/v2.3/plugins/like.php?action=like&amp;app_id=249643311490&amp;channel=https%3A%2F%2Fstaticxx.facebook.com%2Fx%2Fconnect%2Fxd_arbiter%2F%3Fversion%3D46%23cb%3Dfd08f784073d99459%26domain%3Dengineering.fb.com%26is_canvas%3Dfalse%26origin%3Dhttps%253A%252F%252Fengineering.fb.com%252Ffaba8b8eee0b52dd5%26relation%3Dparent.parent&amp;container_width=0&amp;href=https%3A%2F%2Fengineering.fb.com%2F2023%2F02%2F21%2Fvideo-engineering%2Fav1-codec-facebook-instagram-reels%2F&amp;layout=standard&amp;locale=en_US&amp;sdk=joey&amp;share=true&amp;size=small&amp;width=" style="border-width: medium; border-style: none; border-color: currentcolor; border-image: none; visibility: visible; width: 0px; height: 0px;" class=""></iframe></span></div>
+
+
+<div class="more-articles"><a class="prev" aria-label="View the previous article: Inside Meta’s first smart glasses" href="https://engineering.fb.com/2023/02/16/virtual-reality/developing-meta-rayban-stories/"><div class="prev__thumb-wrapper"><img src="https://engineering.fb.com/wp-content/uploads/2023/01/RBS-Hero.jpg?w=580&amp;h=326&amp;crop=1" width="580" height="326" alt="Inside Meta’s first smart glasses" class="prev__thumb"></div><div class="prev__details"><span class="prev__details__btn">Prev</span><br><span class="prev__details__title">Inside Meta’s first smart glasses</span></div></a><a class="next" aria-label="View the next article: Meta&amp;#039;s head of AR hardware on the future of AR" href="https://engineering.fb.com/2023/02/24/virtual-reality/ar-vr-meta-caitlin-kalinowski/"><div class="next__thumb-wrapper"><img src="https://engineering.fb.com/wp-content/uploads/2023/02/Caitlin.jpg?w=580&amp;h=326&amp;crop=1" width="580" height="326" alt="Meta&amp;#039;s head of AR hardware on the future of AR" class="next__thumb"></div><div class="next__details"><span class="next__details__btn">Next</span><br><span class="next__details__title">Meta&amp;#039;s head of AR hardware on the future of AR</span></div></a></div><div class="related-articles">
+	<div class="related-articles__header">
+		<h3 class="related-articles__header__headline">Read More in Video Engineering</h3>
+		<a aria-label="View all articles in this Video Engineering" class="related-articles__header__link" href="https://engineering.fb.com/category/video-engineering/">
+			View All		</a>
+	</div>
+
+	<div class="article-grids related-articles__grid">
+		<div class="row">
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-20105 type-post status-publish format-standard has-post-thumbnail hentry category-open-source category-video-engineering fb_content_type-article" id="post-24054">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2026/06/Meta-AV1-for-RTC-hero.png?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2026-06-22T09:00:08-07:00">
+					JUN 22, 2026				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2026/06/22/video-engineering/adopting-av1-for-real-time-communication-rtc-meta/" rel="bookmark" aria-label="Read More about Adopting AV1 for Real-Time Communication (RTC) at Scale">
+					Adopting AV1 for Real-Time Communication (RTC) at Scale				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-20105 type-post status-publish format-standard has-post-thumbnail hentry category-open-source category-video-engineering fb_content_type-article" id="post-23856">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2026/04/Escaping-the-Fork-Hero-2.png?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy" title="Escaping the Fork - Hero 2">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2026-04-09T09:00:34-07:00">
+					APR 9, 2026				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2026/04/09/developer-tools/escaping-the-fork-how-meta-modernized-webrtc-across-50-use-cases/" rel="bookmark" aria-label="Read More about Escaping the Fork: How Meta Modernized WebRTC Across 50+ Use Cases">
+					Escaping the Fork: How Meta Modernized WebRTC Across 50+ Use Cases				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-20105 type-post status-publish format-standard has-post-thumbnail hentry category-open-source category-video-engineering fb_content_type-article" id="post-23674">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2026/03/FFmpeg-at-Meta-hero_2.png?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2026-03-02T12:00:12-08:00">
+					MAR 2, 2026				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2026/03/02/video-engineering/ffmpeg-at-meta-media-processing-at-scale/" rel="bookmark" aria-label="Read More about FFmpeg at Meta: Media Processing at Scale">
+					FFmpeg at Meta: Media Processing at Scale				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-20105 type-post status-publish format-standard has-post-thumbnail hentry category-open-source category-video-engineering fb_content_type-article" id="post-23389">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2025/11/Eng-Blog-Self-Serve-Hero-Images-ANALYTICS-403-Orange-x2.jpg?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2026-01-14T12:51:33-08:00">
+					JAN 14, 2026				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2026/01/14/ml-applications/adapting-the-facebook-reels-recsys-ai-model-based-on-user-feedback/" rel="bookmark" aria-label="Read More about Adapting the Facebook Reels RecSys AI Model Based on User Feedback">
+					Adapting the Facebook Reels RecSys AI Model Based on User Feedback				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-20105 type-post status-publish format-standard has-post-thumbnail hentry category-open-source category-video-engineering fb_content_type-article" id="post-23294">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2025/11/Meta-Dolby-Vision-Instagram-iOS-HERO-updated.jpg?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2025-11-17T09:30:25-08:00">
+					NOV 17, 2025				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2025/11/17/ios/enhancing-hdr-on-instagram-for-ios-with-dolby-vision/" rel="bookmark" aria-label="Read More about Enhancing HDR on Instagram for iOS With Dolby Vision">
+					Enhancing HDR on Instagram for iOS With Dolby Vision				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-20105 type-post status-publish format-standard has-post-thumbnail hentry category-open-source category-video-engineering fb_content_type-article" id="post-23186">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2025/10/@Scale-2025-Product-YTThumbnail-Wes.jpg?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2025-11-04T10:00:52-08:00">
+					NOV 4, 2025				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2025/11/04/video-engineering/video-invisible-watermarking-at-scale/" rel="bookmark" aria-label="Read More about Video Invisible Watermarking at Scale">
+					Video Invisible Watermarking at Scale				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+					</div><!-- /.row -->
+	</div><!--/.article-grids -->
+
+</div><!-- /.related-articles -->
+
+					
+	 <!-- include the carousel nav here. -->
+
+		
+				
+			
+		</main><!-- #main -->
+
+	</div><!-- #primary -->
+
+		<!-- Do the right sidebar check. -->
+	
+
+
+  
+<div class="widget-area col-lg-3 offset-lg-0_25" id="right-sidebar" role="complementary">
+	<aside id="fb_related_post_widget-4" class="widget widget_fb_related_post_widget"><h3 class="widget-title">Related Posts</h3><hr>
+            <div class="aside-related-projects"><div class="article-grid-redesign">
+              <article class="post-19536 post type-post status-publish has-post-thumbnail hentry" id="post-19536">
+								<a href="https://engineering.fb.com/2022/11/04/video-engineering/instagram-video-processing-encoding-reduction/" rel="bookmark" aria-label="Read More about Reducing Instagram’s basic video compute time by 94 percent">
+									<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2022/11/16_9_With-Label.png?w=580&amp;h=326&amp;crop=1" class="wp-post-image" alt="" srcset="https://engineering.fb.com/wp-content/uploads/2022/11/16_9_With-Label.png?w=580&amp;h=326&amp;crop=1 580w, https://engineering.fb.com/wp-content/uploads/2022/11/16_9_With-Label.png?w=580&amp;h=326&amp;crop=1 326w" sizes="(max-width: 580px) 100vw, 580px" loading="lazy">
+									<header class="entry-header">
+										<span class="posted-on"><time class="entry-date published" datetime="Nov 04, 2022">Nov 04, 2022</time></span>
+										<h4 class="entry-title">Reducing Instagram’s basic video compute time by 94 percent</h4>
+									</header><!-- .entry-header -->
+								</a>
+              </article><!-- #post-## -->
+              </div><div class="article-grid-redesign">
+              <article class="post-17388 post type-post status-publish has-post-thumbnail hentry" id="post-17388">
+								<a href="https://engineering.fb.com/2021/04/05/video-engineering/how-facebook-encodes-your-videos/" rel="bookmark" aria-label="Read More about How Facebook encodes your videos">
+									<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2021/04/Video-encoding-final-hero.jpg?w=580&amp;h=326&amp;crop=1" class="wp-post-image" alt="" srcset="https://engineering.fb.com/wp-content/uploads/2021/04/Video-encoding-final-hero.jpg?w=580&amp;h=326&amp;crop=1 580w, https://engineering.fb.com/wp-content/uploads/2021/04/Video-encoding-final-hero.jpg?w=580&amp;h=326&amp;crop=1 326w" sizes="(max-width: 580px) 100vw, 580px" loading="lazy">
+									<header class="entry-header">
+										<span class="posted-on"><time class="entry-date published" datetime="Apr 05, 2021">Apr 05, 2021</time></span>
+										<h4 class="entry-title">How Facebook encodes your videos</h4>
+									</header><!-- .entry-header -->
+								</a>
+              </article><!-- #post-## -->
+              </div><div class="article-grid-redesign">
+              <article class="post-8219 post type-post status-publish has-post-thumbnail hentry" id="post-8219">
+								<a href="https://engineering.fb.com/2018/04/10/video-engineering/av1-beats-x264-and-libvpx-vp9-in-practical-use-case/" rel="bookmark" aria-label="Read More about AV1 beats x264 and libvpx-vp9 in practical use case">
+									<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2018/04/AV1hero.jpg?w=580&amp;h=326&amp;crop=1" class="wp-post-image" alt="" srcset="https://engineering.fb.com/wp-content/uploads/2018/04/AV1hero.jpg?w=580&amp;h=326&amp;crop=1 580w, https://engineering.fb.com/wp-content/uploads/2018/04/AV1hero.jpg?w=580&amp;h=326&amp;crop=1 326w" sizes="(max-width: 580px) 100vw, 580px" loading="lazy">
+									<header class="entry-header">
+										<span class="posted-on"><time class="entry-date published" datetime="Apr 10, 2018">Apr 10, 2018</time></span>
+										<h4 class="entry-title">AV1 beats x264 and libvpx-vp9 in practical use case</h4>
+									</header><!-- .entry-header -->
+								</a>
+              </article><!-- #post-## -->
+              </div></div></aside><aside id="wpb_widget-3" class="widget widget_wpb_widget"><h3 class="widget-title">Related Positions</h3><hr><ul class="available-positions-list"><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			SUNNYVALE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			BELLEVUE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			MENLO PARK, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			SEATTLE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			NEW YORK, US
+                      		</div>
+                          </a>
+                      	</li>		</ul>
+		<a href="https://www.metacareers.com" target="_blank" rel="noopener">
+			<div class="btn available-positions-btn">
+				See All Jobs			</div>
+		</a>
+		</aside>
+</div><!-- #secondary -->
+
+
+
+	<!-- <php get_template_part('content-single-side-bar'); ?> -->
+
+	<!-- Do the right sidebar check. -->
+	
+</div><!-- Container end -->
+
+</div><!-- Wrapper end -->
+
+</div>
+
+	<!-- ******************* The Footer Full-width Widget Area ******************* -->
+
+	<div class="wrapper wrapper-community-outer">
+		<div class="wrapper-community">
+
+			<div class="community" tabindex="-1">
+
+				<div class="row">
+					<!-- community section is generated through WordPress widget -->
+					<div id="wpb_widget-2" class="footer-widget widget_wpb_widget widget-count-3 col-md-4"><h3 class="widget-title">Available Positions</h3><hr><ul class="available-positions-list"><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			SUNNYVALE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			BELLEVUE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			MENLO PARK, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			SEATTLE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			NEW YORK, US
+                      		</div>
+                          </a>
+                      	</li>		</ul>
+		<a href="https://www.metacareers.com" target="_blank" rel="noopener">
+			<div class="btn available-positions-btn">
+				See All Jobs			</div>
+		</a>
+		</div><!-- .footer-widget --><div id="custom_html-2" class="widget_text footer-widget widget_custom_html widget-count-3 col-md-4"><h3 class="widget-title">Technology at Meta</h3><div class="textwidget custom-html-widget"><ul class="stay-connected-lists">
+	<li class="stay-connected-item">
+<img class="footer-fb-engineering stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/meta_logo.png" alt="footer-fb-engineering" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				Engineering at Meta - X
+			</div>
+			<a onclick="return twitterFollow(&quot;Meta_Engineers&quot;)" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Follow
+				</button>
+			</a>
+		</div>
+	</li>
+	<li class="stay-connected-item">
+<img class="footer-fb-engineering stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/meta_logo.png" alt="footer-AI" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				AI at Meta
+			</div>
+			<a href="https://ai.meta.com/blog/" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Read
+			</button>
+			</a>
+		</div>
+	</li>
+<li class="stay-connected-item">
+<img class="footer-fb-engineering stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/meta_logo.png" alt="footer-developers" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				Meta Quest Blog
+			</div>
+			<a href="https://www.meta.com/blog/quest/" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Read
+			</button>
+			</a>
+		</div>
+	</li>
+
+	<li class="stay-connected-item">
+<img class="footer-fb-engineering stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/meta_logo.png" alt="footer-developers" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				Meta for Developers
+			</div>
+			<a href="https://developers.facebook.com/" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Read
+			</button>
+			</a>
+		</div>
+	</li>
+	<li class="stay-connected-item">
+<img class="footer-fb-engineering stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/meta_logo.png" alt="footer-bug-bounty" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				Meta Bug Bounty
+			</div>
+			<a href="https://bugbounty.meta.com/" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Learn more
+			</button>
+			</a>
+		</div>
+	</li>
+
+	<li class="stay-connected-item">
+		<img class="stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/rss.png" alt="footer-rss" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				RSS
+			</div>
+			<a href="https://code.facebook.com/posts/rss/" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Subscribe
+			</button>
+			</a>
+		</div>
+	</li>
+</ul>
+</div></div><!-- .footer-widget --><div id="custom_html-3" class="widget_text footer-widget widget_custom_html widget-count-3 col-md-4"><h3 class="widget-title">Open Source</h3><div class="textwidget custom-html-widget"><p class="opensource-desc">
+	Meta believes in building community through open source technology. Explore our latest projects in Artificial Intelligence, Data Infrastructure, Development Tools, Front End, Languages, Platforms, Security, Virtual Reality, and more.
+</p>
+<ul class="opensource-cats">
+	<li class="opensource-cat">
+		<img src="/wp-content/themes/code-fb-com/img/android.png" alt="android" loading="lazy" width="50" height="59">
+		<div class="opensource-cap">
+			ANDROID
+		</div>
+	</li>
+	<li class="opensource-cat">
+		<img src="/wp-content/themes/code-fb-com/img/ios.png" alt="ios" loading="lazy" width="48" height="58">
+		<div class="opensource-cap">
+			iOS
+		</div>
+	</li>
+	<li class="opensource-cat">
+		<img src="/wp-content/themes/code-fb-com/img/web.png" alt="web" loading="lazy" width="55" height="49">
+		<div class="opensource-cap">		
+			WEB
+		</div>
+	</li>
+	<li class="opensource-cat">
+		<img src="/wp-content/themes/code-fb-com/img/backend.png" alt="backend" loading="lazy" width="56" height="51">
+		<div class="opensource-cap">
+			BACKEND
+		</div>
+	</li>
+	<li class="opensource-cat">
+		<img src="/wp-content/themes/code-fb-com/img/hardware.png" alt="hardware" loading="lazy" width="55" height="44">
+		<div class="opensource-cap">
+			HARDWARE
+		</div>
+	</li>
+</ul>
+
+<button class="btn opensource-btn" onclick="window.location.href='https://opensource.fb.com/'">
+	Learn More
+</button>
+
+</div></div><!-- .footer-widget -->
+				</div>
+
+			</div>
+			</div>
+
+	</div><!-- #wrapper-footer-full -->
+
+
+<div class="wrapper-footer" id="wrapper-footer">
+	<div class="inner-container">
+		<div class="footer">
+			<div class="row">
+				<div class="col-md-12">
+					<footer class="meta-footer" id="meta-footer">
+						<div class="site-info row justify-content-between">
+							<div class="col-md-5 meta-logo-container">
+								<a href="https://about.facebook.com/" target="_blank" rel="noopener">
+									<img src="https://engineering.fb.com/wp-content/themes/code-fb-com/img/meta_logo_full.svg" width="89" height="18" alt="Meta">
+								</a>
+								<div id="text-2" class="widget widget_text">			<div class="textwidget"><p>Engineering at Meta is a technical news resource for engineers interested in how we solve large-scale technical challenges at Meta.</p>
+</div>
+		</div>							</div>
+							<div class="col-md-6 footer-meta-links-container">
+														<ul class="meta-footer-links">
+									<li class="footer-link"><a href="https://engineering.fb.com">Home</a></li><li class="footer-link"><a href="https://about.meta.com/" target="_blank" rel="noopener">Company Info</a></li><li class="footer-link"><a href="https://www.metacareers.com/?ref=engineering.fb.com" target="_blank" rel="noopener">Careers</a></li>								</ul>
+							</div>
+						</div>
+					</footer>
+				</div>
+			</div>
+		</div>
+	</div>
+
+		<div class="footer">
+			<div class="row">
+
+				<div class="col-md-12">
+
+					<footer class="site-footer" id="colophon">
+						<div class="inner-container">
+							<div class="site-info row justify-content-between">
+
+								<div class="col-md-4 copyright-container">
+									<div class="copyright"> © 2026 Meta</div>
+								</div>
+
+								<!-- static footer -->
+								<div class="col-md-7 footer-links-container">
+									<ul class="footer-links">
+										<li class="footer-link"><a href="https://www.facebook.com/policies" target="_blank" rel="noopener">Terms</a></li><li class="footer-link"><a href="https://www.facebook.com/privacy/policy" target="_blank" rel="noopener">Privacy</a></li><li class="footer-link"><a href="/privacy">Cookies</a></li><li class="footer-link"><a href="https://www.facebook.com/help" target="_blank" rel="noopener">Help</a></li>									</ul>
+								</div>
+							</div>
+						</div><!-- .site-info -->
+
+					</footer><!-- #colophon -->
+
+				</div><!--col end -->
+
+			</div><!-- row end -->
+
+	</div><!-- //.inner-container -->
+</div><!-- wrapper end -->
+
+<!-- #page we need this extra closing tag here -->
+
+<script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/code-fb-com/*","/wp-content/themes/understrap/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+  <div class="gdprconsent-container" id="GDPRConsentBar" style="display: block;">
+    <div class="gdprconsent-wrapper">
+      <div class="gdprconsent-content">
+        <p>To help personalize content, tailor and measure ads and provide a safer experience, we use cookies. By clicking or navigating the site, you agree to allow our collection of information on and off Facebook through cookies. Learn more, including about available controls: <a href="/privacy">Cookie Policy</a></p>
+                <div class="gdprconsent-button">
+          <button type="button" data-gdpr-accept="">Accept</button>
+        </div>
+              </div>
+    </div>
+  </div>
+  	
+	<!-- Twitter universal website tag code -->
+	<script>
+		if (window.gdprSafeTrack) {
+			window.gdprSafeTrack(function() {
+				!function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments);
+				},s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='//static.ads-twitter.com/uwt.js',
+				a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,'script');
+				// Insert Twitter Pixel ID and Standard Event data below
+				twq('init','o31u0');
+				twq('track','PageView');
+			});
+		}
+	</script>
+	<!-- End Twitter universal website tag code -->
+
+	
+	<script type="text/javascript">
+		window.WPCOM_sharing_counts = {"https://engineering.fb.com/2023/02/21/video-engineering/av1-codec-facebook-instagram-reels/":20105};
+	</script>
+				
+					<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KZRLGZ8" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+		
+					<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=660742068067366&ev=PageView&noscript=1"/></noscript>
+		<script id="child-understrap-scripts-js-extra">
+var loadmore_params = {"restfulURL":"https://engineering.fb.com/wp-json/fb/v1/loadmore","searchText":"","posts":"{\"page\":0,\"year\":2023,\"monthnum\":2,\"day\":21,\"name\":\"av1-codec-facebook-instagram-reels\",\"category_name\":\"video-engineering\",\"error\":\"\",\"m\":\"\",\"p\":0,\"post_parent\":\"\",\"subpost\":\"\",\"subpost_id\":\"\",\"attachment\":\"\",\"attachment_id\":0,\"pagename\":\"\",\"page_id\":0,\"second\":\"\",\"minute\":\"\",\"hour\":\"\",\"w\":0,\"tag\":\"\",\"cat\":\"\",\"tag_id\":\"\",\"author\":\"\",\"author_name\":\"\",\"feed\":\"\",\"tb\":\"\",\"paged\":0,\"meta_key\":\"\",\"meta_value\":\"\",\"preview\":\"\",\"s\":\"\",\"sentence\":\"\",\"title\":\"\",\"fields\":\"all\",\"menu_order\":\"\",\"embed\":\"\",\"category__in\":[],\"category__not_in\":[],\"category__and\":[],\"post__in\":[],\"post__not_in\":[],\"post_name__in\":[],\"tag__in\":[],\"tag__not_in\":[],\"tag__and\":[],\"tag_slug__in\":[],\"tag_slug__and\":[],\"post_parent__in\":[],\"post_parent__not_in\":[],\"author__in\":[],\"author__not_in\":[],\"search_columns\":[],\"ignore_sticky_posts\":false,\"suppress_filters\":false,\"cache_results\":true,\"update_post_term_cache\":true,\"update_menu_item_cache\":false,\"lazy_load_term_meta\":true,\"update_post_meta_cache\":true,\"post_type\":\"\",\"posts_per_page\":12,\"nopaging\":false,\"comments_per_page\":\"50\",\"no_found_rows\":false,\"order\":\"DESC\"}","current_page":"1","max_page":"0","post_type":"post"};
+var search_params = {"ajaxurl":"https://engineering.fb.com/wp-admin/admin-ajax.php","posts":"{\"page\":0,\"year\":2023,\"monthnum\":2,\"day\":21,\"name\":\"av1-codec-facebook-instagram-reels\",\"category_name\":\"video-engineering\",\"error\":\"\",\"m\":\"\",\"p\":0,\"post_parent\":\"\",\"subpost\":\"\",\"subpost_id\":\"\",\"attachment\":\"\",\"attachment_id\":0,\"pagename\":\"\",\"page_id\":0,\"second\":\"\",\"minute\":\"\",\"hour\":\"\",\"w\":0,\"tag\":\"\",\"cat\":\"\",\"tag_id\":\"\",\"author\":\"\",\"author_name\":\"\",\"feed\":\"\",\"tb\":\"\",\"paged\":0,\"meta_key\":\"\",\"meta_value\":\"\",\"preview\":\"\",\"s\":\"\",\"sentence\":\"\",\"title\":\"\",\"fields\":\"all\",\"menu_order\":\"\",\"embed\":\"\",\"category__in\":[],\"category__not_in\":[],\"category__and\":[],\"post__in\":[],\"post__not_in\":[],\"post_name__in\":[],\"tag__in\":[],\"tag__not_in\":[],\"tag__and\":[],\"tag_slug__in\":[],\"tag_slug__and\":[],\"post_parent__in\":[],\"post_parent__not_in\":[],\"author__in\":[],\"author__not_in\":[],\"search_columns\":[],\"ignore_sticky_posts\":false,\"suppress_filters\":false,\"cache_results\":true,\"update_post_term_cache\":true,\"update_menu_item_cache\":false,\"lazy_load_term_meta\":true,\"update_post_meta_cache\":true,\"post_type\":\"\",\"posts_per_page\":12,\"nopaging\":false,\"comments_per_page\":\"50\",\"no_found_rows\":false,\"order\":\"DESC\"}","current_page":"1","max_page":"0","article_filter":"89380bf628"};
+var more_articles = {"next_article":{"label":"Next","permalink":"https://engineering.fb.com/2023/02/24/virtual-reality/ar-vr-meta-caitlin-kalinowski/","title":"Meta&#039;s head of AR hardware on the future of AR","thumbnail":["https://engineering.fb.com/wp-content/uploads/2023/02/Caitlin.jpg?w=580&h=326&crop=1",580,326,true]},"prev_article":{"label":"Prev","permalink":"https://engineering.fb.com/2023/02/16/virtual-reality/developing-meta-rayban-stories/","title":"Inside Meta\u2019s first smart glasses","thumbnail":["https://engineering.fb.com/wp-content/uploads/2023/01/RBS-Hero.jpg?w=580&h=326&crop=1",580,326,true]}};
+//# sourceURL=child-understrap-scripts-js-extra
+</script>
+<script id="jetpack-facebook-embed-js-extra">
+var jpfbembed = {"appid":"249643311490","locale":"en_US"};
+//# sourceURL=jetpack-facebook-embed-js-extra
+</script>
+<script type="text/javascript" src="https://engineering.fb.com/_static/??-eJx9jUEOwiAQAD/ksqlW0YPxKabA1i7tLkQgfl9iPHnwOpnJ4CuDT1pJK9aFhAr6FAhm17Fg4FIxdrbwFuAjGGE1sezwf9mj/OQiv6o0yFt7sBaMVPPkVxhOZo93Vo+u9Q3OkyeX0gokjsL3d5PrYM8XOx7seIxv/GdA6Q=="></script><div id="fb-root" class=" fb_reset"><div style="position: absolute; top: -10000px; width: 0px; height: 0px;"><div></div></div></div><script id="mediaelement-core-js-before">
+var mejsL10n = {"language":"en","strings":{"mejs.download-file":"Download File","mejs.install-flash":"You are using a browser that does not have Flash player enabled or installed. Please turn on your Flash player plugin or download the latest version from https://get.adobe.com/flashplayer/","mejs.fullscreen":"Fullscreen","mejs.play":"Play","mejs.pause":"Pause","mejs.time-slider":"Time Slider","mejs.time-help-text":"Use Left/Right Arrow keys to advance one second, Up/Down arrows to advance ten seconds.","mejs.live-broadcast":"Live Broadcast","mejs.volume-help-text":"Use Up/Down Arrow keys to increase or decrease volume.","mejs.unmute":"Unmute","mejs.mute":"Mute","mejs.volume-slider":"Volume Slider","mejs.video-player":"Video Player","mejs.audio-player":"Audio Player","mejs.captions-subtitles":"Captions/Subtitles","mejs.captions-chapters":"Chapters","mejs.none":"None","mejs.afrikaans":"Afrikaans","mejs.albanian":"Albanian","mejs.arabic":"Arabic","mejs.belarusian":"Belarusian","mejs.bulgarian":"Bulgarian","mejs.catalan":"Catalan","mejs.chinese":"Chinese","mejs.chinese-simplified":"Chinese (Simplified)","mejs.chinese-traditional":"Chinese (Traditional)","mejs.croatian":"Croatian","mejs.czech":"Czech","mejs.danish":"Danish","mejs.dutch":"Dutch","mejs.english":"English","mejs.estonian":"Estonian","mejs.filipino":"Filipino","mejs.finnish":"Finnish","mejs.french":"French","mejs.galician":"Galician","mejs.german":"German","mejs.greek":"Greek","mejs.haitian-creole":"Haitian Creole","mejs.hebrew":"Hebrew","mejs.hindi":"Hindi","mejs.hungarian":"Hungarian","mejs.icelandic":"Icelandic","mejs.indonesian":"Indonesian","mejs.irish":"Irish","mejs.italian":"Italian","mejs.japanese":"Japanese","mejs.korean":"Korean","mejs.latvian":"Latvian","mejs.lithuanian":"Lithuanian","mejs.macedonian":"Macedonian","mejs.malay":"Malay","mejs.maltese":"Maltese","mejs.norwegian":"Norwegian","mejs.persian":"Persian","mejs.polish":"Polish","mejs.portuguese":"Portuguese","mejs.romanian":"Romanian","mejs.russian":"Russian","mejs.serbian":"Serbian","mejs.slovak":"Slovak","mejs.slovenian":"Slovenian","mejs.spanish":"Spanish","mejs.swahili":"Swahili","mejs.swedish":"Swedish","mejs.tagalog":"Tagalog","mejs.thai":"Thai","mejs.turkish":"Turkish","mejs.ukrainian":"Ukrainian","mejs.vietnamese":"Vietnamese","mejs.welsh":"Welsh","mejs.yiddish":"Yiddish"}};
+//# sourceURL=mediaelement-core-js-before
+</script>
+<script id="mediaelement-core-js" src="https://engineering.fb.com/wp-includes/js/mediaelement/mediaelement-and-player.min.js?ver=4.2.17"></script>
+<script type="text/javascript" src="https://engineering.fb.com/wp-includes/js/mediaelement/mediaelement-migrate.min.js?m=1789742869g"></script><script id="mediaelement-js-extra">
+var _wpmejsSettings = {"pluginPath":"/wp-includes/js/mediaelement/","classPrefix":"mejs-","stretching":"responsive","audioShortcodeLibrary":"mediaelement","videoShortcodeLibrary":"mediaelement"};
+//# sourceURL=mediaelement-js-extra
+</script>
+<script type="text/javascript" src="https://engineering.fb.com/_static/??-eJzTLy/QzcxLzilNSS3WzyrWz01NyUxMzUnNTc0r0QfKIfP1cjPz9LKKdfTx6SlKzUtJLUotKtYvy8xNzYfqsc+1NTS3sDQ3MbIws8wCACU5Koo="></script><script id="sharing-js-js-extra">
+var sharing_js_options = {"lang":"en","counts":"1","is_stats_active":""};
+//# sourceURL=sharing-js-js-extra
+</script>
+<script id="sharing-js-js" src="https://engineering.fb.com/wp-content/mu-plugins/jetpack-16.2/_inc/build/sharedaddy/sharing.min.js?ver=16.2"></script>
+<script id="sharing-js-js-after">
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "facebook" ] = "menubar=1,resizable=1,width=600,height=400";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "threads" ] = "menubar=1,resizable=1,width=600,height=400";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "linkedin" ] = "menubar=1,resizable=1,width=580,height=450";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "x" ] = "menubar=1,resizable=1,width=600,height=350";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "bluesky" ] = "menubar=1,resizable=1,width=600,height=400";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "mastodon" ] = "menubar=1,resizable=1,width=460,height=400";
+//# sourceURL=sharing-js-js-after
+</script>
+<script id="video-analytics-js-after">
+if (window.gdprSafeTrack) {
+					window.gdprSafeTrack(function() {
+						let youtube = document.querySelectorAll('[src*="youtube-nocookie"]');
+						for (let i = 0; i < youtube.length; i++) {
+							youtube[i].src = youtube[i].src.replace('youtube-nocookie.com', 'youtube.com');
+						}
+						let vimeo = document.querySelectorAll('[src*="vimeo"]');
+						for (let i = 0; i < vimeo.length; i++) {
+							vimeo[i].src = vimeo[i].src.replace('&dnt=true', '');
+						}
+					});
+				}
+//# sourceURL=video-analytics-js-after
+</script>
+<script id="wp-emoji-settings" type="application/json">
+{"baseUrl":"https://s.w.org/images/core/emoji/17.0.2/72x72/","ext":".png","svgUrl":"https://s.w.org/images/core/emoji/17.0.2/svg/","svgExt":".svg","source":{"concatemoji":"https://engineering.fb.com/wp-includes/js/wp-emoji-release.min.js?ver=7.1.1"}}
+</script>
+<script type="module">
+/*! This file is auto-generated */
+var e="script#wp-emoji-settings",t=document.querySelector(e);if(!(t instanceof HTMLScriptElement))throw new Error("Element missing: "+e);const r=JSON.parse(t.text),s=(window._wpemojiSettings=r,"wpEmojiSettingsSupports"),o=["flag","emoji"];function i(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(s,JSON.stringify(t))}catch(e){}}function c(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0);const r=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);return t.every((e,t)=>e===r[t])}function p(e,t){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var n=e.getImageData(16,16,1,1);for(let e=0;e<n.data.length;e++)if(0!==n.data[e])return!1;return!0}function u(e,t,n,r){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\udde8\ud83c\uddf6","\ud83c\udde8\u200b\ud83c\uddf6")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!r(e,"\ud83e\u1fac8")}return!1}function f(e,t,n,r){let a;const s=(a="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):document.createElement("canvas")).getContext("2d",{willReadFrequently:!0}),o=(s.textBaseline="top",s.font="600 32px Arial",{});return e.forEach(e=>{o[e]=t(s,e,n,r)}),o}function a(e){var t=document.createElement("script");t.src=e,t.defer=!0,document.head.appendChild(t)}r.supports={everything:!0,everythingExceptFlag:!0},new Promise(t=>{let n=function(){try{var e=JSON.parse(sessionStorage.getItem(s));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+f.toString()+"("+[JSON.stringify(o),u.toString(),c.toString(),p.toString()].join(",")+"));",r=new Blob([e],{type:"text/javascript"});const a=new Worker(URL.createObjectURL(r),{name:"wpTestEmojiSupports"});return void(a.onmessage=e=>{i(n=e.data),a.terminate(),t(n)})}catch(e){}i(n=f(o,u,c,p))}t(n)}).then(e=>{for(const n in e)r.supports[n]=e[n],r.supports.everything=r.supports.everything&&r.supports[n],"flag"!==n&&(r.supports.everythingExceptFlag=r.supports.everythingExceptFlag&&r.supports[n]);var t;r.supports.everythingExceptFlag=r.supports.everythingExceptFlag&&!r.supports.flag,r.supports.everything||((t=r.source||{}).concatemoji?a(t.concatemoji):t.wpemoji&&t.twemoji&&(a(t.twemoji),a(t.wpemoji)))});
+//# sourceURL=https://engineering.fb.com/wp-includes/js/wp-emoji-loader.min.js
+</script>
+
+
+
+
+</body></html>

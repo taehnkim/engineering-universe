@@ -1,0 +1,808 @@
+<html lang="en"><head>
+        <meta charset="utf-8">
+        
+        <title>
+            
+            Autonomous LLM post-training with Tunix on TPUs
+            
+            
+            - Google Developers Blog
+            
+        </title>
+        <meta property="og:title" content="Autonomous LLM post-training with Tunix on TPUs- Google Developers Blog">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+	<meta name="description" content="Stop manual LLM fine-tuning. Discover how autofinetune uses autonomous AI agents to run experiments, optimize hyperparameters, and commit winning SFT/GRPO code.">
+  <meta content="summary_large_image" name="twitter:card">
+  <meta content="Google for Developers Blog - News about Web, Mobile, AI and Cloud" property="twitter:title">
+  <meta property="og:title" content="Autonomous LLM post-training with Tunix on TPUs">
+  <script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-H733Y2BZES&amp;cx=c&amp;gtm=4e69g1" nonce=""></script><script async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-WVTLDSL"></script><script type="text/javascript" id="www-widgetapi-script" src="https://www.youtube.com/s/player/4fd832e7/www-widgetapi.vflset/www-widgetapi.js" async="" nonce=""></script><script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [{
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Google for Developers Blog",
+      "item": "https://developers.googleblog.com/"
+    },{
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Autonomous LLM post-training with Tunix on TPUs",
+      "item": "https://developers.googleblog.com/autonomous-llm-post-training-with-tunix-on-tpus/"
+    }]
+  }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Autonomous LLM post-training with Tunix on TPUs",
+      "description": "The &quot;autofinetune&quot; project introduces an autonomous research loop that fully automates LLM post-training workflows, including Supervised Fine-Tuning (SFT) and Reinforcement Learning via GRPO. By defining boundary conditions and evaluation metrics in a single Markdown specification, developers can deploy an AI agent to iteratively edit training scripts, launch experiments, and automatically commit verified hyperparameter optimizations to Git. Built on Google’s AI stack—including Tunix, Gemma, and Cloud TPUs—this framework eliminates manual tuning cycles, successfully demonstrating hands-off performance gains in both function calling and math reasoning models.",
+      "image": "https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Ai-1-banner_9.2e16d0ba.fill-800x400.png",
+      "datePublished": "2026-09-11",
+      "author": [
+        
+        
+          { "@type": "Person", "name": "Wei Wei", "url": "/search/?author=Wei+Wei" }
+        
+        
+      ]
+    }
+  </script>
+  
+  <meta content="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Ai-1-meta_4.2e16d0ba.fill-1200x600.png" property="og:image">
+  
+
+
+        
+        
+
+        <!-- Google Tag Manager -->
+        <script type="text/javascript" nonce="" src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/analytics.js"></script>
+        <!-- End Google Tag Manager -->
+
+        
+        <link href="//www.gstatic.com/glue/v27_1/glue.min.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/dgc_blog.css">
+        <link rel="icon" href="https://storage.googleapis.com/gweb-developer-goog-blog-assets/meta/favicon.ico" type="image/x-icon">
+        <link rel="apple-touch-icon" href="https://storage.googleapis.com/gweb-developer-goog-blog-assets/meta/apple-touch-icon.png">
+
+        
+				<link rel="preconnect" href="https://fonts.googleapis.com">
+				<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+				<link rel="preload" href="https://fonts.googleapis.com/css2?family=Product+Sans&amp;family=Google+Sans+Display:ital@0;1&amp;family=Google+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;family=Google+Sans+Text:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;display=swap" as="style">
+				<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Product+Sans&amp;family=Google+Sans+Display:ital@0;1&amp;family=Google+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;family=Google+Sans+Text:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;display=swap">
+        <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&amp;family=Google+Sans+Flex:opsz,wght@6..144,1..1000&amp;display=swap" rel="stylesheet" data-page-link="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&amp;display=swap">
+
+        
+        <link href="https://www.gstatic.com/glue/cookienotificationbar/cookienotificationbar.min.css" rel="stylesheet">
+
+        
+  <link rel="stylesheet" type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/blog_detail.css">
+  <link type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/prism.css" rel="stylesheet">
+
+    </head>
+
+    <body id="main-content" class="glue-body ">
+        <!-- Google Tag Manager (noscript) -->
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVTLDSL "
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
+
+        
+
+				
+        
+
+<!-- HTML -->
+<header class="dgc-header">
+  <div class="dgc-header-inner">
+    <button class="hamburger" aria-haspopup="true" aria-expanded="false" aria-label="Open Menu">
+      <svg role="presentation" aria-hidden="true" class="glue-icon">
+        <use href="/glue-icon/#menu"></use>
+      </svg>
+    </button>
+    <div class="product-name-wrapper">
+      <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+        <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+      </a>
+    </div>
+    <div class="desktop-nav-wrapper">
+      <div class="upper-tabs-wrapper">
+        <div class="upper-tabs">
+          <nav class="tabs" aria-label="Upper Tabs">
+            <div class="tab">
+              <a href="//developers.google.com/community" class="top-nav-title">
+                Community/Events
+              </a>
+            </div>
+            <div class="tab">
+              <a href="//developers.google.com/solutions/catalog" class="top-nav-title">
+                Learn
+              </a>
+            </div>
+            <div class="tab">
+              <a href="//developers.googleblog.com" class="top-nav-title">
+                Blog
+              </a>
+            </div>
+            <div class="tab">
+              <a href="https://www.youtube.com/user/GoogleDevelopers" class="top-nav-title">
+                YouTube
+              </a>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dgc-header-search">
+    <div class="search-wrapper glue-page">
+      <div class="glue-grid">
+        <form id="search-form" action="/search/" method="get" class="search-content glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-9-md glue-grid__col--span-7-lg">
+          <div class="search-input-wrapper">
+            <svg role="presentation" aria-hidden="true" class="glue-icon search-icon">
+              <use href="/glue-icon/#search"></use>
+            </svg>
+            <input type="text" name="query" placeholder="Search all articles..." aria-label="Search" class="search-input-field">
+          </div>
+          <button class="glue-button glue-button--high-emphasis">
+            Search
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-drawer" top-level-nav="">
+  <nav class="nav-content" aria-label="Side menu">
+    <div class="mobile-header">
+      <button class="nav-close-btn nav-btn" aria-label="Close navigation">
+        <svg role="presentation" aria-hidden="true" class="glue-icon">
+          <use href="/glue-icon/#close"></use>
+        </svg>
+      </button>
+      <button class="nav-back-btn nav-btn hidden" aria-label="Back to Menu">
+        <svg role="presentation" aria-hidden="true" class="glue-icon">
+          <use href="/glue-icon/#arrow-back"></use>
+        </svg>
+      </button>
+      <div class="product-name-wrapper">
+        <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+          <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+        </a>
+      </div>
+    </div>
+    <div class="nav-wrapper">
+      <div class="mobile-nav-top">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="//developers.google.com/community" class="nav-title" data-label="Tab: Community/Events">
+              <span class="nav-text" tooltip="">
+                Community/Events
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="//developers.google.com/solutions/catalog" class="nav-title" data-label="Tab: Learn">
+              <span class="nav-text" tooltip="">
+                Learn
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="//developers.googleblog.com" class="nav-title" data-label="Tab: Blog">
+              <span class="nav-text" tooltip="">
+                Blog
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="https://www.youtube.com/user/GoogleDevelopers" class="nav-title" data-label="Tab: YouTube">
+              <span class="nav-text" tooltip="">
+                YouTube
+             </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<div class="backdrop"></div>
+
+        
+  <div class="blog-detail-container">
+
+    
+      <section class="tags-container glue-page glue-spacer-5-top">
+        <div class="glue-eyebrow"></div>
+      </section>
+    
+
+    <section class="heading-container glue-page  glue-spacer-1-top">
+      <h1 class="glue-headline glue-headline--headline-1">Autonomous LLM post-training with Tunix on TPUs</h1>
+    </section>
+
+    <section class="summary-container glue-page glue-spacer-4-top">
+      <div class="date-time">
+        <div class="published-date glue-font-weight-medium">SEPT. 11, 2026</div>
+      </div>
+    </section>
+
+    <section class="glue-page glue-grid glue-spacer-1-top">
+
+      <section class="author-container glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-10-md">
+      
+        
+          <div class="author-obj">
+            <a class="glue-font-weight-medium" href="/search/?author=Wei+Wei">Wei Wei</a>
+            
+              <span class="glue-font-weight-medium role">Developer Advocate</span>
+            
+            
+          </div>
+        
+
+      
+      </section>
+      <section class="social-container glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-2-md">
+        <button id="social-button" class="glue-button glue-button--low-emphasis glue-button--icon" aria-haspopup="true" aria-expanded="false">
+          <svg role="presentation" aria-hidden="true" class="glue-icon">
+            <use href="/glue-icon/#share"></use>
+          </svg>
+          <span>Share</span>
+        </button>
+        <ul id="social-menu" class="glue-elevation-level-1" role="menu" aria-labelledby="social-button">
+          <li>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=https://developers.googleblog.com/autonomous-llm-post-training-with-tunix-on-tpus/" title="Share on Facebook" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#post-facebook"></use>
+              </svg>
+              <span>Facebook</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://twitter.com/intent/tweet?text=https://developers.googleblog.com/autonomous-llm-post-training-with-tunix-on-tpus/" title="Share on Twitter" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#twitter-x"></use>
+              </svg>
+              <span>Twitter</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://www.linkedin.com/shareArticle?url=https://developers.googleblog.com/autonomous-llm-post-training-with-tunix-on-tpus/&amp;mini=true" title="Share on LinkedIn" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#post-linkedin"></use>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
+          </li>
+          <li>
+            <a href="mailto:name@example.com?subject=Check%20out%20this%20site&amp;body=Check%20out%20https://developers.googleblog.com/autonomous-llm-post-training-with-tunix-on-tpus/" title="Send via Email">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#email"></use>
+              </svg>
+              <span>Mail</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" title="Get shareable link" data-link="https://developers.googleblog.com/autonomous-llm-post-training-with-tunix-on-tpus/" data-copy-text="Copy Link" data-copied-text="Copied!">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#link"></use>
+              </svg>
+              <span></span>
+            </a>
+          </li>
+        </ul>
+      </section>
+    </section>
+
+    
+    <section class="blocks-container glue-page glue-spacer-3-top">
+      <div class="block">
+          
+
+<img class="banner-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Ai-1-banner_9.original.png" alt="Ai-1-banner (9)">  <div class="inner-block-content rich-content">
+    <p data-block-key="p1w3c">Imagine going to sleep after writing a single Markdown specification and waking up to find that an AI agent ran dozens of LLM fine-tuning experiments overnight on your behalf - discovering optimal LoRA ranks, refining learning rate schedules, tuning batch sizes and committing each verified improvement to Git.</p><p data-block-key="48l1b">This is no longer a fantasy. Earlier this year, the <a href="https://github.com/karpathy/autoresearch">autoresearch</a> project showcased how autonomous LLM agents can iteratively explore pre-training in a self-contained loop. Taking inspiration from this paradigm, we created <a href="https://github.com/windmaple/autofinetune">autofinetune</a>: applying autonomous research loops to LLM post-training (Supervised Fine-Tuning and Reinforcement Learning via GRPO), using Google’s full AI stack—<a href="https://github.com/google/tunix">Tunix</a>, Gemma, and Cloud TPUs orchestrated with <a href="https://antigravity.google/product/antigravity-cli">Antigravity CLI</a> and Gemini Flash 3.7.</p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/fullstack.original.png" alt="fullstack">
+            
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <p data-block-key="p1w3c">In this post, we’ll explore how the autonomous research loop works for post-training and walk through a couple of real-world LLM finetuning case studies.</p><h2 data-block-key="yfbty" id="the-paradigm-shift:-from-manual-tuning-to-autonomous-loops"><b>The Paradigm Shift: From Manual Tuning to Autonomous Loops</b></h2><p data-block-key="blbv2">Traditional post-training involves a repetitive, manual cycle:</p><p data-block-key="9hs77"></p><ol><li data-block-key="avuvq">Formulate a hypothesis (e.g., <i>"Will adding</i> <code><i>attn_vec_einsum</i></code><i> to the LoRA target modules improve accuracy?"</i> or <i>"What happens if we change rollout temperature during GRPO?"</i>).</li><li data-block-key="4usjp">Edit training scripts and hyperparameters.</li><li data-block-key="c7avg">Launch a job on accelerators.</li><li data-block-key="7tm2c">Monitor loss curves and benchmark evaluations.</li><li data-block-key="9uich">Manually revert failures or record successes in a spreadsheet.</li></ol><p data-block-key="al3d"></p><p data-block-key="d6o4v">As demonstrated in <code>autoresearch</code>, we can now automate this whole process with the power of AI agents:</p><p data-block-key="7p3c1"></p><ul><li data-block-key="4k329"><b>Design the Arena (</b><code>program.md</code><b>)</b>: human defines the loop, boundary conditions, evaluation criteria, and constraints.</li><li data-block-key="74b1n"><b>Provide the Execution Code (</b><code>run.py</code><b>)</b>: A single, clean, self-contained finetuning script.</li><li data-block-key="cgab9"><b>Let the Agent Iterate</b>: An agent follows instructions in <code>program.md</code>: it modifies <code>run.py</code>, runs the training job, measures the target metric, retains winning commits or reverts regressions, and logs results in <code>results.tsv</code>.</li></ul>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/agentloop.original.jpg" alt="agentloop">
+            
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <h2 data-block-key="y8rv9" id="case-study-1:-supervised-fine-tuning-(sft)-on-functiongemma"><b>Case Study 1: Supervised Fine-Tuning (SFT) on FunctionGemma</b></h2><p data-block-key="c9lva">In the first experiment in <a href="https://github.com/windmaple/autofinetune/tree/main/FunctionGemma-SFT">autofinetune</a>, we took the same SFT setup in our previous <a href="https://developers.googleblog.com/easy-functiongemma-finetuning-with-tunix-on-google-tpus/">blog</a> and extended it by creating the autoresearch loop to optimize <a href="https://huggingface.co/google/functiongemma-270m-it">google/functiongemma-270m-it</a> on the <a href="https://huggingface.co/datasets/google/mobile-actions">google/mobile-actions</a> dataset.</p><h3 data-block-key="br3y2" id="the-setup"><b>The Setup</b></h3><p data-block-key="6p0ud"></p><ul><li data-block-key="8gonf"><b>Hardware</b>: Cloud TPU v5e-1</li><li data-block-key="dcqu8"><b>Iteration Speed</b>: A few minutes per run</li><li data-block-key="c086a"><b>Total Runs</b>: 20 automated experiments in a couple of hours for quick experimentation</li><li data-block-key="kckd"><b>Objective Metric</b>: Post-training evaluation accuracy on function call generation (accuracy)</li></ul><p data-block-key="faf3g"></p><p data-block-key="2v4nl">The agent was given boundaries in <a href="https://github.com/windmaple/autofinetune/blob/main/FunctionGemma-SFT/program.md">program.md</a>:</p><p data-block-key="b6n07"></p><ul><li data-block-key="fn7p3"><b>Allowed</b>: LoRA rank/alpha, target projection layers, learning rates, warmup/decay schedules, optimizers (e.g., AdamW/Muon, gradient clipping), batch size, and seeds.</li><li data-block-key="2hadp"><b>Disallowed</b>: Changing the dataset, number of epochs, or model architecture.</li></ul><p data-block-key="605j8"></p><h3 data-block-key="kwoz5" id="sample-trajectory"><b>Sample Trajectory</b></h3><p data-block-key="317i0">Here is a sample trajectory from <a href="https://github.com/windmaple/autofinetune/blob/main/sample_runs/SFT_results.tsv">sample_runs/SFT_results.tsv</a> demonstrating how the agent hill climbed.</p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/SFT_results.original.png" alt="SFT_results">
+            
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <p data-block-key="efrnn">As you can see, the agent is able to automatically adjust LoRA rank/alpha, optimizer, learning rate, etc. to keep improving the model’s accuracy in terms of generating correct function calls.</p><h2 data-block-key="2kvvi" id="case-study-2:-reinforcement-learning-(grpo)-on-gemma-for-math-reasoning"><b>Case Study 2: Reinforcement Learning (GRPO) on Gemma for Math Reasoning</b></h2><p data-block-key="2h3tl">Supervised fine-tuning is only a simple test. For our second case study, we took the official <a href="https://github.com/google/tunix/blob/main/examples/grpo_gemma.ipynb">GRPO example</a> from the Tunix repository (which trains Gemma 3 1B for math reasoning using GSM8K; the trained model has better numerical accuracy and format accuracy in its answers) and set it up for autonomous RL finetuning. Reinforcement learning is subject to hyperparameter sensitivity, instability, and longer execution times - making this task more challenging and time-consuming.</p><h3 data-block-key="o86yb" id="the-arena-setup"><b>The Arena Setup</b></h3><p data-block-key="bvuur"></p><ul><li data-block-key="148ck"><b>Hardware</b>: Cloud TPU v6e-1</li><li data-block-key="e5h7d"><b>Model</b>: <a href="https://huggingface.co/google/gemma-3-1b-it">Gemma 3 1B</a></li><li data-block-key="48gj9"><b>Dataset</b>: GSM8K</li><li data-block-key="2avpb"><b>Iteration Speed</b>: A couple of hours per run</li><li data-block-key="63mui"><b>Run Duration</b>: 40 experiments over 2–3 days</li><li data-block-key="8mrhp"><b>Objective Metric</b>: to simplify the outer optimization loop for the agent, we chose a single artificial evaluation metric <code>Post_RL_metric</code>, which is simply <code>numerical_accuracy + format_accurac</code>y (you can of course use other metrics, i.e., using different weights).</li></ul><p data-block-key="3eejj"></p><h3 data-block-key="iuc6l" id="sample-trajectory"><b>Sample trajectory</b></h3><p data-block-key="cbvi6">Below is a sample trajectory logged in <a href="https://github.com/windmaple/autofinetune/blob/main/sample_runs/RL_results.tsv">sample_runs/RL_results.tsv</a>, showing the agent’s progress. The agent was able to identify better LoRA configurations, rollout temperature, KL penalty, system prompt, etc. to improve the total reward by ~10%.</p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/RL_results.original.png" alt="SFT_results">
+            
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <h2 data-block-key="usae7" id="what's-next"><b>What’s Next?</b></h2><p data-block-key="5n5tu">We hope this project shows you the power of AI agents in the domain of LLM post-training and inspires you to think about how to leverage them to automate your LLM finetuning workflows using Tunix on TPUs. Please check out the code, sample runs, and <code>program.md</code> templates in the <a href="https://github.com/windmaple/autofinetune"><b>autofinetune GitHub repository</b></a>, explore the <a href="https://github.com/google/tunix"><b>Tunix library</b></a>, and start building your own autonomous post-training lab today!</p>
+</div> 
+      </div>
+    </section>
+    
+
+    <section class="navigation-container glue-page glue-spacer-6-top">
+      <div class="posted-in-section">
+        <div class="posted-in-section__heading">
+          <span class="glue-caption">
+            posted in:
+          </span>
+        </div>
+        <div class="posted-in-section__tags">
+          <ul>
+              
+                  <li>
+                      <a href="/search/?technology_categories=AI" class="glue-caption">AI</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?technology_categories=Cloud" class="glue-caption">Cloud</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?content_type_categories=How-To+Guides" class="glue-caption">How-To Guides</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?content_type_categories=Learn" class="glue-caption">Learn</a>
+                  </li>
+              
+              
+          </ul>
+      </div>
+      </div>
+      <div class="buttons-section">
+        <div class="buttons-section__left">
+          <a href="/the-anatomy-of-harness-engineering-how-to-evaluate-iterate-and-guard-ai-coding-agents/" class="glue-button--icon glue-elevation-level-1 " aria-label="Previous">
+            <svg role="presentation" aria-hidden="true" class="glue-icon">
+              <use href="/glue-icon/#chevron-left"></use>
+            </svg>
+          </a>
+          <span class="caption ">Previous</span>
+        </div>
+        <div class="buttons-section__right">
+          <span class="caption ">Next</span>
+          <a href="/driving-developer-excellence-inside-the-program-sprints/" class="glue-button--icon glue-elevation-level-1 " aria-label="Next">
+            <svg role="presentation" aria-hidden="true" class="glue-icon">
+              <use href="/glue-icon/#chevron-right"></use>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class="related-posts-container glue-page glue-spacer-6-top glue-spacer-3-bottom">
+      <span class="glue-headline glue-headline--headline-3">Related Posts</span>
+      <div class="related-posts-container__carousel glue-page glue-spacer-5-top">
+        <div class="glue-carousel glue-carousel--cards glue-carousel-related-posts glue-carousel--peek-out glue-carousel--has-navigation" aria-label="Related Posts">
+          <!-- Previous -->
+          <button class="glue-carousel__button glue-carousel__button--prev glue-is-inactive" aria-label="Go to the previous slide" aria-controls="">
+            <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--32px">
+              <use href="/glue-icon/#chevron-left"></use>
+            </svg>
+          </button>
+          <!-- Next -->
+          <button class="glue-carousel__button glue-carousel__button--next" aria-label="Go to the next slide" aria-controls="">
+            <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--32px">
+              <use href="/glue-icon/#chevron-right"></use>
+            </svg>
+          </button>
+          <!-- List -->
+          <div class="glue-carousel__viewport">
+            <div class="glue-carousel__list" aria-live="polite" style="width: 2004px; grid-template-columns: repeat(4, 1fr); transform: translate3d(0px, 0px, 0px);">
+              
+                <a class="glue-card glue-carousel__item" href="/why-client-sdk-generation-belongs-in-the-open/" tabindex="0">
+                  <div aria-label="Why client SDK generation belongs in the open" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Why client SDK generation belongs in the open" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Copy_of_why_client_SDK_generation_.2e16d0ba.fill-800x400.png">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                            <span class="glue-label">Learn</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Why client SDK generation belongs in the open</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">SEPT. 17, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+                <a class="glue-card glue-carousel__item" href="/agent-anomaly-detection-now-in-private-preview-on-the-gemini-enterprise-agent-platform/" tabindex="-1">
+                  <div aria-label="Agent Anomaly Detection, now in Private Preview on the Gemini Enterprise Agent Platform" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Agent Anomaly Detection, now in Private Preview on the Gemini Enterprise Agent Platform" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Blog_Banner_3.2e16d0ba.fill-800x400.jpg">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            <span class="glue-label">Cloud</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                            <span class="glue-label">Learn</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Agent Anomaly Detection, now in Private Preview on the Gemini Enterprise Agent Platform</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">SEPT. 16, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+                <a class="glue-card glue-carousel__item" href="/the-anatomy-of-harness-engineering-how-to-evaluate-iterate-and-guard-ai-coding-agents/" aria-hidden="true" tabindex="-1">
+                  <div aria-label="The Anatomy of Harness Engineering: How to Evaluate, Iterate, and Guard AI Coding Agents" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="The Anatomy of Harness Engineering: How to Evaluate, Iterate, and Guard AI Coding Agents" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/BlogBanner_990x556_x2.2e16d0ba.fill-800x400.png">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            <span class="glue-label">Cloud</span>
+                            
+                            
+                            <span class="glue-label">How-To Guides</span>
+                            
+                            <span class="glue-label">Learn</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">The Anatomy of Harness Engineering: How to Evaluate, Iterate, and Guard AI Coding Agents</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">SEPT. 9, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+                <a class="glue-card glue-carousel__item" href="/driving-developer-excellence-inside-the-program-sprints/" aria-hidden="true" tabindex="-1">
+                  <div aria-label="Driving Developer Excellence: Inside the Program Sprints" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Driving Developer Excellence: Inside the Program Sprints" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/image_9_j6IHMbN.2e16d0ba.fill-800x400.png">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            <span class="glue-label">Cloud</span>
+                            
+                            
+                            <span class="glue-label">How-To Guides</span>
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Driving Developer Excellence: Inside the Program Sprints</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">SEPT. 4, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+            </div>
+          </div>
+          <!-- Navigation dots -->
+          <div class="glue-carousel__navigation" aria-label="Choose a page" data-glue-carousel-navigation-label="Selected tab $glue_carousel_page_number$ of $glue_carousel_page_total$">
+          <button class="glue-carousel__dot glue-is-active" data-dot="1" aria-controls="" aria-label="Selected tab 1 of 2" tabindex="0" aria-current="true"></button><button class="glue-carousel__dot" data-dot="2" aria-controls="" aria-label="Selected tab 2 of 2" tabindex="-1" aria-current="false"></button></div>
+        </div>
+      </div>
+    </section>
+    
+  </div>
+
+
+				
+				
+
+<div class="footer-linkboxes__wrapper">
+  <nav class="footer-linkboxes" aria-label="Footer links">
+    <ul class="footer-linkboxes__list">
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Connect
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//googledevelopers.blogspot.com" class="footer-linkbox-list__link">
+                Blog
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/3FReQXN" class="footer-linkbox-list__link">
+                Bluesky
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/googlefordevs" class="footer-linkbox-list__link">
+                Instagram
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/gdevs-li" class="footer-linkbox-list__link">
+                LinkedIn
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/gdevs-tw" class="footer-linkbox-list__link">
+                X (Twitter)
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/developers" class="footer-linkbox-list__link">
+                YouTube
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Programs
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/program" class="footer-linkbox-list__link">
+                Google Developer Program
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/gdg" class="footer-linkbox-list__link">
+                Google Developer Groups
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/experts" class="footer-linkbox-list__link">
+                Google Developer Experts
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/accelerators" class="footer-linkbox-list__link">
+                Accelerators
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//www.womentechmakers.com" class="footer-linkbox-list__link">
+                Women Techmakers
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/nvidia" class="footer-linkbox-list__link">
+                Google Cloud &amp; NVIDIA
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Developer consoles
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.developers.google.com" class="footer-linkbox-list__link">
+                Google API Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.cloud.google.com" class="footer-linkbox-list__link">
+                Google Cloud Platform Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//play.google.com/apps/publish" class="footer-linkbox-list__link">
+                Google Play Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.firebase.google.com" class="footer-linkbox-list__link">
+                Firebase Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.actions.google.com" class="footer-linkbox-list__link">
+                Actions on Google Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//cast.google.com/publish" class="footer-linkbox-list__link">
+                Cast SDK Developer Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//chrome.google.com/webstore/developer/dashboard" class="footer-linkbox-list__link">
+                Chrome Web Store Dashboard
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.home.google.com/" class="footer-linkbox-list__link">
+                Google Home Developer Console
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+    </ul>
+  </nav>
+</div>
+<div class="footer-utility__wrapper">
+  <div>
+    <nav class="footer-sites" aria-label="Other Google Developers websites">
+      <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+        <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+      </a>
+      <ul class="footer-sites-list">
+        <li class="footer-sites-item">
+          <a href="//developer.android.com" class="footer-sites-link">
+            Android
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//developer.chrome.com/home" class="footer-sites-link">
+            Chrome
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//firebase.google.com" class="footer-sites-link">
+            Firebase
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//cloud.google.com" class="footer-sites-link">
+            Google Cloud Platform
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//developers.google.com/products" class="footer-sites-link">
+            All products
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <button aria-hidden="true" class="glue-cookie-notification-bar-control footer-sites-link">
+            Manage cookies
+          </button>
+        </li>
+      </ul>
+    </nav>
+    <nav class="footer-utility-links">
+      <ul class="footer-utility-list">
+        <li class="footer-utility-item">
+          <a href="//developers.google.com/terms/site-terms" class="footer-utility-link">
+            Terms
+          </a>
+        </li>
+        <li class="footer-utility-item">
+          <a href="//policies.google.com/privacy" class="footer-utility-link">
+            Privacy
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+
+        
+				
+
+        
+        <script nonce="" src="https://www.youtube.com/player_api"></script>
+        <script nonce="" src="//www.gstatic.com/glue/v27_1/glue.min.js"></script>
+        <script nonce="" type="text/javascript" src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/dgc_blog.js"></script>
+
+        <script nonce="" src="https://www.gstatic.com/glue/cookienotificationbar/cookienotificationbar.min.js" data-glue-cookie-notification-bar-category="2A" data-glue-cookie-notification-bar-site-id="developers.googleblog.com"></script>
+
+        
+  <script src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/blog_detail.js" nonce=""></script>
+  <script src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/prism.js" nonce=""></script>
+
+    
+
+</body></html>

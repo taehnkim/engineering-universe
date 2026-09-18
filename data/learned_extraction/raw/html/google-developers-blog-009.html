@@ -1,0 +1,1128 @@
+<html lang="en"><head>
+        <meta charset="utf-8">
+        
+        <title>
+            
+            Decoding cosmic signals with deep learning and Keras
+            
+            
+            - Google Developers Blog
+            
+        </title>
+        <meta property="og:title" content="Decoding cosmic signals with deep learning and Keras- Google Developers Blog">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+	<meta name="description" content="Astroparticle physics sits at the exciting intersection of astrophysics and particle physics and stu...">
+  <meta content="summary_large_image" name="twitter:card">
+  <meta content="Google for Developers Blog - News about Web, Mobile, AI and Cloud" property="twitter:title">
+  <meta property="og:title" content="Decoding cosmic signals with deep learning and Keras">
+  <script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-H733Y2BZES&amp;cx=c&amp;gtm=4e69g1h1" nonce=""></script><script async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-WVTLDSL"></script><script type="text/javascript" id="www-widgetapi-script" src="https://www.youtube.com/s/player/4fd832e7/www-widgetapi.vflset/www-widgetapi.js" async="" nonce=""></script><script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [{
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Google for Developers Blog",
+      "item": "https://developers.googleblog.com/"
+    },{
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Decoding cosmic signals with deep learning and Keras",
+      "item": "https://developers.googleblog.com/decoding-cosmic-signals-with-deep-learning-and-keras/"
+    }]
+  }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Decoding cosmic signals with deep learning and Keras",
+      "description": "",
+      "image": "https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/image_1_l7IVARL.2e16d0ba.fill-800x400.png",
+      "datePublished": "2026-08-27",
+      "author": [
+        
+        
+          { "@type": "Person", "name": "Yufeng Guo", "url": "/search/?author=Yufeng+Guo" },
+        
+          { "@type": "Person", "name": "Jonas Glombitza, PhD", "url": "/search/?author=Jonas+Glombitza%2C+PhD" }
+        
+        
+      ]
+    }
+  </script>
+  
+  <meta content="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/image_1_l7IVARL.2e16d0ba.fill-1200x600.png" property="og:image">
+  
+
+
+        
+        
+
+        <!-- Google Tag Manager -->
+        <script type="text/javascript" nonce="" src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/analytics.js"></script>
+        <!-- End Google Tag Manager -->
+
+        
+        <link href="//www.gstatic.com/glue/v27_1/glue.min.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/dgc_blog.css">
+        <link rel="icon" href="https://storage.googleapis.com/gweb-developer-goog-blog-assets/meta/favicon.ico" type="image/x-icon">
+        <link rel="apple-touch-icon" href="https://storage.googleapis.com/gweb-developer-goog-blog-assets/meta/apple-touch-icon.png">
+
+        
+				<link rel="preconnect" href="https://fonts.googleapis.com">
+				<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+				<link rel="preload" href="https://fonts.googleapis.com/css2?family=Product+Sans&amp;family=Google+Sans+Display:ital@0;1&amp;family=Google+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;family=Google+Sans+Text:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;display=swap" as="style">
+				<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Product+Sans&amp;family=Google+Sans+Display:ital@0;1&amp;family=Google+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;family=Google+Sans+Text:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;display=swap">
+        <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&amp;family=Google+Sans+Flex:opsz,wght@6..144,1..1000&amp;display=swap" rel="stylesheet" data-page-link="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&amp;display=swap">
+
+        
+        <link href="https://www.gstatic.com/glue/cookienotificationbar/cookienotificationbar.min.css" rel="stylesheet">
+
+        
+  <link rel="stylesheet" type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/blog_detail.css">
+  <link type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/prism.css" rel="stylesheet">
+
+    </head>
+
+    <body id="main-content" class="glue-body ">
+        <!-- Google Tag Manager (noscript) -->
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVTLDSL "
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
+
+        
+
+				
+        
+
+<!-- HTML -->
+<header class="dgc-header">
+  <div class="dgc-header-inner">
+    <button class="hamburger" aria-haspopup="true" aria-expanded="false" aria-label="Open Menu">
+      <svg role="presentation" aria-hidden="true" class="glue-icon">
+        <use href="/glue-icon/#menu"></use>
+      </svg>
+    </button>
+    <div class="product-name-wrapper">
+      <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+        <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+      </a>
+    </div>
+    <div class="desktop-nav-wrapper">
+      <div class="upper-tabs-wrapper">
+        <div class="upper-tabs">
+          <nav class="tabs" aria-label="Upper Tabs">
+            <div class="tab">
+              <a href="//developers.google.com/community" class="top-nav-title">
+                Community/Events
+              </a>
+            </div>
+            <div class="tab">
+              <a href="//developers.google.com/solutions/catalog" class="top-nav-title">
+                Learn
+              </a>
+            </div>
+            <div class="tab">
+              <a href="//developers.googleblog.com" class="top-nav-title">
+                Blog
+              </a>
+            </div>
+            <div class="tab">
+              <a href="https://www.youtube.com/user/GoogleDevelopers" class="top-nav-title">
+                YouTube
+              </a>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dgc-header-search">
+    <div class="search-wrapper glue-page">
+      <div class="glue-grid">
+        <form id="search-form" action="/search/" method="get" class="search-content glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-9-md glue-grid__col--span-7-lg">
+          <div class="search-input-wrapper">
+            <svg role="presentation" aria-hidden="true" class="glue-icon search-icon">
+              <use href="/glue-icon/#search"></use>
+            </svg>
+            <input type="text" name="query" placeholder="Search all articles..." aria-label="Search" class="search-input-field">
+          </div>
+          <button class="glue-button glue-button--high-emphasis">
+            Search
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-drawer" top-level-nav="">
+  <nav class="nav-content" aria-label="Side menu">
+    <div class="mobile-header">
+      <button class="nav-close-btn nav-btn" aria-label="Close navigation">
+        <svg role="presentation" aria-hidden="true" class="glue-icon">
+          <use href="/glue-icon/#close"></use>
+        </svg>
+      </button>
+      <button class="nav-back-btn nav-btn hidden" aria-label="Back to Menu">
+        <svg role="presentation" aria-hidden="true" class="glue-icon">
+          <use href="/glue-icon/#arrow-back"></use>
+        </svg>
+      </button>
+      <div class="product-name-wrapper">
+        <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+          <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+        </a>
+      </div>
+    </div>
+    <div class="nav-wrapper">
+      <div class="mobile-nav-top">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="//developers.google.com/community" class="nav-title" data-label="Tab: Community/Events">
+              <span class="nav-text" tooltip="">
+                Community/Events
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="//developers.google.com/solutions/catalog" class="nav-title" data-label="Tab: Learn">
+              <span class="nav-text" tooltip="">
+                Learn
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="//developers.googleblog.com" class="nav-title" data-label="Tab: Blog">
+              <span class="nav-text" tooltip="">
+                Blog
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="https://www.youtube.com/user/GoogleDevelopers" class="nav-title" data-label="Tab: YouTube">
+              <span class="nav-text" tooltip="">
+                YouTube
+             </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<div class="backdrop"></div>
+
+        
+  <div class="blog-detail-container">
+
+    
+      <section class="tags-container glue-page glue-spacer-5-top">
+        <div class="glue-eyebrow"></div>
+      </section>
+    
+
+    <section class="heading-container glue-page  glue-spacer-1-top">
+      <h1 class="glue-headline glue-headline--headline-1">Decoding cosmic signals with deep learning and Keras</h1>
+    </section>
+
+    <section class="summary-container glue-page glue-spacer-4-top">
+      <div class="date-time">
+        <div class="published-date glue-font-weight-medium">AUG. 27, 2026</div>
+      </div>
+    </section>
+
+    <section class="glue-page glue-grid glue-spacer-1-top">
+
+      <section class="author-container glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-10-md">
+      
+        
+          <div class="author-obj">
+            <a class="glue-font-weight-medium" href="/search/?author=Yufeng+Guo">Yufeng Guo</a>
+            
+              <span class="glue-font-weight-medium role">Developer Advocate</span>
+            
+            
+              <span class="glue-font-weight-medium team">Core ML Frameworks</span>
+            
+          </div>
+        
+          <div class="author-obj">
+            <a class="glue-font-weight-medium" href="/search/?author=Jonas+Glombitza%2C+PhD">Jonas Glombitza, PhD</a>
+            
+              <span class="glue-font-weight-medium role">Erlangen Centre for Astroparticle Physics</span>
+            
+            
+          </div>
+        
+
+      
+      </section>
+      <section class="social-container glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-2-md">
+        <button id="social-button" class="glue-button glue-button--low-emphasis glue-button--icon" aria-haspopup="true" aria-expanded="false">
+          <svg role="presentation" aria-hidden="true" class="glue-icon">
+            <use href="/glue-icon/#share"></use>
+          </svg>
+          <span>Share</span>
+        </button>
+        <ul id="social-menu" class="glue-elevation-level-1" role="menu" aria-labelledby="social-button">
+          <li>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=https://developers.googleblog.com/decoding-cosmic-signals-with-deep-learning-and-keras/" title="Share on Facebook" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#post-facebook"></use>
+              </svg>
+              <span>Facebook</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://twitter.com/intent/tweet?text=https://developers.googleblog.com/decoding-cosmic-signals-with-deep-learning-and-keras/" title="Share on Twitter" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#twitter-x"></use>
+              </svg>
+              <span>Twitter</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://www.linkedin.com/shareArticle?url=https://developers.googleblog.com/decoding-cosmic-signals-with-deep-learning-and-keras/&amp;mini=true" title="Share on LinkedIn" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#post-linkedin"></use>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
+          </li>
+          <li>
+            <a href="mailto:name@example.com?subject=Check%20out%20this%20site&amp;body=Check%20out%20https://developers.googleblog.com/decoding-cosmic-signals-with-deep-learning-and-keras/" title="Send via Email">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#email"></use>
+              </svg>
+              <span>Mail</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" title="Get shareable link" data-link="https://developers.googleblog.com/decoding-cosmic-signals-with-deep-learning-and-keras/" data-copy-text="Copy Link" data-copied-text="Copied!">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#link"></use>
+              </svg>
+              <span></span>
+            </a>
+          </li>
+        </ul>
+      </section>
+    </section>
+
+    
+    <section class="blocks-container glue-page glue-spacer-3-top">
+      <div class="block">
+          
+
+<img class="banner-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/image_1_l7IVARL.original.png" alt="image_1">  <div class="inner-block-content rich-content">
+    <p data-block-key="hn5ai">Astroparticle physics sits at the exciting intersection of astrophysics and particle physics and studies cosmic messengers: particles such as atomic nuclei, electrons, high-energy photons (light), and neutrinos accelerated in distant, cosmic phenomena and objects such as black holes, neutron stars, active galaxies, and supernovas, as well as other events from the early formation of the universe. By studying these <i>messenger particles,</i> we probe the most energetic and extreme phenomena known, from neutrinos produced in the Sun to the mysterious origins of ultra-high-energy cosmic-rays, and the elusive nature of dark matter and dark energy.</p><p data-block-key="8r1h2">Modern astroparticle physics is inherently data-intensive. It relies on gigantic observatories, often spanning thousands of square kilometers, designed to detect rare and tiny signals from the cosmos. These instruments generate enormous volumes of complex data, far exceeding what traditional analysis techniques were designed to handle.</p><p data-block-key="9ffse">This blog post focuses on the growing role of deep learning in astroparticle physics and the new possibilities it unlocks in this data-rich research field. These methods offer new prospects to improve instrument sensitivity, uncover patterns that would otherwise remain hidden, and search for signal anomalies. Ultimately, these advances help to address some of the most fundamental questions: “<i>What is the structure of the Universe?”</i>, and<i> “What is the elementary nature of matter?”</i></p><h3 data-block-key="95dom" id="the-challenges-of-astronomy-at-the-highest-energies"><b>The challenges of astronomy at the highest energies</b></h3><p data-block-key="91k44">From stars and planets to galaxies and nebulae, astronomy is deeply rooted in the discovery and observation of fascinating objects in the Universe. In Astronomy, light (ranging from infrared to visible light, and all the way up to X-rays) is the messenger that is observed, providing the key to studying the cosmos. Astroparticle physics extends astronomy into the highest-energy regime, where the Universe reveals its most extreme phenomena. It looks at gamma rays (high-energetic photons, i.e., light), with charged nuclei, neutrinos, and most recently, gravitational waves. By observing not only a single messenger but combining multiple kinds, modern astroparticle physics opens a new window into the universe.</p><p data-block-key="dg57m">However, for observations at these high energies, quantum and particle-interaction effects fundamentally change how we observe the cosmos. Individual high-energy particles can no longer be detected directly at Earth using conventional observatories such as optical or radio telescopes. Instead, when the cosmic particles enter the atmosphere, they interact with air molecules and produce extensive particle showers — cascades of billions and billions of secondary shower particles, mostly electrons, positrons, muons, and light, that spread over large areas and reach the Earth’s Surface and extend over many square kilometers in scale. <i>In fact, every second, about 100 of these secondary shower particles continuously pass through the human body, entirely unnoticed.</i></p><h3 data-block-key="z9rwm" id="astroparticle-physics-experiments-in-the-21st-century"><b>Astroparticle physics experiments in the 21st century</b></h3><p data-block-key="fh742">To make matters even more challenging, the flux of particles at the highest energies is extraordinarily low: at energies above 10¹⁹ electron volts, one expects only around 100 per square kilometer per century. As a consequence, astroparticle physics in the 21st century relies on enormous observatories, often covering tens to thousands of square kilometers, in order to collect sufficient statistics to perform surveys. These experiments enable physicists and astronomers to probe the Universe in ways that are inaccessible to traditional astronomy, astrophysics, and particle physics, opening a window onto the most energetic processes known in nature.</p><p data-block-key="9ql7d">To catch the showers, sensors and detectors are distributed over vast, regular grids on kilometer scales or cubes, making their data image-like and well-suited for deep learning. Modern sensors usually feature readouts with nanosecond resolution that enable us to track the interaction of the incoming shower particles with the detector at high precision, by recording so-called waveforms or signal traces. An example is shown below for a cosmic-ray event measured by a detector of the Pierre Auger Observatory. As shown, different shower particles induce different shapes in the recorded total waveform.</p><p data-block-key="fbv01">Prominent examples include the <b>Pierre Auger Observatory</b>, the world’s largest detector for cosmic-rays at ultra-high energies; the <b>Cherenkov Telescope Array</b>, the next-generation flagship facility for gamma-ray astronomy; and the <b>IceCube Observatory</b>, which uses a cubic kilometer of Antarctic ice to detect neutrinos (see the respective boxes). These observatories all have spatially distributed sensors that record waveforms, which encode information about the primary messenger particle, by providing spatiotemporal data structures of air showers.</p>
+</div>  <div class="inner-block-content rich-content">
+    <h3 data-block-key="74t0m" id=""><b>Pierre Auger Observatory</b></h3><p data-block-key="aim2j"><br>The Pierre Auger Observatory, located in Argentina at an altitude of 1200 m is the world's largest cosmic-ray experiment and features more than 1500 detector stations covering an area of 3000 km^2. The experiment detects air showers at the highest energies, with each triggered detector recording up to three waveforms per event.</p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/keras-image-composite_1.original.png" alt="keras-image-composite 1">
+            
+            
+                
+                    <div class="regular-image-description">
+                        Pierre Auger Observatory: Cosmic-ray detection with the Pierre Auger Observatory. Top: Measurement of a cosmic shower triggering 20 detector stations. Bottom: photograph of one of more than 1500 Auger detector stations (left) and three measured waveforms of a single station encoding information on the shower development. Images taken from [1-3].
+                    </div>
+                
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <h3 data-block-key="0pyc0" id=""><b>Neutrino Observatories</b></h3><p data-block-key="f1802"><br>Neutrino telescopes such as <b>IceCube</b> in Antarctica or <b>KM3NeT</b>, currently under construction in the Mediterranean Sea, use strings of digital optical modules (DOMs) to detect faint flashes of light emitted by shower particles when they interact with ice or water. IceCube has an instrumented volume of approximately 1 km³ and is deployed as more than 80 strings, each equipped with 60 sensors, at depths between 1.5 km and 2.5 km beneath the Antarctic ice.</p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/image_5_Dt4vjqX.original.png" alt="image_5">
+            
+            
+                
+                    <div class="regular-image-description">
+                        Neutrino detection at IceCube. Left: Visualization of a neutrino event detected by IceCube. Right: Sketch of the deployment of one of the 86 strings (top) of IceCube holding one DOM each (bottom) collecting the faint light flashes. Images taken from [4, 5]. Bottom: simulated IceCube-like signal trace.
+                    </div>
+                
+            
+        </div>
+    </div>
+   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/image_6_6SfD3oB.original.png" alt="image_6">
+            
+            
+                
+                    <div class="regular-image-description">
+                        Neutrino detection at IceCube. Left: Visualization of a neutrino event detected by IceCube. Right: Sketch of the deployment of one of the 86 strings (top) of IceCube holding one DOM each (bottom) collecting the faint light flashes. Images taken from [4, 5]. Bottom: simulated IceCube-like signal trace.
+                    </div>
+                
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <h3 data-block-key="g840i" id=""><b>Ground-based gamma-ray observatories</b></h3><p data-block-key="au2jq"></p><p data-block-key="bd30f">The Cherenkov Telescope Array Observatory (CTAO) is the next-generation facility for ground-based gamma-ray astronomy and is expected to collect more than hundreds of petabytes of data per year. It consists of two large arrays of Cherenkov telescopes. These telescopes are designed not to observe the incoming gamma rays directly, but instead image the Cherenkov emission produced by particle showers using ultra-fast cameras.</p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/keras-image-composite_2.original.png" alt="keras-image-composite 2">
+            
+            
+                
+                    <div class="regular-image-description">
+                        Gamma-ray Astronomy with CTAO. Top: Illustration showing all three telescope types foreseen in its telescope array. Right: Typical of a detected gamma-ray shower in a Cherenkov image, imaging the same shower with telescopes at different positions.
+Left: Typical shape of an air shower image recorded with a Cherenkov telescope, after integrating the waveform of every pixel. Right: example waveform of a signal pixel.
+Images taken from [6, 7]
+                    </div>
+                
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <h2 data-block-key="3wphs" id="the-challenge-of-&quot;indirect-astronomy&quot;:-event-reconstruction"><b>The challenge of “indirect astronomy”: event reconstruction</b></h2><p data-block-key="e3v0u">Reconstructing the properties of a cosmic particle from the measured shower data is exceptionally complex due to the indirect nature of ground-based detectors, as they don't catch the cosmic messenger directly. Instead, they sample the shower's footprint, i.e., the arrival times and energy deposits of particles hitting the ground. Figuratively speaking, the reconstruction is similar to a paleontologist studying bones to reconstruct the primary dinosaur. Similarly, with the signals recorded by detectors, researchers aim to infer the nature of the original particle (whether it was a neutrino, a gamma ray, or a cosmic-ray nucleus) as well as its energy and origin.</p><p data-block-key="b1i36">This reconstruction problem is particularly challenging because the development of particle showers is governed by stochastic quantum processes. Thus, each interaction underlies intrinsic fluctuations, meaning that no two showers are ever exactly alike, even if they were initiated by identical particles with the same properties (e.g., position and energy). As a result, precise and detailed measurements of the shower are crucial: the more information that can be exploited, the better the reconstruction of the primary particle — the messenger particle we want to study.</p><p data-block-key="4jsc">However, detailed measurements alone are not sufficient on their own. Interpreting these data requires highly sophisticated algorithms capable of identifying the underlying structures and patterns hidden within the shower signals and the huge amount of data. This formulates an inverse problem: from indirect and incomplete observations, the primary cause (cosmic messenger) will be reconstructed. This is precisely where deep learning comes into play. By learning complex, non-linear relationships directly from large volumes of data, modern methods offer powerful new tools to tackle the challenges of event reconstruction and enable more accurate and robust interpretations of astroparticle physics experiments.</p><h3 data-block-key="95gzp" id="from-traditional-reconstructions-to-machine-learning-and-deep-learning"><b>From traditional reconstructions to machine learning and deep learning</b></h3><p data-block-key="9h4hr">Traditionally, event reconstruction has been performed via function fitting or using parametrizations derived from simulations or, where possible, first principles. These approaches rely not on the recorded waveforms themselves, but on two compressed quantities: the integrated signal, i.e., the charge, and the arrival time, defined as the time of the first particles hitting the respective detector. For reconstructing the energy <i>E</i>, usually a modified Nishimura-Kamata-Greisen (NKG) function:</p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/keras-equation-1_alt.original.png" alt="keras-equation-1 alt">
+            
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <p data-block-key="nss2d">is fitted to the integrated signal <i>S</i> of each station measured at a distance <i>r</i> to the shower center, with the remaining parameters either derived from shower simulations or optimized for the instrument. The result has a strong correlation with the primary energy and enables a reconstruction of good quality.</p><p data-block-key="fak4h">Reconstructing the mass of the primary particle is extremely challenging, as fluctuations in the shower development (the process that forms the cascade) often induce signal variations that are on the same scale or larger than the subtle differences induced by the tiny particles. Therefore, more phenomenological approaches have been introduced. A heavier nucleus — for example, an iron nucleus — fragments into many lower-energy sub-showers early in the atmosphere, creating a shower with a higher muon content relative to a shower induced by a lighter particle, e.g., a helium nucleus, of the same energy. These muons, which can be thought of as heavy electrons, travel nearly undeflected through the atmosphere and arrive at the surface in a sharp, narrow pulse, whereas other particles disperse over a broader time window. Traditionally, by quantifying the spikiness of the waveform traces using and comparing them to simulated air showers, the mass can be very roughly estimated.</p><p data-block-key="fcgru">Deep learning, and specifically <a href="https://keras.io/">Keras</a>, offers a breakthrough, especially for replacing phenomenological approaches. Instead of relying on hand-designed features, deep neural networks can be trained end-to-end on simulated detector signals. The network learns to extract subtle, non-linear correlations between signal traces, their timing, and the detector geometry, reconstructing shower properties with unprecedented precision. This effectively bypasses the information loss inherent in reducing waveforms to just a single charge value and an arrival time, and enables the exploitation of the full spatio-temporal structure of the data — a fundamental limitation of current-generation reconstruction algorithms in astroparticle physics.</p><p data-block-key="410ek">As an example, we will focus in this blog post on a neural network architecture developed by researchers at the Pierre Auger Observatory, based on Keras, to reconstruct the cosmic-ray mass composition from signals measured by its array of surface detectors. The architecture is tailored to the structure and symmetries of the data, as discussed in detail below.</p><h2 data-block-key="mfcmr" id="spatio-temporal-data-analysis-using-keras"><b>Spatio-temporal data analysis using Keras</b></h2><p data-block-key="cn49o">The data recorded by astroparticle physics experiments and the Pierre Auger Observatory is spatio-temporal (see above: Pierre Auger Observatory), including sensors distributed in space that measure waveforms: each air shower imprints a pattern of particle signals across the detector array, evolving in both space and time. Its characteristic structure (e.g., signal size, shower particle composition, temporal structure) encodes information on the shower development, and thus the primary messenger particle. In particular, three physical aspects of the data are fundamental.</p><p data-block-key="cr818">First, the measured shower footprint, i.e., the spatial distribution of the signals on the detectors. The footprint’s size directly correlates with the energy of the primary particle: a highly energetic cosmic-ray produces a shower so extensive that it triggers dozens of stations spread across many (tens of!) kilometers, whereas a lower-energy event leaves only a handful of stations with a small signal. Beyond its size, the shape of the footprint encodes the shower geometry. A circular footprint indicates a vertical shower arriving straight down, while an elongated and asymmetric footprint is induced by an inclined shower arriving from close to the horizon, where the shower front intersects the array at a shallow angle and travels across the array. In practice, only a small fraction of the 1,660 stations are triggered by any given event. To obtain a regular, image-like input suitable for convolutional processing, a 13×13 station cutout is extracted from the full array, with the station recording the largest signal placed at the center.</p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/keras-image-composite_3.original.png" alt="keras-image-composite 3">
+            
+            
+                
+                    <div class="regular-image-description">
+                        Left: Simulated air-shower footprint measured by the Pierre Auger Observatory, featuring a hexagonal detector grid. The color intensity indicates the arrival time (bright = early, dark = late) and the marker size indicates the signal size (integrated waveform). Grey points mark stations in the 13x13 cutout that did not measure a signal, and the arrow denotes the arrival direction of the incoming particle shower. Right: Footprint after Cartesian re-indexing resulting in a regular 2D image.
+                    </div>
+                
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <p data-block-key="hn5ai">Furthermore, the arrival time, defined by the time the first particles arrive at each station — the leading edge of the waveform — encodes the curvature of the shower front as it sweeps across the array. These relative arrival times encode the shower’s direction and, therefore, also the direction of the impinging particle. Figuratively, this is similar to echo sounding, employing the arrival time of reflected sound to infer the depth and geometry of an object.</p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/image_12.original.png" alt="image_12">
+            
+            
+                
+                    <div class="regular-image-description">
+                        Example of the measured waveforms of a single detector station. The different colors denote the three different recorded waveforms. Event image from [3].
+                    </div>
+                
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <p data-block-key="hn5ai">The <b>shape of the waveform itself</b> encodes information about shower development and mass composition. For example, showers with more muons will induce more spikes in the waveforms, whereas signals detected far from a shower that develops very high in the atmosphere will feature signals more spread in time due to the increased scattering of particles in the atmosphere. Auger utilizes 3 microseconds of the recorded waveform after an event is detected.<br>Using this cutout of the waveform instead of the full waveform (with only a short window containing meaningful signal) overcomes sparsity: instead of dealing with sparse traces, the network receives a scalar per station indicating when the shower arrived, along with three waveforms per station that encode information on the shower development.</p><p data-block-key="1b13b">Missing information is another key. In real-world observatories, detectors fail and stop working or fall close to the edge of the array where detectors are missing, causing missing information or holes in the footprint. It is important to note that it is fundamentally different from measuring having a signal data because a station is missing or broken, than a perfectly working detector does not measure a signal. To provide this information, a simple status map is added as input to the model (1=working, 0=missing/failing), and during training, detectors are masked and marked in the status map, respectively.</p><h3 data-block-key="n59qz" id="encoding-physics-domain-knowledge-as-an-inductive-bias"><b>Encoding physics domain knowledge as an inductive bias</b></h3><p data-block-key="6cg0m">Together with the two-dimensional spatial layout of the stations, the full dataset forms a <b>3D data cube</b>: a 2D grid of stations, each carrying a time trace of 120 steps, 25 nanoseconds each. A naive approach would feed this entire cube into a single big 3D CNN or similar architecture; however, this would not exploit the inherent physics symmetries, limiting the final performance as simulating air shower events is expensive and hence limited.<br>Instead, the setup is divided into two physically-motivated subparts: a <i>temporal model</i> that processes each station's waveform individually, and a <i>spatial model</i> that analyzes the spatial signal pattern induced on the detector grid. The key motivation is that, at a station spacing of 1.5 km, the waveforms at different detectors are causally independent — particles from the same shower arrive at each station separately, and there are no direct signal correlations between waveforms across stations. This means temporal and spatial processing can be cleanly decoupled, which is not only physically correct but also makes the model computationally very efficient.</p>
+</div>  <div class="inner-block-content code-block line-numbers">
+    <pre class="language-python line-numbers" tabindex="0"><code class="language-python"><span class="token keyword">import</span> keras
+<span class="token keyword">from</span> keras <span class="token keyword">import</span> layers
+
+
+<span class="token comment"># =========================</span>
+<span class="token comment"># Temporal Model (LSTM part)</span>
+<span class="token comment"># =========================</span>
+<span class="token keyword">class</span> <span class="token class-name">TemporalModel</span><span class="token punctuation">(</span>keras<span class="token punctuation">.</span>Model<span class="token punctuation">)</span><span class="token punctuation">:</span>
+   <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">)</span><span class="token punctuation">:</span>
+       <span class="token builtin">super</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>__init__<span class="token punctuation">(</span><span class="token punctuation">)</span>
+       self<span class="token punctuation">.</span>lstm1 <span class="token operator">=</span> layers<span class="token punctuation">.</span>TimeDistributed<span class="token punctuation">(</span>
+           layers<span class="token punctuation">.</span>TimeDistributed<span class="token punctuation">(</span>
+               layers<span class="token punctuation">.</span>Bidirectional<span class="token punctuation">(</span>layers<span class="token punctuation">.</span>LSTM<span class="token punctuation">(</span><span class="token number">30</span><span class="token punctuation">,</span> return_sequences<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+           <span class="token punctuation">)</span>
+       <span class="token punctuation">)</span>
+       self<span class="token punctuation">.</span>lstm2 <span class="token operator">=</span> layers<span class="token punctuation">.</span>TimeDistributed<span class="token punctuation">(</span>
+           layers<span class="token punctuation">.</span>TimeDistributed<span class="token punctuation">(</span>layers<span class="token punctuation">.</span>LSTM<span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">,</span> return_sequences<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+       <span class="token punctuation">)</span>
+
+
+   <span class="token keyword">def</span> <span class="token function">call</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> x<span class="token punctuation">)</span><span class="token punctuation">:</span>
+       x <span class="token operator">=</span> self<span class="token punctuation">.</span>lstm1<span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+       x <span class="token operator">=</span> self<span class="token punctuation">.</span>lstm2<span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+       <span class="token keyword">return</span> x<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+    <div class="language-block glue-font-weight-medium">
+        Python
+    </div>
+    <div class="copy-code-block">
+        <span class="hidden">Copied</span>
+        <button class="copy-clipboard">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"></path></svg>
+        </button>
+    </div>
+    <div class="dark-mode-block">
+        <button class="dark-mode-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Zm-10-270Z"></path></svg>
+        </button>
+    </div>
+    
+        
+            <div class="code-block-description">Code 1: Implementation of the temporal model. Two LSTM layers (weight-shared over the spatial coordinates using the Keras TimeDistributed layer) process the input.</div>
+        
+    
+</div>  <div class="inner-block-content rich-content">
+    <h3 data-block-key="286rj" id="the-temporal-model:-learning-from-waveforms-with-shared-lstms"><b>The temporal model: learning from waveforms with shared LSTMs</b></h3><p data-block-key="a807m">The temporal model processes each station's waveform independently. It applies a shared bidirectional LSTM followed by a standard LSTM to each of the three waveforms per station: the bidirectional LSTM scans all 120 time steps in both directions, and the subsequent LSTM compresses this into a vector of 10 learned features — a compact, learned representation of the temporal structure of that station's signal. These 10 features capture information that would traditionally require hand-engineering: things like rise time, pulse width, and muon-to-EM ratio, but learned from data in a task-optimized way. Using bidirectional LSTMs showed slightly improved performance over unidirectional (vanilla) LSTMs and makes it unnecessary to flip the trace, since most information is concentrated at the beginning of the time trace.</p><p data-block-key="bqsh0">Critically, <b>the same LSTM sub-network is shared across all 13×13 stations</b>, enforcing that the physics learned from one station applies universally to all. This is a strong and well-motivated inductive bias: shower physics, as well as the interactions inside the detector, are universal, independent of where on the grid a station is located. In Keras, this weight sharing is elegantly achieved using the TimeDistributed layer, which applies the same Sequential LSTM layer to each station in the flattened grid, as seen at the top of the model definition above. Once each station has been reduced to its 10 temporal features, these are concatenated with the per-station arrival times and station status map onto the 13×13 spatial grid, and passed to the spatial model.<br></p>
+</div>  <div class="inner-block-content code-block line-numbers">
+    <pre class="language-python line-numbers" tabindex="0"><code class="language-python"><span class="token keyword">from</span> keras<span class="token punctuation">.</span>layers <span class="token keyword">import</span> Conv2D <span class="token keyword">as</span> ConvHex2D
+
+
+<span class="token comment"># =========================</span>
+<span class="token comment"># SpatialModel: DenseNet-like</span>
+<span class="token comment"># =========================</span>
+<span class="token keyword">class</span> <span class="token class-name">SpatialModel</span><span class="token punctuation">(</span>keras<span class="token punctuation">.</span>Model<span class="token punctuation">)</span><span class="token punctuation">:</span>
+   <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> n_layers<span class="token operator">=</span><span class="token number">3</span><span class="token punctuation">,</span> n_filters<span class="token operator">=</span><span class="token number">32</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+       <span class="token builtin">super</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>__init__<span class="token punctuation">(</span><span class="token punctuation">)</span>
+       self<span class="token punctuation">.</span>n_layers <span class="token operator">=</span> n_layers
+       self<span class="token punctuation">.</span>convs <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+
+
+       <span class="token keyword">for</span> _ <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>n_layers<span class="token punctuation">)</span><span class="token punctuation">:</span>
+           self<span class="token punctuation">.</span>convs<span class="token punctuation">.</span>append<span class="token punctuation">(</span>
+               ConvHex2D<span class="token punctuation">(</span>n_filters<span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">,</span> padding<span class="token operator">=</span><span class="token string">"same"</span><span class="token punctuation">,</span> activation<span class="token operator">=</span><span class="token string">"elu"</span><span class="token punctuation">)</span>
+           <span class="token punctuation">)</span>
+
+
+   <span class="token keyword">def</span> <span class="token function">call</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> x<span class="token punctuation">)</span><span class="token punctuation">:</span>
+       dense_inputs <span class="token operator">=</span> <span class="token punctuation">[</span>x<span class="token punctuation">]</span>
+
+
+       <span class="token keyword">for</span> conv <span class="token keyword">in</span> self<span class="token punctuation">.</span>convs<span class="token punctuation">:</span>
+           concat <span class="token operator">=</span> layers<span class="token punctuation">.</span>concatenate<span class="token punctuation">(</span>dense_inputs<span class="token punctuation">)</span>
+           out <span class="token operator">=</span> conv<span class="token punctuation">(</span>concat<span class="token punctuation">)</span>
+           dense_inputs<span class="token punctuation">.</span>append<span class="token punctuation">(</span>out<span class="token punctuation">)</span>
+
+
+       <span class="token keyword">return</span> layers<span class="token punctuation">.</span>concatenate<span class="token punctuation">(</span>dense_inputs<span class="token punctuation">)</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+    <div class="language-block glue-font-weight-medium">
+        Python
+    </div>
+    <div class="copy-code-block">
+        <span class="hidden">Copied</span>
+        <button class="copy-clipboard">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"></path></svg>
+        </button>
+    </div>
+    <div class="dark-mode-block">
+        <button class="dark-mode-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Zm-10-270Z"></path></svg>
+        </button>
+    </div>
+    
+        
+            <div class="code-block-description">Code 2: Implementation of the spatial model. The spatial distribution of the shower footprint is explored using convolutional layers.</div>
+        
+    
+</div>  <div class="inner-block-content rich-content">
+    <h3 data-block-key="78w1i" id="the-spatial-model:-hexagonal-convolutions-over-the-detector-grid"><b>The spatial model: hexagonal convolutions over the detector grid</b></h3><p data-block-key="33al7">The spatial model uses convolutional layers across the spatial grid, underscoring the need for the <i>temporal model</i> to be shared across stations to enable effective convolutions of the feature maps (otherwise, the feature space of the temporal model would be only weakly constrained). While standard square convolutional kernels could be employed at the Auger array, hexagonal convolutions are better suited to the <b>hexagonal detector grid and the inherent rotational symmetry</b> of air showers (the measured detector signal is invariant under rotations along the azimuth angle). Therefore, group-equivariant convolutions are designed for hexagonal grids that enforce both translational symmetry and <b>60-degree rotational symmetry</b>. This means the same convolutional filters are shared not only across positions (as in any CNN) but also across six rotational orientations, resulting in a parameter-efficient model that explicitly accounts for the rotational invariance of air showers, reflecting a well-founded physical inductive bias. In the pseudocode below, Conv2D has been aliased as ConvHex2D for illustrative purposes. To learn more about hexagonal convolutions, see the TensorFlow fork <a href="https://github.com/jglombitza/hexaconv">https://github.com/jglombitza/hexaconv</a> of the HexaConv library <a href="https://github.com/ehoogeboom/hexaconv">https://github.com/ehoogeboom/hexaconv</a>.</p>
+</div>  <div class="inner-block-content code-block line-numbers">
+    <pre class="language-python line-numbers" tabindex="0"><code class="language-python"><span class="token comment"># =========================</span>
+<span class="token comment"># Individual Task Model</span>
+<span class="token comment"># =========================</span>
+<span class="token keyword">def</span> <span class="token function">residual_unit</span><span class="token punctuation">(</span>inp<span class="token punctuation">,</span> nfilter<span class="token punctuation">,</span> bottleneck<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+   x <span class="token operator">=</span> inp
+
+
+   <span class="token keyword">if</span> bottleneck<span class="token punctuation">:</span>
+       x <span class="token operator">=</span> layers<span class="token punctuation">.</span>Conv2D<span class="token punctuation">(</span>nfilter<span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span> padding<span class="token operator">=</span><span class="token string">"same"</span><span class="token punctuation">)</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+
+
+   shortcut <span class="token operator">=</span> x
+
+
+   x <span class="token operator">=</span> ConvHex2D<span class="token punctuation">(</span>nfilter<span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">,</span> padding<span class="token operator">=</span><span class="token string">"same"</span><span class="token punctuation">)</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+   x <span class="token operator">=</span> layers<span class="token punctuation">.</span>Activation<span class="token punctuation">(</span><span class="token string">"relu"</span><span class="token punctuation">)</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+   x <span class="token operator">=</span> ConvHex2D<span class="token punctuation">(</span>nfilter<span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">,</span> padding<span class="token operator">=</span><span class="token string">"same"</span><span class="token punctuation">)</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+
+
+   x <span class="token operator">=</span> layers<span class="token punctuation">.</span>Add<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token punctuation">[</span>x<span class="token punctuation">,</span> shortcut<span class="token punctuation">]</span><span class="token punctuation">)</span>
+   <span class="token keyword">return</span> layers<span class="token punctuation">.</span>Activation<span class="token punctuation">(</span><span class="token string">"relu"</span><span class="token punctuation">)</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+
+
+
+
+<span class="token comment"># =========================</span>
+<span class="token comment"># Multi-task tower</span>
+<span class="token comment"># =========================</span>
+<span class="token keyword">class</span> <span class="token class-name">MultiTaskTower</span><span class="token punctuation">(</span>keras<span class="token punctuation">.</span>Model<span class="token punctuation">)</span><span class="token punctuation">:</span>
+   <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> nfilter<span class="token operator">=</span><span class="token number">108</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+       <span class="token builtin">super</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>__init__<span class="token punctuation">(</span><span class="token punctuation">)</span>
+       self<span class="token punctuation">.</span>nfilter <span class="token operator">=</span> nfilter
+
+
+   <span class="token keyword">def</span> <span class="token function">call</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> x<span class="token punctuation">)</span><span class="token punctuation">:</span>
+       x <span class="token operator">=</span> residual_unit<span class="token punctuation">(</span>x<span class="token punctuation">,</span> self<span class="token punctuation">.</span>nfilter<span class="token punctuation">)</span>
+       x <span class="token operator">=</span> residual_unit<span class="token punctuation">(</span>x<span class="token punctuation">,</span> self<span class="token punctuation">.</span>nfilter<span class="token punctuation">)</span>
+       x <span class="token operator">=</span> layers<span class="token punctuation">.</span>AveragePooling2D<span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+       x <span class="token operator">=</span> residual_unit<span class="token punctuation">(</span>x<span class="token punctuation">,</span> <span class="token number">2</span> <span class="token operator">*</span> self<span class="token punctuation">.</span>nfilter<span class="token punctuation">,</span> bottleneck<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+       x <span class="token operator">=</span> residual_unit<span class="token punctuation">(</span>x<span class="token punctuation">,</span> <span class="token number">2</span> <span class="token operator">*</span> self<span class="token punctuation">.</span>nfilter<span class="token punctuation">)</span>
+       x <span class="token operator">=</span> layers<span class="token punctuation">.</span>GlobalAveragePooling2D<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+       <span class="token keyword">return</span> x<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+    <div class="language-block glue-font-weight-medium">
+        Python
+    </div>
+    <div class="copy-code-block">
+        <span class="hidden">Copied</span>
+        <button class="copy-clipboard">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"></path></svg>
+        </button>
+    </div>
+    <div class="dark-mode-block">
+        <button class="dark-mode-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Zm-10-270Z"></path></svg>
+        </button>
+    </div>
+    
+        
+            <div class="code-block-description">Code 3: Implementation of the multi-task layer to perform reconstruction of the shower</div>
+        
+    
+</div>  <div class="inner-block-content rich-content">
+    <p data-block-key="hn5ai">Employing the hexagonal convolutions, the spatial model uses a densely-connected block inspired by DenseNet, where each layer's output is concatenated with all previous feature maps. This promotes feature reuse, preserving the arrival time, a physically critical feature throughout the network, which has been shown to stabilize training. Finally, after spatial pooling and a series of residual blocks, the network branches into separate task-specific towers for the energy, the cosmic-ray mass, and the arrival direction. This multitask structure is well motivated: the target labels are closely related, and learning them jointly improved both generalization and training stability.</p>
+</div>  <div class="inner-block-content code-block line-numbers">
+    <pre class="language-python line-numbers" tabindex="0"><code class="language-python"><span class="token comment"># =========================</span>
+<span class="token comment"># Inputs</span>
+<span class="token comment"># =========================</span>
+trace_input <span class="token operator">=</span> keras<span class="token punctuation">.</span>Input<span class="token punctuation">(</span>shape<span class="token operator">=</span><span class="token punctuation">(</span><span class="token number">13</span><span class="token punctuation">,</span> <span class="token number">13</span><span class="token punctuation">,</span> <span class="token number">120</span><span class="token punctuation">,</span> <span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">,</span> name<span class="token operator">=</span><span class="token string">"TraceInput"</span><span class="token punctuation">)</span>
+time_input <span class="token operator">=</span> keras<span class="token punctuation">.</span>Input<span class="token punctuation">(</span>shape<span class="token operator">=</span><span class="token punctuation">(</span><span class="token number">13</span><span class="token punctuation">,</span> <span class="token number">13</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span> name<span class="token operator">=</span><span class="token string">"TimeInput"</span><span class="token punctuation">)</span>
+state_input <span class="token operator">=</span> keras<span class="token punctuation">.</span>Input<span class="token punctuation">(</span>shape<span class="token operator">=</span><span class="token punctuation">(</span><span class="token number">13</span><span class="token punctuation">,</span> <span class="token number">13</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span> name<span class="token operator">=</span><span class="token string">"StateInput"</span><span class="token punctuation">)</span>
+
+
+<span class="token comment"># =========================</span>
+<span class="token comment"># Forward Pass</span>
+<span class="token comment"># =========================</span>
+trace_encoder <span class="token operator">=</span> TemporalModel<span class="token punctuation">(</span><span class="token punctuation">)</span>
+dense_block <span class="token operator">=</span> SpatialModel<span class="token punctuation">(</span><span class="token punctuation">)</span>  <span class="token comment"># spatial model shared along all tasks</span>
+tower <span class="token operator">=</span> MultiTaskTower<span class="token punctuation">(</span><span class="token punctuation">)</span>  <span class="token comment"># individual towers for each task</span>
+
+
+processed_traces <span class="token operator">=</span> trace_encoder<span class="token punctuation">(</span>trace_input<span class="token punctuation">)</span>
+
+
+x <span class="token operator">=</span> layers<span class="token punctuation">.</span>concatenate<span class="token punctuation">(</span><span class="token punctuation">[</span>processed_traces<span class="token punctuation">,</span> time_input<span class="token punctuation">,</span> state_input<span class="token punctuation">]</span><span class="token punctuation">)</span>
+x <span class="token operator">=</span> dense_block<span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+X <span class="token operator">=</span> tower<span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+
+
+energy_output <span class="token operator">=</span> layers<span class="token punctuation">.</span>Dense<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> name<span class="token operator">=</span><span class="token string">"energy"</span><span class="token punctuation">)</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+xmax_output <span class="token operator">=</span> layers<span class="token punctuation">.</span>Dense<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> name<span class="token operator">=</span><span class="token string">"xmax"</span><span class="token punctuation">)</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+shower_core_output <span class="token operator">=</span> layers<span class="token punctuation">.</span>Dense<span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">,</span> name<span class="token operator">=</span><span class="token string">"shower_core"</span><span class="token punctuation">)</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+shower_direction_output <span class="token operator">=</span> layers<span class="token punctuation">.</span>Dense<span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">,</span> name<span class="token operator">=</span><span class="token string">"shower_direction"</span><span class="token punctuation">)</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span>
+
+
+<span class="token comment"># =========================</span>
+<span class="token comment"># Final Keras model</span>
+<span class="token comment"># =========================</span>
+full_model <span class="token operator">=</span> keras<span class="token punctuation">.</span>Model<span class="token punctuation">(</span>
+   inputs<span class="token operator">=</span><span class="token punctuation">[</span>trace_input<span class="token punctuation">,</span> time_input<span class="token punctuation">,</span> state_input<span class="token punctuation">]</span><span class="token punctuation">,</span> outputs<span class="token operator">=</span><span class="token punctuation">[</span>xmax_output<span class="token punctuation">,</span> energy_output<span class="token punctuation">,</span> shower_core_output<span class="token punctuation">,</span> shower_direction_output<span class="token punctuation">]</span>
+<span class="token punctuation">)</span>
+
+
+<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"Model Summary:"</span><span class="token punctuation">)</span>
+full_model<span class="token punctuation">.</span>summary<span class="token punctuation">(</span><span class="token punctuation">)</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+    <div class="language-block glue-font-weight-medium">
+        Python
+    </div>
+    <div class="copy-code-block">
+        <span class="hidden">Copied</span>
+        <button class="copy-clipboard">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"></path></svg>
+        </button>
+    </div>
+    <div class="dark-mode-block">
+        <button class="dark-mode-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Zm-10-270Z"></path></svg>
+        </button>
+    </div>
+    
+        
+            <div class="code-block-description">Code 4: Architecture for reconstruction of the shower core, shower maximum, energy and shower origin, combining the various network parts: trace model, spatial model, and task-specific towers.</div>
+        
+    
+</div>  <div class="inner-block-content rich-content">
+    <h2 data-block-key="4w8op" id="outcome"><b>Outcome</b></h2><p data-block-key="8fhha">This multitask network, trained end-to-end with physics simulations, unlocked a dataset ten times larger than state-of-the-art telescope observations, achieved with a detector never designed to actually measure cosmic-ray composition, and reaching energies at which no such measurement had previously been possible. A comparable result using telescope observations would require roughly 100 years of continuous operations.</p><p data-block-key="7j1tg">The results confirmed that cosmic-rays become progressively heavier at the highest energies, ruling out the long-held assumption that pure protons are the most energetic particles in our universe. On top of that, the measurement revealed a characteristic structure in how the composition evolves with energy: it shows distinct features that align with known structures in the cosmic-ray energy spectrum, raising new questions about where and how these extreme particles are accelerated across the universe.</p><p data-block-key="a7bb8">Insights of this depth were widely anticipated only after the completion of the AugerPrime detector upgrade, making their early appearance remarkable and promising an exciting future of cosmic-ray detection that combines deep learning, Keras, and AugerPrime.</p><h2 data-block-key="f47gc" id="the-broader-picture:-deep-learning-in-astroparticle-physics"><b>The broader picture: deep learning in astroparticle physics</b></h2><p data-block-key="7jdn1">The success of deep learning applications is not limited to a single experiment. For example, at the IceCube Observatory, deep learning has similarly changed event reconstruction and selection, leading to the discovery of neutrinos coming from the galactic plane. Across many physics experiments standard reconstruction algorithms struggle with complex event geometries, forcing physics analyses and surveys to exclude a large fraction of these recorded data to preserve high quality. In contrast, deep learning can recover previously unusable events, allowing more observation data to be analyzed quickly and efficiently, enabling timely follow-up observations. In both experiments, the Pierre Auger Observatory and IceCube, the power of deep learning enabled a <b>ten-fold increase in usable observation data</b>. To put that in perspective: ten times more data from a detector that has been running for ten years is equivalent to operating that same detector for a century. This leap in effective statistics is comparable to what a major detector upgrade or an entirely new observatory would deliver, projects that typically cost between one and ten million USD. The emergence of deep learning in astroparticle physics has only just begun, and as more and more observatories adopt deep learning in their reconstruction pipelines, there is more to come. The detectors we already have may yet reveal phenomena we haven't even thought of looking for…</p><h2 data-block-key="fgrro" id="ai-in-physics-and-the-pursuit-of-understanding"><b>AI in physics and the pursuit of understanding</b></h2><p data-block-key="1ssc8">A persistent challenge is the mismatch between non-perfect physics simulations and real detector data, which has largely limited the performance of deep learning in physics to date. Models trained on simulations that do not perfectly reflect real detector conditions make domain adaptation and careful cross-validation of the algorithms with independent detectors essential. Therefore, dedicated calibrations of deep learning algorithms using separate detectors are essential and can be combined with domain adaptation techniques to bridge the gap between data and simulations. Equally important is the precise quantification of uncertainties; unlike in many industry applications, physicists need very exact uncertainty estimates to test hypotheses and assess the likelihood of a discovery, requiring detailed studies to quantify model uncertainties, in particular when there is a domain shift between simulations and data.</p><p data-block-key="1lgjm">In the future, foundation models that can facilitate a range of tasks: such as event reconstruction, simulation and unfolding, pre-trained across multiple experiments hold much promise for multi-messenger astronomy, where signals from multiple messengers: cosmic-rays, neutrinos, and gravitational waves are combined to improve overall model performance, obtain a coherent picture, and open a new window to our universe at the highest energies. Deeply tied to this is the implementation of domain knowledge and inductive biases. Encoding such knowledge and physics symmetries into neural network architectures has proven crucial, often because simulated datasets in physics are far smaller than those in computer vision or NLP, as simulating a single shower at the highest energies can take up to a week on modern hardware. During the development of the Keras model discussed above, RNNs and CNNs were state-of-the-art. Today, graph neural networks or point cloud transformers would likely be better suited to handle rotational symmetry and the sparse, irregular footprints, while transformers would replace LSTMs to avoid their computationally expensive structure.</p><p data-block-key="6mukl">The community working in the intersection of AI and physics is increasingly confronted by <a href="http://www.incompleteideas.net/IncIdeas/BitterLesson.html">Sutton's "Bitter Lesson”</a>. Historically, efficient methods that employ massive computation have outperformed solutions based on human knowledge. Also in physics, where <a href="https://www.quantamagazine.org/how-noethers-theorem-revolutionized-physics-20250207/">fundamental symmetries have been at its core for more than 100 years</a>, in many cases, more training data and efficient scaling can outperform physics-inspired architectures. For a physicist, this success is not just bitter but also unexpected and confusing, suggesting that implementing domain knowledge may not be the final end, but rather an intermediate step and a sign of progress, perhaps making this a rather <a href="https://theoryandpractice.org/2025/09/The%20Bittersweet%20Lesson/">bittersweet lesson</a>.</p><p data-block-key="dfmm2">Finally, a persistent tension remains in how we define "doing science". We, <i>humans</i>, and our intelligence and capacities are cognitively and physiologically limited, driving our preference for "nice, simple-looking" equations. A machine-learned "black box" will solve complex questions with superior performance, but will likely trade physical insight and interpretation capabilities for that precision. In the end, we want algorithms that can discover as we do: discovering causal mechanisms, symmetries, and physics laws on their own, and not systems that, however powerful, optimize for predictive skill over what we have already observed. Doing science is simply different from machines trained to perform similar tasks, and this is not inherently bad; in fact, they are powerful tools. But it reminds us that our episteme is defined by the pursuit of understanding and not merely optimizing for predictive accuracy. This current and evident contradiction promises an even more exciting future for research at the intersection of AI and fundamental science.</p><h2 data-block-key="j2avj" id="call-to-action"><b>Call to Action</b></h2><p data-block-key="67d59">To dive deeper, you can read the original results, published in <a href="https://doi.org/10.1088/1748-0221/16/07/P07019">JINST</a>, and <a href="https://doi.org/10.1103/physrevlett.134.021001">Physical Review Letters</a>.</p><p data-block-key="5b60r">For those looking to apply these ideas in practice and learn more about fast prototyping of physics models in Keras, physics-specific tutorials, and a broader overview of the field, visit<a href="http://www.deeplearningphysics.org/"> deeplearningphysics.org</a>.</p><h2 data-block-key="m3kp6" id="references"><b>References</b></h2><p data-block-key="4l1m9">[1] Pierre Auger Collaboration, <i>Auger Open Data Portal</i> — schematic map of the Pierre Auger Observatory (1600 water-Cherenkov surface detectors and 24 fluorescence telescopes, Mendoza Province, Argentina).<a href="https://opendata.auger.org/"> https://opendata.auger.org</a> (accessed August 2026).</p><p data-block-key="qe9s">[2] Pierre Auger Collaboration, <i>"Photos — Galleries,"</i> Pierre Auger Observatory,, released under CC BY‑SA 4.0 International License; usage subject to the Observatory's media guidelines.<a href="https://www.auger.org/component/content/article/93-photos?catid=82&amp;Itemid=435"> https://www.auger.org/component/content/article/93-photos?catid=82&amp;Itemid=435</a> (accessed August 2026).</p><p data-block-key="447ba">[3] Pierre Auger Collaboration, <i>Auger Open Data — Event Display</i>, reconstructed cosmic-ray air-shower event (ID 141316557800), interactive ground-array/FADC-trace/LDF/FD-profile viewer.<a href="https://opendata.auger.org/display.php?evsel=1&amp;nbmin=20&amp;evid=141316557800"> https://opendata.auger.org/display.php?evsel=1&amp;nbmin=20&amp;evid=141316557800</a> (accessed August 2026).</p><p data-block-key="5q0rl">[4] IceCube Collaboration/NSF, <i>"Neutrino IC170922 in IceCube,"</i> artistic rendering of the neutrino event that triggered the September 2017 multimessenger detection of blazar TXS 0506+056, in: ECAP news article, <i>"Breakthrough in Multimessenger Astrophysics,"</i> 12 July 2018.<a href="https://ecap.nat.fau.de/index.php/breakthrough-in-multimessenger-astrophysics/"> https://ecap.nat.fau.de/index.php/breakthrough-in-multimessenger-astrophysics/</a></p><p data-block-key="29brj">[5] IceCube Collaboration, <i>"Schematic view of a neutrino detected in IceCube,"</i> Detector Gallery, IceCube Neutrino Observatory, University of Wisconsin–Madison / NSF.<a href="https://icecube.wisc.edu/gallery/detector/"> https://icecube.wisc.edu/gallery/detector/</a></p><p data-block-key="d8upb">[6] G. Pérez Diaz (IAC) / M.-A. Besel (CTAO) / ESO / N. Risinger (skysurvey.org), <i>"Proposed CTA Telescopes,"</i> artist's rendering of the ~99-telescope Cherenkov Telescope Array southern-hemisphere site at ESO's Paranal Observatory, released 26 Aug. 2020.<a href="https://www.eso.org/public/images/2020-cta-paranal-comp-8k-trans-cc/"> https://www.eso.org/public/images/2020-cta-paranal-comp-8k-trans-cc/</a></p><p data-block-key="62k21">[7] K. Kosack (CEA Paris-Saclay) et al., <i>"Getting Started with ctapipe"</i>, ctapipe documentation (CTA Observatory).<a href="https://ctapipe.readthedocs.io/en/latest/auto_examples/tutorials/ctapipe_handson.html"> https://ctapipe.readthedocs.io/en/latest/auto_examples/tutorials/ctapipe_handson.html</a></p>
+</div> 
+      </div>
+    </section>
+    
+
+    <section class="navigation-container glue-page glue-spacer-6-top">
+      <div class="posted-in-section">
+        <div class="posted-in-section__heading">
+          <span class="glue-caption">
+            posted in:
+          </span>
+        </div>
+        <div class="posted-in-section__tags">
+          <ul>
+              
+                  <li>
+                      <a href="/search/?technology_categories=AI" class="glue-caption">AI</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?content_type_categories=Case+Studies" class="glue-caption">Case Studies</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?content_type_categories=Community" class="glue-caption">Community</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?content_type_categories=Learn" class="glue-caption">Learn</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?content_type_categories=Explore" class="glue-caption">Explore</a>
+                  </li>
+              
+              
+          </ul>
+      </div>
+      </div>
+      <div class="buttons-section">
+        <div class="buttons-section__left">
+          <a href="/how-to-evaluate-live-voice-agents-in-adk/" class="glue-button--icon glue-elevation-level-1 " aria-label="Previous">
+            <svg role="presentation" aria-hidden="true" class="glue-icon">
+              <use href="/glue-icon/#chevron-left"></use>
+            </svg>
+          </a>
+          <span class="caption ">Previous</span>
+        </div>
+        <div class="buttons-section__right">
+          <span class="caption ">Next</span>
+          <a href="/build-zero-trust-ai-agents-with-googles-agent-development-kit/" class="glue-button--icon glue-elevation-level-1 " aria-label="Next">
+            <svg role="presentation" aria-hidden="true" class="glue-icon">
+              <use href="/glue-icon/#chevron-right"></use>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class="related-posts-container glue-page glue-spacer-6-top glue-spacer-3-bottom">
+      <span class="glue-headline glue-headline--headline-3">Related Posts</span>
+      <div class="related-posts-container__carousel glue-page glue-spacer-5-top">
+        <div class="glue-carousel glue-carousel--cards glue-carousel-related-posts glue-carousel--peek-out glue-carousel--has-navigation" aria-label="Related Posts">
+          <!-- Previous -->
+          <button class="glue-carousel__button glue-carousel__button--prev glue-is-inactive" aria-label="Go to the previous slide" aria-controls="">
+            <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--32px">
+              <use href="/glue-icon/#chevron-left"></use>
+            </svg>
+          </button>
+          <!-- Next -->
+          <button class="glue-carousel__button glue-carousel__button--next" aria-label="Go to the next slide" aria-controls="">
+            <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--32px">
+              <use href="/glue-icon/#chevron-right"></use>
+            </svg>
+          </button>
+          <!-- List -->
+          <div class="glue-carousel__viewport">
+            <div class="glue-carousel__list" aria-live="polite" style="width: 2004px; grid-template-columns: repeat(4, 1fr); transform: translate3d(0px, 0px, 0px);">
+              
+                <a class="glue-card glue-carousel__item" href="/why-client-sdk-generation-belongs-in-the-open/" tabindex="0">
+                  <div aria-label="Why client SDK generation belongs in the open" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Why client SDK generation belongs in the open" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Copy_of_why_client_SDK_generation_.2e16d0ba.fill-800x400.png">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                            <span class="glue-label">Learn</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Why client SDK generation belongs in the open</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">SEPT. 17, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+                <a class="glue-card glue-carousel__item" href="/4-engineering-patterns-behind-the-strongest-ai-agents-challenge-submissions/" tabindex="-1">
+                  <div aria-label="4 engineering patterns behind the strongest AI Agents Challenge submissions" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="4 engineering patterns behind the strongest AI Agents Challenge submissions" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Gemini_Generated_Image_5wdk45wdk45.2e16d0ba.fill-800x400.jpg">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            <span class="glue-label">Cloud</span>
+                            
+                            
+                            <span class="glue-label">Case Studies</span>
+                            
+                            <span class="glue-label">Best Practices</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">4 engineering patterns behind the strongest AI Agents Challenge submissions</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">SEPT. 2, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+                <a class="glue-card glue-carousel__item" href="/agent-anomaly-detection-now-in-private-preview-on-the-gemini-enterprise-agent-platform/" aria-hidden="true" tabindex="-1">
+                  <div aria-label="Agent Anomaly Detection, now in Private Preview on the Gemini Enterprise Agent Platform" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Agent Anomaly Detection, now in Private Preview on the Gemini Enterprise Agent Platform" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Blog_Banner_3.2e16d0ba.fill-800x400.jpg">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            <span class="glue-label">Cloud</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                            <span class="glue-label">Learn</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Agent Anomaly Detection, now in Private Preview on the Gemini Enterprise Agent Platform</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">SEPT. 16, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+                <a class="glue-card glue-carousel__item" href="/heygen-x-google-cloud-bringing-avatar-iv-to-tpus/" aria-hidden="true" tabindex="-1">
+                  <div aria-label="HeyGen x Google Cloud: Bringing Avatar IV to TPUs" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="HeyGen x Google Cloud: Bringing Avatar IV to TPUs" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Gemini_Generated_Image_eshxr7eshxr.2e16d0ba.fill-800x400.jpg">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            <span class="glue-label">Cloud</span>
+                            
+                            
+                            <span class="glue-label">Case Studies</span>
+                            
+                            <span class="glue-label">Learn</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">HeyGen x Google Cloud: Bringing Avatar IV to TPUs</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">AUG. 13, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+            </div>
+          </div>
+          <!-- Navigation dots -->
+          <div class="glue-carousel__navigation" aria-label="Choose a page" data-glue-carousel-navigation-label="Selected tab $glue_carousel_page_number$ of $glue_carousel_page_total$">
+          <button class="glue-carousel__dot glue-is-active" data-dot="1" aria-controls="" aria-label="Selected tab 1 of 2" tabindex="0" aria-current="true"></button><button class="glue-carousel__dot" data-dot="2" aria-controls="" aria-label="Selected tab 2 of 2" tabindex="-1" aria-current="false"></button></div>
+        </div>
+      </div>
+    </section>
+    
+  </div>
+
+
+				
+				
+
+<div class="footer-linkboxes__wrapper">
+  <nav class="footer-linkboxes" aria-label="Footer links">
+    <ul class="footer-linkboxes__list">
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Connect
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//googledevelopers.blogspot.com" class="footer-linkbox-list__link">
+                Blog
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/3FReQXN" class="footer-linkbox-list__link">
+                Bluesky
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/googlefordevs" class="footer-linkbox-list__link">
+                Instagram
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/gdevs-li" class="footer-linkbox-list__link">
+                LinkedIn
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/gdevs-tw" class="footer-linkbox-list__link">
+                X (Twitter)
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/developers" class="footer-linkbox-list__link">
+                YouTube
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Programs
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/program" class="footer-linkbox-list__link">
+                Google Developer Program
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/gdg" class="footer-linkbox-list__link">
+                Google Developer Groups
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/experts" class="footer-linkbox-list__link">
+                Google Developer Experts
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/accelerators" class="footer-linkbox-list__link">
+                Accelerators
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//www.womentechmakers.com" class="footer-linkbox-list__link">
+                Women Techmakers
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/nvidia" class="footer-linkbox-list__link">
+                Google Cloud &amp; NVIDIA
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Developer consoles
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.developers.google.com" class="footer-linkbox-list__link">
+                Google API Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.cloud.google.com" class="footer-linkbox-list__link">
+                Google Cloud Platform Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//play.google.com/apps/publish" class="footer-linkbox-list__link">
+                Google Play Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.firebase.google.com" class="footer-linkbox-list__link">
+                Firebase Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.actions.google.com" class="footer-linkbox-list__link">
+                Actions on Google Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//cast.google.com/publish" class="footer-linkbox-list__link">
+                Cast SDK Developer Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//chrome.google.com/webstore/developer/dashboard" class="footer-linkbox-list__link">
+                Chrome Web Store Dashboard
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.home.google.com/" class="footer-linkbox-list__link">
+                Google Home Developer Console
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+    </ul>
+  </nav>
+</div>
+<div class="footer-utility__wrapper">
+  <div>
+    <nav class="footer-sites" aria-label="Other Google Developers websites">
+      <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+        <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+      </a>
+      <ul class="footer-sites-list">
+        <li class="footer-sites-item">
+          <a href="//developer.android.com" class="footer-sites-link">
+            Android
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//developer.chrome.com/home" class="footer-sites-link">
+            Chrome
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//firebase.google.com" class="footer-sites-link">
+            Firebase
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//cloud.google.com" class="footer-sites-link">
+            Google Cloud Platform
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//developers.google.com/products" class="footer-sites-link">
+            All products
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <button aria-hidden="true" class="glue-cookie-notification-bar-control footer-sites-link">
+            Manage cookies
+          </button>
+        </li>
+      </ul>
+    </nav>
+    <nav class="footer-utility-links">
+      <ul class="footer-utility-list">
+        <li class="footer-utility-item">
+          <a href="//developers.google.com/terms/site-terms" class="footer-utility-link">
+            Terms
+          </a>
+        </li>
+        <li class="footer-utility-item">
+          <a href="//policies.google.com/privacy" class="footer-utility-link">
+            Privacy
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+
+        
+				
+
+        
+        <script nonce="" src="https://www.youtube.com/player_api"></script>
+        <script nonce="" src="//www.gstatic.com/glue/v27_1/glue.min.js"></script>
+        <script nonce="" type="text/javascript" src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/dgc_blog.js"></script>
+
+        <script nonce="" src="https://www.gstatic.com/glue/cookienotificationbar/cookienotificationbar.min.js" data-glue-cookie-notification-bar-category="2A" data-glue-cookie-notification-bar-site-id="developers.googleblog.com"></script>
+
+        
+  <script src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/blog_detail.js" nonce=""></script>
+  <script src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/prism.js" nonce=""></script>
+
+    
+
+</body></html>

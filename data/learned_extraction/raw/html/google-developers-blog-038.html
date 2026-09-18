@@ -1,0 +1,948 @@
+<html lang="en"><head>
+        <meta charset="utf-8">
+        
+        <title>
+            
+            How We Made SPACE INVADERS: World Defense, an AR game powered by ARCore
+            
+            
+            - Google Developers Blog
+            
+        </title>
+        <meta property="og:title" content="How We Made SPACE INVADERS: World Defense, an AR game powered by ARCore- Google Developers Blog">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+	<meta name="description" content="Look behind the scenes of how SPACE INVADERS was developed, and how we used our newest features and tools to design the first of its kind procedural, global AR gameplay.">
+  <meta content="summary_large_image" name="twitter:card">
+  <meta content="Google for Developers Blog - News about Web, Mobile, AI and Cloud" property="twitter:title">
+  <meta property="og:title" content="How We Made SPACE INVADERS: World Defense, an AR game powered by ARCore">
+  <script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-H733Y2BZES&amp;cx=c&amp;gtm=4e69g1" nonce=""></script><script async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-WVTLDSL"></script><script type="text/javascript" id="www-widgetapi-script" src="https://www.youtube.com/s/player/4fd832e7/www-widgetapi.vflset/www-widgetapi.js" async="" nonce=""></script><script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [{
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Google for Developers Blog",
+      "item": "https://developers.googleblog.com/"
+    },{
+      "@type": "ListItem",
+      "position": 2,
+      "name": "How We Made SPACE INVADERS: World Defense, an AR game powered by ARCore",
+      "item": "https://developers.googleblog.com/how-we-made-space-invaders-world-defense-an-ar-game-powered-by-arcore/"
+    }]
+  }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "How We Made SPACE INVADERS: World Defense, an AR game powered by ARCore",
+      "description": "Look behind the scenes of how SPACE INVADERS was developed, and how we used our newest features and tools to design the first of its kind procedural, global AR gameplay.",
+      "image": "https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/63.2e16d0ba.fill-800x400.png",
+      "datePublished": "2023-09-05",
+      "author": [
+        
+        
+          { "@type": "Person", "name": "Dereck Bridie", "url": "/search/?author=Dereck+Bridie" },
+        
+          { "@type": "Person", "name": "Bradford Lee", "url": "/search/?author=Bradford+Lee" }
+        
+        
+      ]
+    }
+  </script>
+  
+  <meta content="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/63.2e16d0ba.fill-1200x600.png" property="og:image">
+  
+
+
+        
+        
+
+        <!-- Google Tag Manager -->
+        <script type="text/javascript" nonce="" src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/analytics.js"></script>
+        <!-- End Google Tag Manager -->
+
+        
+        <link href="//www.gstatic.com/glue/v27_1/glue.min.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/dgc_blog.css">
+        <link rel="icon" href="https://storage.googleapis.com/gweb-developer-goog-blog-assets/meta/favicon.ico" type="image/x-icon">
+        <link rel="apple-touch-icon" href="https://storage.googleapis.com/gweb-developer-goog-blog-assets/meta/apple-touch-icon.png">
+
+        
+				<link rel="preconnect" href="https://fonts.googleapis.com">
+				<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+				<link rel="preload" href="https://fonts.googleapis.com/css2?family=Product+Sans&amp;family=Google+Sans+Display:ital@0;1&amp;family=Google+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;family=Google+Sans+Text:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;display=swap" as="style">
+				<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Product+Sans&amp;family=Google+Sans+Display:ital@0;1&amp;family=Google+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;family=Google+Sans+Text:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;display=swap">
+        <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&amp;family=Google+Sans+Flex:opsz,wght@6..144,1..1000&amp;display=swap" rel="stylesheet" data-page-link="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&amp;display=swap">
+
+        
+        <link href="https://www.gstatic.com/glue/cookienotificationbar/cookienotificationbar.min.css" rel="stylesheet">
+
+        
+  <link rel="stylesheet" type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/blog_detail.css">
+  <link type="text/css" href="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/css/prism.css" rel="stylesheet">
+
+    </head>
+
+    <body id="main-content" class="glue-body ">
+        <!-- Google Tag Manager (noscript) -->
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WVTLDSL "
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
+
+        
+
+				
+        
+
+<!-- HTML -->
+<header class="dgc-header">
+  <div class="dgc-header-inner">
+    <button class="hamburger" aria-haspopup="true" aria-expanded="false" aria-label="Open Menu">
+      <svg role="presentation" aria-hidden="true" class="glue-icon">
+        <use href="/glue-icon/#menu"></use>
+      </svg>
+    </button>
+    <div class="product-name-wrapper">
+      <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+        <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+      </a>
+    </div>
+    <div class="desktop-nav-wrapper">
+      <div class="upper-tabs-wrapper">
+        <div class="upper-tabs">
+          <nav class="tabs" aria-label="Upper Tabs">
+            <div class="tab">
+              <a href="//developers.google.com/community" class="top-nav-title">
+                Community/Events
+              </a>
+            </div>
+            <div class="tab">
+              <a href="//developers.google.com/solutions/catalog" class="top-nav-title">
+                Learn
+              </a>
+            </div>
+            <div class="tab">
+              <a href="//developers.googleblog.com" class="top-nav-title">
+                Blog
+              </a>
+            </div>
+            <div class="tab">
+              <a href="https://www.youtube.com/user/GoogleDevelopers" class="top-nav-title">
+                YouTube
+              </a>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="dgc-header-search">
+    <div class="search-wrapper glue-page">
+      <div class="glue-grid">
+        <form id="search-form" action="/search/" method="get" class="search-content glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-9-md glue-grid__col--span-7-lg">
+          <div class="search-input-wrapper">
+            <svg role="presentation" aria-hidden="true" class="glue-icon search-icon">
+              <use href="/glue-icon/#search"></use>
+            </svg>
+            <input type="text" name="query" placeholder="Search all articles..." aria-label="Search" class="search-input-field">
+          </div>
+          <button class="glue-button glue-button--high-emphasis">
+            Search
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-drawer" top-level-nav="">
+  <nav class="nav-content" aria-label="Side menu">
+    <div class="mobile-header">
+      <button class="nav-close-btn nav-btn" aria-label="Close navigation">
+        <svg role="presentation" aria-hidden="true" class="glue-icon">
+          <use href="/glue-icon/#close"></use>
+        </svg>
+      </button>
+      <button class="nav-back-btn nav-btn hidden" aria-label="Back to Menu">
+        <svg role="presentation" aria-hidden="true" class="glue-icon">
+          <use href="/glue-icon/#arrow-back"></use>
+        </svg>
+      </button>
+      <div class="product-name-wrapper">
+        <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+          <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+        </a>
+      </div>
+    </div>
+    <div class="nav-wrapper">
+      <div class="mobile-nav-top">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="//developers.google.com/community" class="nav-title" data-label="Tab: Community/Events">
+              <span class="nav-text" tooltip="">
+                Community/Events
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="//developers.google.com/solutions/catalog" class="nav-title" data-label="Tab: Learn">
+              <span class="nav-text" tooltip="">
+                Learn
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="//developers.googleblog.com" class="nav-title" data-label="Tab: Blog">
+              <span class="nav-text" tooltip="">
+                Blog
+             </span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="https://www.youtube.com/user/GoogleDevelopers" class="nav-title" data-label="Tab: YouTube">
+              <span class="nav-text" tooltip="">
+                YouTube
+             </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<div class="backdrop"></div>
+
+        
+  <div class="blog-detail-container">
+
+    
+      <section class="tags-container glue-page glue-spacer-5-top">
+        <div class="glue-eyebrow"><a href="/search/?product_categories=AR">AR</a></div>
+      </section>
+    
+
+    <section class="heading-container glue-page  glue-spacer-1-top">
+      <h1 class="glue-headline glue-headline--headline-1">How We Made SPACE INVADERS: World Defense, an AR game powered by ARCore</h1>
+    </section>
+
+    <section class="summary-container glue-page glue-spacer-4-top">
+      <div class="date-time">
+        <div class="published-date glue-font-weight-medium">SEPT. 5, 2023</div>
+      </div>
+    </section>
+
+    <section class="glue-page glue-grid glue-spacer-1-top">
+
+      <section class="author-container glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-10-md">
+      
+        
+          <div class="author-obj">
+            <a class="glue-font-weight-medium" href="/search/?author=Dereck+Bridie">Dereck Bridie</a>
+            
+              <span class="glue-font-weight-medium role">Developer Relations Engineer</span>
+            
+            
+              <span class="glue-font-weight-medium team">ARCore</span>
+            
+          </div>
+        
+          <div class="author-obj">
+            <a class="glue-font-weight-medium" href="/search/?author=Bradford+Lee">Bradford Lee</a>
+            
+              <span class="glue-font-weight-medium role">Product Marketing Manager</span>
+            
+            
+              <span class="glue-font-weight-medium team">Augmented Reality</span>
+            
+          </div>
+        
+
+      
+      </section>
+      <section class="social-container glue-grid__col glue-grid__col--span-4-sm glue-grid__col--span-2-md">
+        <button id="social-button" class="glue-button glue-button--low-emphasis glue-button--icon" aria-haspopup="true" aria-expanded="false">
+          <svg role="presentation" aria-hidden="true" class="glue-icon">
+            <use href="/glue-icon/#share"></use>
+          </svg>
+          <span>Share</span>
+        </button>
+        <ul id="social-menu" class="glue-elevation-level-1" role="menu" aria-labelledby="social-button">
+          <li>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=https://developers.googleblog.com/how-we-made-space-invaders-world-defense-an-ar-game-powered-by-arcore/" title="Share on Facebook" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#post-facebook"></use>
+              </svg>
+              <span>Facebook</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://twitter.com/intent/tweet?text=https://developers.googleblog.com/how-we-made-space-invaders-world-defense-an-ar-game-powered-by-arcore/" title="Share on Twitter" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#twitter-x"></use>
+              </svg>
+              <span>Twitter</span>
+            </a>
+          </li>
+          <li>
+            <a href="https://www.linkedin.com/shareArticle?url=https://developers.googleblog.com/how-we-made-space-invaders-world-defense-an-ar-game-powered-by-arcore/&amp;mini=true" title="Share on LinkedIn" target="_blank" rel="noopener">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#post-linkedin"></use>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
+          </li>
+          <li>
+            <a href="mailto:name@example.com?subject=Check%20out%20this%20site&amp;body=Check%20out%20https://developers.googleblog.com/how-we-made-space-invaders-world-defense-an-ar-game-powered-by-arcore/" title="Send via Email">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#email"></use>
+              </svg>
+              <span>Mail</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" title="Get shareable link" data-link="https://developers.googleblog.com/how-we-made-space-invaders-world-defense-an-ar-game-powered-by-arcore/" data-copy-text="Copy Link" data-copied-text="Copied!">
+              <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--social glue-icon--32px">
+                <use href="/glue-icon/#link"></use>
+              </svg>
+              <span></span>
+            </a>
+          </li>
+        </ul>
+      </section>
+    </section>
+
+    
+    <section class="blocks-container glue-page glue-spacer-3-top">
+      <div class="block">
+          
+
+<img class="banner-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/020-20Hero20Image.original.png" alt="0%20-%20Hero%20Image.png">  <div class="inner-block-content rich-content">
+    <p data-block-key="iocju">To celebrate the 45th anniversary of “SPACE INVADERS,” we collaborated with TAITO, the Japanese developer of the original arcade game, and UNIT9 to launch “<a href="https://blog.google/products/google-ar-vr/space-invaders/">SPACE INVADERS: World Defense</a>,” an immersive game that takes advantage of the most advanced location-based AR technology. Players around the world can go outside to explore their local neighborhoods, defend the Earth from virtual Space Invaders that spawn from nearby structures, and score points by taking them down – all with augmented reality.</p><p data-block-key="56rez">The game is powered by our <a href="https://developers.google.com/ar/">latest ARCore technology</a> - Geospatial API, Streetscape Geometry API, and Geospatial Creator. We’re excited to show you behind the scenes of how the game was developed and how we used our newest features and tools to design the first of its kind procedural, global AR gameplay.</p><h2 data-block-key="0icv3"><b>Geospatial API: Turn the world into a playground</b></h2><p data-block-key="hj8jo"><a href="https://developers.googleblog.com/2022/05/Make-the-world-your-canvas-ARCore-Geospatial-API.html">Geospatial API</a> enables you to attach content remotely to any area mapped by <a href="https://www.google.com/streetview/anniversary/">Google Street View</a> and create richer and more robust immersive experiences linked to real-world locations on a global scale. SPACE INVADERS: World Defense is available in over 100 countries in areas with high Visual Positioning Service (VPS) coverage in Street View, adapting the gameplay to busy urban environments as well as smaller towns and villages.</p><p data-block-key="pcx8v">For players who live in areas without VPS coverage, we have recently updated the game to include our new mode called Indoor Mode, which allows you to defend the Earth from Space Invaders in any setting or location - indoors or outdoors.</p>
+</div>   
+
+<div class="inner-block-content video-block">
+    
+        <video autoplay="" loop="" muted="" playsinline="">
+<source src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/original_videos/space1.webm" type="video/webm">
+<p>Sorry, your browser doesn't support playback for this video</p>
+
+</video>
+    
+    
+</div>  <div class="inner-block-content rich-content">
+    <p data-block-key="kif8h"><i>The new Indoor Mode in Space Invaders brings the immersive gameplay to any indoor building setting</i></p><h2 data-block-key="d76um"><b>Creating the initial user flow</b></h2><p data-block-key="vsg8h"><a href="https://developers.google.com/ar/develop/geospatial">ARCore Geospatial API</a> uses camera images from the user’s device to scan for feature points and compares those to images from Google Street View in order to precisely position the device in real-world space.</p>
+</div>   
+
+<div class="inner-block-content video-block">
+    
+        <video autoplay="" loop="" muted="" playsinline="">
+<source src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/original_videos/space2.webm" type="video/webm">
+<p>Sorry, your browser doesn't support playback for this video</p>
+
+</video>
+    
+    
+</div>  <div class="inner-block-content rich-content">
+    <p data-block-key="4r14p"><i>Geospatial API is based on VPS with tens of billions of images in Street View to enable developers to build world-anchored experiences remotely in over 100 countries</i></p><p data-block-key="2e45j"></p><p data-block-key="bmlsj">This requires the user to hold up their phone and pan around the area such that enough data is collected to accurately position the user. To do this, we employed a clever technique to get users to scan the area, by requiring them to track the spaceship in the camera’s field of view.</p>
+</div>   
+
+<div class="inner-block-content video-block">
+    
+        <video autoplay="" loop="" muted="" playsinline="">
+<source src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/original_videos/space3.webm" type="video/webm">
+<p>Sorry, your browser doesn't support playback for this video</p>
+
+</video>
+    
+    
+</div>  <div class="inner-block-content rich-content">
+    <p data-block-key="hw0hq"><i>To get started, follow the spaceship to scan your local surroundings</i></p><p data-block-key="3n9cd"></p><p data-block-key="91kp5">Using this user flow, we continually check whether the Geospatial API has gathered enough data for a high quality experience:</p>
+</div>  <div class="inner-block-content code-block line-numbers">
+    <pre class="language-javascript line-numbers" tabindex="0"><code class="language-javascript"><span class="token keyword">if</span> <span class="token punctuation">(</span>earthManager<span class="token punctuation">.</span>EarthTrackingState <span class="token operator">==</span> TrackingState<span class="token punctuation">.</span>Tracking<span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+        <span class="token keyword">var</span> yawAcc <span class="token operator">=</span> earthManager<span class="token punctuation">.</span>CameraGeospatialPose<span class="token punctuation">.</span>OrientationYawAccuracy<span class="token punctuation">;</span>
+        <span class="token keyword">var</span> horiAcc <span class="token operator">=</span> earthManager<span class="token punctuation">.</span>CameraGeospatialPose<span class="token punctuation">.</span>HorizontalAccuracy<span class="token punctuation">;</span>
+
+        bool yawIsAccurate <span class="token operator">=</span> yawAcc <span class="token operator">&lt;=</span> <span class="token number">5</span><span class="token punctuation">;</span>
+        bool horizontalIsAccurate <span class="token operator">=</span> horiAcc <span class="token operator">&lt;=</span> <span class="token number">10</span><span class="token punctuation">;</span>
+
+	<span class="token keyword">return</span> yawIsAccurate <span class="token operator">&amp;&amp;</span> horizontalIsAccurate<span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+    <div class="language-block glue-font-weight-medium">
+        JavaScript
+    </div>
+    <div class="copy-code-block">
+        <span class="hidden">Copied</span>
+        <button class="copy-clipboard">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"></path></svg>
+        </button>
+    </div>
+    <div class="dark-mode-block">
+        <button class="dark-mode-toggle">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#202124"><path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Zm-10-270Z"></path></svg>
+        </button>
+    </div>
+    
+</div>  <div class="inner-block-content rich-content">
+    <h3 data-block-key="9r2av">Transforming the environment into the playground</h3><p data-block-key="01gaj">After scanning the nearby area, the game uses mesh data from the <a href="https://developers.google.com/ar/develop/unity-arf/geospatial/streetscape-geometry">Streetscape Geometry API</a> to algorithmically make playing the game in different locations a unique experience. Every real-world location has its own topography and city layout, affecting the gameplay in its own unique way.</p>
+</div>   
+
+<div class="inner-block-content video-block">
+    
+        <video autoplay="" loop="" muted="" playsinline="">
+<source src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/original_videos/space4.webm" type="video/webm">
+<p>Sorry, your browser doesn't support playback for this video</p>
+
+</video>
+    
+    
+</div>  <div class="inner-block-content rich-content">
+    <p data-block-key="puxe2"><i>Gameplay is varied depending on your location - from towns in Czech Republic (left) to cities in New York (right)</i></p><p data-block-key="27lqu"></p><p data-block-key="7etsm">In the game, SPACE INVADERS can spawn from buildings, so we constructed test cases using building geometry obtained from different parts of the world. This ensures that the game would perform optimally in diverse environments from local villages to bustling cities.</p>
+</div>   
+
+<div class="inner-block-content video-block">
+    
+        <video controls="">
+<source src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/original_videos/space5.webm" type="video/webm">
+<p>Sorry, your browser doesn't support playback for this video</p>
+
+</video>
+    
+    
+</div>  <div class="inner-block-content rich-content">
+    <p data-block-key="sq39z"><i>A visualization of how the algorithm would place portals in the real-world</i></p><h3 data-block-key="dr3nk">Entering the Invader’s dimension</h3><p data-block-key="gfma0">From our research studies, we learned that it can be tiring for users to keep holding their hands up for a prolonged period of time for an augmented reality experience. This knowledge influenced our gameplay development - we created the Invader’s dimension to give players a chance to relax their phone arm and improve user comfort.</p><p data-block-key="elcgs">Our favorite ‘wow’ moment that really shows you the power of the Geospatial API is the transition between real-world AR and virtually generated, 3D dimensions.</p>
+</div>   
+
+<div class="inner-block-content video-block">
+    
+        <video autoplay="" loop="" muted="" playsinline="">
+<source src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/original_videos/ezgif.com-gif-to-webm_5.webm" type="video/webm">
+<p>Sorry, your browser doesn't support playback for this video</p>
+
+</video>
+    
+    
+</div>  <div class="inner-block-content rich-content">
+    <p data-block-key="dfaxz"><i>Gameplay transition from real-world AR to 3D dimension</i></p><p data-block-key="fee65"></p><p data-block-key="71eb9">This effect is achieved by blending the camera feed with the virtual environment shader that renders the buildings and terrain in the distinct wireframe style.</p>
+</div>   
+
+<div class="inner-block-content video-block">
+    
+        <video autoplay="" loop="" muted="" playsinline="">
+<source src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/original_videos/ezgif.com-gif-to-webm_6.webm" type="video/webm">
+<p>Sorry, your browser doesn't support playback for this video</p>
+
+</video>
+    
+    
+</div>  <div class="inner-block-content rich-content">
+    <p data-block-key="lcyj3"><i>The Invader’s dimension appears around the player in the Unity Editor, seamlessly transitioning between the two modes</i></p><p data-block-key="2c8hc"></p><p data-block-key="8ja5m">After the player enters the Invader’s dimension, the player’s spaceship flies through an algorithmically generated path through their local neighborhood. This is done by creating a depth image of the user’s environment from an overhead camera. In this image, the red channel represents buildings and the blue channel represents space that could potentially be used for the flight path. This image is then used to generate a grid with points that the path should follow, and an A* search algorithm is used to solve for a path that follows all the points.</p><p data-block-key="m09jz">Finally, the generated A-Star path is post-processed to smooth out any potential jittering, sharp turns and collisions.</p><p data-block-key="tyenv">To smooth out the spaceship’s pathway, the jitter is removed by sampling the path over a set interval of nodes. Then, we determine if there are any sharp turns on a path by analyzing the angles along the path. If a sharp turn is present, we introduce two additional points to round it out. Lastly we see if this smoothed path would collide with any obstacles, and adjust it to fly over them if detected.</p>
+</div>   
+
+
+    
+    <div class="inner-block-content">
+        <div class="image-wrapper">
+            
+                <img class="regular-image" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/8a-Depth-Composite-8B-3D-Path.original.png" alt="8a-Depth-Composite-8B-3D-Path.png">
+            
+            
+                
+                    <div class="regular-image-description">
+                        A visualization of the depth map and a generated sample path in the Invader’s dimension
+                    </div>
+                
+            
+        </div>
+    </div>
+  <div class="inner-block-content rich-content">
+    <h3 data-block-key="rojif">Creating a global gaming experience</h3><p data-block-key="607r6">A key takeaway from building the game was that the complexity of the contextual generation required worldwide testing. With Unity, we brought multiple environments into test cases, which allowed us to rapidly iterate and validate changes to these algorithms. This gave us confidence to deploy the game globally.</p><h3 data-block-key="t92g2">Visualizing SPACE INVADERS using Geospatial Creator</h3><p data-block-key="n3fyy">We used <a href="https://developers.googleblog.com/2023/05/create-world-scale-augmented-reality-experiences-in-minutes-with-google-geospatial-creator.html">Geospatial Creator</a>, powered by ARCore and <a href="https://mapsplatform.google.com/maps-products/map-tiles/">Photorealistic 3D Tiles from Google Maps Platform</a>, to validate how virtual content, such as Space Invaders, would appear next to specific landmarks within Tokyo in Unity.</p>
+</div>   
+
+<div class="inner-block-content video-block">
+    
+        <video autoplay="" loop="" muted="" playsinline="">
+<source src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/original_videos/space8.webm" type="video/webm">
+<p>Sorry, your browser doesn't support playback for this video</p>
+
+</video>
+    
+    
+</div>  <div class="inner-block-content rich-content">
+    <p data-block-key="utwj9"><i>With Photorealistic 3D Tiles, we were able to visualize Invaders in specific locations, including the Tokyo Tower in Japan</i></p><p data-block-key="8p6jt"></p><h3 data-block-key="1p9om">Future updates and releases</h3><p data-block-key="3d3eg">Since the game’s launch, we have heard our players’ feedback and have been actively updating and improving the gameplay experience.</p><p data-block-key="5sbhr"></p><ul><li data-block-key="fb3qz">We have added a new gameplay mode, Indoor Mode, which allows all players without VPS coverage or players who do not want to use AR mode to experience the game.</li><li data-block-key="tajov">To encourage users to play the game in AR, scores have been rebalanced to reward players who play outside more than players who play indoors.</li></ul><p data-block-key="ycr6d">Download the game on <a href="https://play.google.com/store/apps/details?id=jp.co.taito.siwd&amp;utm_source=keyword&amp;utm_medium=blog&amp;utm_campaign=space-invaders-world-defense">Android</a> or <a href="https://apple.co/46D71NY">iOS</a> today and join the ranks of an elite Earth defender force to compete in your neighborhood for the highest score. To hear the latest game updates, follow us on Twitter (<a href="https://twitter.com/GoogleARVR">@GoogleARVR</a>) to hear how we are improving the game. Plus, visit our <a href="http://developers.google.com/ar">ARCore</a> and <a href="http://goo.gle/geospatialcreator">Geospatial Creator</a> websites to learn how to get started building with Google’s AR technology.</p>
+</div> 
+      </div>
+    </section>
+    
+
+    <section class="navigation-container glue-page glue-spacer-6-top">
+      <div class="posted-in-section">
+        <div class="posted-in-section__heading">
+          <span class="glue-caption">
+            posted in:
+          </span>
+        </div>
+        <div class="posted-in-section__tags">
+          <ul>
+              
+                  <li>
+                      <a href="/search/?product_categories=AR" class="glue-caption">AR</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?technology_categories=AI" class="glue-caption">AI</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?content_type_categories=Announcements" class="glue-caption">Announcements</a>
+                  </li>
+              
+              
+                  <li>
+                      <a href="/search/?tag=Influence" class="glue-caption">Influence</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=VPS" class="glue-caption">VPS</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=Visual Positioning System" class="glue-caption">Visual Positioning System</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=ARCore" class="glue-caption">ARCore</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=Space Invaders" class="glue-caption">Space Invaders</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=Unity" class="glue-caption">Unity</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=TAITO" class="glue-caption">TAITO</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=augmented reality" class="glue-caption">augmented reality</a>
+                  </li>
+              
+                  <li>
+                      <a href="/search/?tag=Geospatial" class="glue-caption">Geospatial</a>
+                  </li>
+              
+          </ul>
+      </div>
+      </div>
+      <div class="buttons-section">
+        <div class="buttons-section__left">
+          <a href="/weareplay-meet-ingrid-from-sweden-more-stories-from-around-the-world/" class="glue-button--icon glue-elevation-level-1 " aria-label="Previous">
+            <svg role="presentation" aria-hidden="true" class="glue-icon">
+              <use href="/glue-icon/#chevron-left"></use>
+            </svg>
+          </a>
+          <span class="caption ">Previous</span>
+        </div>
+        <div class="buttons-section__right">
+          <span class="caption ">Next</span>
+          <a href="/supporting-black-tech-entrepreneurs-through-the-fourth-google-for-startups-accelerator-black-founders-program/" class="glue-button--icon glue-elevation-level-1 " aria-label="Next">
+            <svg role="presentation" aria-hidden="true" class="glue-icon">
+              <use href="/glue-icon/#chevron-right"></use>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    
+    <section class="related-posts-container glue-page glue-spacer-6-top glue-spacer-3-bottom">
+      <span class="glue-headline glue-headline--headline-3">Related Posts</span>
+      <div class="related-posts-container__carousel glue-page glue-spacer-5-top">
+        <div class="glue-carousel glue-carousel--cards glue-carousel-related-posts glue-carousel--peek-out glue-carousel--has-navigation" aria-label="Related Posts">
+          <!-- Previous -->
+          <button class="glue-carousel__button glue-carousel__button--prev glue-is-inactive" aria-label="Go to the previous slide" aria-controls="">
+            <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--32px">
+              <use href="/glue-icon/#chevron-left"></use>
+            </svg>
+          </button>
+          <!-- Next -->
+          <button class="glue-carousel__button glue-carousel__button--next" aria-label="Go to the next slide" aria-controls="">
+            <svg role="presentation" aria-hidden="true" class="glue-icon glue-icon--32px">
+              <use href="/glue-icon/#chevron-right"></use>
+            </svg>
+          </button>
+          <!-- List -->
+          <div class="glue-carousel__viewport">
+            <div class="glue-carousel__list" aria-live="polite" style="width: 2004px; grid-template-columns: repeat(4, 1fr); transform: translate3d(0px, 0px, 0px);">
+              
+                <a class="glue-card glue-carousel__item" href="/why-client-sdk-generation-belongs-in-the-open/" tabindex="0">
+                  <div aria-label="Why client SDK generation belongs in the open" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Why client SDK generation belongs in the open" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Copy_of_why_client_SDK_generation_.2e16d0ba.fill-800x400.png">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                            <span class="glue-label">Learn</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Why client SDK generation belongs in the open</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">SEPT. 17, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+                <a class="glue-card glue-carousel__item" href="/google-ar-at-io-2024-new-geospatial-ar-features-and-more/" tabindex="-1">
+                  <div aria-label="Google AR at I/O 2024: New Geospatial AR features and more" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Google AR at I/O 2024: New Geospatial AR features and more" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/IO24_BlogHeaders_2x1-12.2e16d0ba.fill-800x400.png">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            <span class="glue-label">AR</span>
+                            
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                            <span class="glue-label">Industry Trends</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Google AR at I/O 2024: New Geospatial AR features and more</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">MAY 15, 2024</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+                <a class="glue-card glue-carousel__item" href="/agent-anomaly-detection-now-in-private-preview-on-the-gemini-enterprise-agent-platform/" aria-hidden="true" tabindex="-1">
+                  <div aria-label="Agent Anomaly Detection, now in Private Preview on the Gemini Enterprise Agent Platform" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Agent Anomaly Detection, now in Private Preview on the Gemini Enterprise Agent Platform" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Blog_Banner_3.2e16d0ba.fill-800x400.jpg">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            <span class="glue-label">Cloud</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                            <span class="glue-label">Learn</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Agent Anomaly Detection, now in Private Preview on the Gemini Enterprise Agent Platform</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">SEPT. 16, 2026</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+                <a class="glue-card glue-carousel__item" href="/introducing-android-xr-sdk-developer-preview/" aria-hidden="true" tabindex="-1">
+                  <div aria-label="Introducing the Android XR SDK Developer Preview" class="glue-card__inner">
+                    <picture class="glue-card__asset">
+                      <img alt="Introducing the Android XR SDK Developer Preview" src="https://storage.googleapis.com/gweb-developer-goog-blog-assets/images/Android-XR-SDK-Preview.2e16d0ba.fill-800x400.png">
+                    </picture>
+                    <div class="glue-card__content">
+                      <div class="glue-card__tags glue-spacer-2-top">
+                        
+                            
+                            <span class="glue-label">Android</span>
+                            
+                            <span class="glue-label">AR</span>
+                            
+                            
+                            <span class="glue-label">AI</span>
+                            
+                            
+                            <span class="glue-label">Announcements</span>
+                            
+                        
+                      </div>
+                      <p class="glue-headline glue-headline--headline-5">Introducing the Android XR SDK Developer Preview</p>
+                      <div class="glue-card__cta-custom glue-spacer-3-top">
+                        <span class="glue-cta">DEC. 12, 2024</span>
+                        <svg aria-hidden="true" class="glue-icon glue-icon--24px" role="presentation">
+                          <use href="/glue-icon/#arrow-forward"></use>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              
+            </div>
+          </div>
+          <!-- Navigation dots -->
+          <div class="glue-carousel__navigation" aria-label="Choose a page" data-glue-carousel-navigation-label="Selected tab $glue_carousel_page_number$ of $glue_carousel_page_total$">
+          <button class="glue-carousel__dot glue-is-active" data-dot="1" aria-controls="" aria-label="Selected tab 1 of 2" tabindex="0" aria-current="true"></button><button class="glue-carousel__dot" data-dot="2" aria-controls="" aria-label="Selected tab 2 of 2" tabindex="-1" aria-current="false"></button></div>
+        </div>
+      </div>
+    </section>
+    
+  </div>
+
+
+				
+				
+
+<div class="footer-linkboxes__wrapper">
+  <nav class="footer-linkboxes" aria-label="Footer links">
+    <ul class="footer-linkboxes__list">
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Connect
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//googledevelopers.blogspot.com" class="footer-linkbox-list__link">
+                Blog
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/3FReQXN" class="footer-linkbox-list__link">
+                Bluesky
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/googlefordevs" class="footer-linkbox-list__link">
+                Instagram
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/gdevs-li" class="footer-linkbox-list__link">
+                LinkedIn
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/gdevs-tw" class="footer-linkbox-list__link">
+                X (Twitter)
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="https://goo.gle/developers" class="footer-linkbox-list__link">
+                YouTube
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Programs
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/program" class="footer-linkbox-list__link">
+                Google Developer Program
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/gdg" class="footer-linkbox-list__link">
+                Google Developer Groups
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/experts" class="footer-linkbox-list__link">
+                Google Developer Experts
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/accelerators" class="footer-linkbox-list__link">
+                Accelerators
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//www.womentechmakers.com" class="footer-linkbox-list__link">
+                Women Techmakers
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//developers.google.com/community/nvidia" class="footer-linkbox-list__link">
+                Google Cloud &amp; NVIDIA
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+      <li class="footer-linkbox">
+        <span class="footer-linkbox-heading">
+          Developer consoles
+        </span>
+        <ul class="footer-linkbox-list">
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.developers.google.com" class="footer-linkbox-list__link">
+                Google API Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.cloud.google.com" class="footer-linkbox-list__link">
+                Google Cloud Platform Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//play.google.com/apps/publish" class="footer-linkbox-list__link">
+                Google Play Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.firebase.google.com" class="footer-linkbox-list__link">
+                Firebase Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.actions.google.com" class="footer-linkbox-list__link">
+                Actions on Google Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//cast.google.com/publish" class="footer-linkbox-list__link">
+                Cast SDK Developer Console
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//chrome.google.com/webstore/developer/dashboard" class="footer-linkbox-list__link">
+                Chrome Web Store Dashboard
+              </a>
+            </li>
+          
+            <li class="footer-linkbox-list__item">
+              <a href="//console.home.google.com/" class="footer-linkbox-list__link">
+                Google Home Developer Console
+              </a>
+            </li>
+          
+        </ul>
+      </li>
+    </ul>
+  </nav>
+</div>
+<div class="footer-utility__wrapper">
+  <div>
+    <nav class="footer-sites" aria-label="Other Google Developers websites">
+      <a href="https://developers.google.com/" class="site-logo-link" data-label="Site logo">
+        <img src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/images/g-dev.svg" class="site-logo" alt="Google for Developers">
+      </a>
+      <ul class="footer-sites-list">
+        <li class="footer-sites-item">
+          <a href="//developer.android.com" class="footer-sites-link">
+            Android
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//developer.chrome.com/home" class="footer-sites-link">
+            Chrome
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//firebase.google.com" class="footer-sites-link">
+            Firebase
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//cloud.google.com" class="footer-sites-link">
+            Google Cloud Platform
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <a href="//developers.google.com/products" class="footer-sites-link">
+            All products
+          </a>
+        </li>
+        <li class="footer-sites-item">
+          <button aria-hidden="true" class="glue-cookie-notification-bar-control footer-sites-link">
+            Manage cookies
+          </button>
+        </li>
+      </ul>
+    </nav>
+    <nav class="footer-utility-links">
+      <ul class="footer-utility-list">
+        <li class="footer-utility-item">
+          <a href="//developers.google.com/terms/site-terms" class="footer-utility-link">
+            Terms
+          </a>
+        </li>
+        <li class="footer-utility-item">
+          <a href="//policies.google.com/privacy" class="footer-utility-link">
+            Privacy
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+
+        
+				
+
+        
+        <script nonce="" src="https://www.youtube.com/player_api"></script>
+        <script nonce="" src="//www.gstatic.com/glue/v27_1/glue.min.js"></script>
+        <script nonce="" type="text/javascript" src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/dgc_blog.js"></script>
+
+        <script nonce="" src="https://www.gstatic.com/glue/cookienotificationbar/cookienotificationbar.min.js" data-glue-cookie-notification-bar-category="2A" data-glue-cookie-notification-bar-site-id="developers.googleblog.com"></script>
+
+        
+  <script src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/blog_detail.js" nonce=""></script>
+  <script src="https://storage.googleapis.com/gweb-developer-goog-blog-cms-assets/site/20260817-205152/js/prism.js" nonce=""></script>
+
+    
+
+</body></html>

@@ -1,0 +1,1172 @@
+<html lang="en-US"><head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-title" content="Engineering at Meta - Engineering at Meta Blog">
+	<meta property="fb:app_id" content="1425766027653270">
+	<link rel="profile" href="http://gmpg.org/xfn/11">
+	<link rel="pingback" href="https://engineering.fb.com/xmlrpc.php">
+	<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+		<script src="https://connect.facebook.net/en_US/bundle/sdk.js/" async="" crossorigin="anonymous"></script><script id="facebook-jssdk" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&amp;version=v2.6"></script><script async="" src="https://engineering.fb.com/wp-content/themes/code-fb-com/dist/js/optimize.min.js"></script>
+	
+	<!-- This site is optimized with the Yoast SEO Premium plugin v19.3 (Yoast SEO v27.3) - https://yoast.com/product/yoast-seo-premium-wordpress/ -->
+	<title>Privacy-Aware Infrastructure in the AI-Native Era: An Asset Classification Case Study - Engineering at Meta</title>
+	<link rel="canonical" href="https://engineering.fb.com/2026/06/25/security/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study/">
+	<meta name="twitter:label1" content="Written by">
+	<meta name="twitter:data1" content="Rituraj Kirti, Vasileios Lakafosis">
+	<meta name="twitter:label2" content="Est. reading time">
+	<meta name="twitter:data2" content="26 minutes">
+	<script type="application/ld+json" class="yoast-schema-graph">{"@context":"https:\/\/schema.org","@graph":[{"@type":"Article","@id":"https:\/\/engineering.fb.com\/2026\/06\/25\/security\/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study\/#article","isPartOf":{"@id":"https:\/\/engineering.fb.com\/2026\/06\/25\/security\/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study\/"},"author":[{"@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/7dd73e4693d18b69c0518f5ee31c49fd"},{"@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/d840f4fffbbab56b169747a817607696"}],"headline":"Privacy-Aware Infrastructure in the AI-Native Era: An Asset Classification Case Study","datePublished":"2026-06-25T22:30:51+00:00","dateModified":"2026-06-30T17:17:20+00:00","mainEntityOfPage":{"@id":"https:\/\/engineering.fb.com\/2026\/06\/25\/security\/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study\/"},"wordCount":5084,"publisher":{"@id":"https:\/\/engineering.fb.com\/#organization"},"image":{"@id":"https:\/\/engineering.fb.com\/2026\/06\/25\/security\/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study\/#primaryimage"},"thumbnailUrl":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2026\/06\/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-HERO.png","articleSection":["ML Applications","Security &amp; Privacy"],"inLanguage":"en-US"},{"@type":"WebPage","@id":"https:\/\/engineering.fb.com\/2026\/06\/25\/security\/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study\/","url":"https:\/\/engineering.fb.com\/2026\/06\/25\/security\/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study\/","name":"Privacy-Aware Infrastructure in the AI-Native Era: An Asset Classification Case Study - Engineering at Meta","isPartOf":{"@id":"https:\/\/engineering.fb.com\/#website"},"primaryImageOfPage":{"@id":"https:\/\/engineering.fb.com\/2026\/06\/25\/security\/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study\/#primaryimage"},"image":{"@id":"https:\/\/engineering.fb.com\/2026\/06\/25\/security\/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study\/#primaryimage"},"thumbnailUrl":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2026\/06\/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-HERO.png","datePublished":"2026-06-25T22:30:51+00:00","dateModified":"2026-06-30T17:17:20+00:00","breadcrumb":{"@id":"https:\/\/engineering.fb.com\/2026\/06\/25\/security\/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study\/#breadcrumb"},"inLanguage":"en-US","potentialAction":[{"@type":"ReadAction","target":["https:\/\/engineering.fb.com\/2026\/06\/25\/security\/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study\/"]}]},{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/engineering.fb.com\/2026\/06\/25\/security\/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study\/#primaryimage","url":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2026\/06\/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-HERO.png","contentUrl":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2026\/06\/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-HERO.png","width":1376,"height":768},{"@type":"BreadcrumbList","@id":"https:\/\/engineering.fb.com\/2026\/06\/25\/security\/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study\/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https:\/\/engineering.fb.com\/"},{"@type":"ListItem","position":2,"name":"Privacy-Aware Infrastructure in the AI-Native Era: An Asset Classification Case Study"}]},{"@type":"WebSite","@id":"https:\/\/engineering.fb.com\/#website","url":"https:\/\/engineering.fb.com\/","name":"Engineering at Meta","description":"Engineering at Meta Blog","publisher":{"@id":"https:\/\/engineering.fb.com\/#organization"},"potentialAction":[{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https:\/\/engineering.fb.com\/?s={search_term_string}"},"query-input":{"@type":"PropertyValueSpecification","valueRequired":true,"valueName":"search_term_string"}}],"inLanguage":"en-US"},{"@type":"Organization","@id":"https:\/\/engineering.fb.com\/#organization","name":"Meta","url":"https:\/\/engineering.fb.com\/","logo":{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/engineering.fb.com\/#\/schema\/logo\/image\/","url":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2023\/08\/Meta_lockup_positive-primary_RGB.jpg","contentUrl":"https:\/\/engineering.fb.com\/wp-content\/uploads\/2023\/08\/Meta_lockup_positive-primary_RGB.jpg","width":29011,"height":12501,"caption":"Meta"},"image":{"@id":"https:\/\/engineering.fb.com\/#\/schema\/logo\/image\/"},"sameAs":["https:\/\/www.facebook.com\/Engineering\/","https:\/\/x.com\/fb_engineering"]},[],{"@type":"Person","@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/7dd73e4693d18b69c0518f5ee31c49fd","name":"Rituraj Kirti","image":{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g23494c9101089ad44ae88ce9d2f56aac","url":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","contentUrl":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","caption":"Rituraj Kirti"},"url":"https:\/\/engineering.fb.com\/author\/rituraj-kirti\/"},{"@type":"Person","@id":"https:\/\/engineering.fb.com\/#\/schema\/person\/image\/d840f4fffbbab56b169747a817607696","name":"Vasileios Lakafosis","image":{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g23494c9101089ad44ae88ce9d2f56aac","url":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","contentUrl":"https:\/\/secure.gravatar.com\/avatar\/?s=96&d=mm&r=g","caption":"Vasileios Lakafosis"},"url":"https:\/\/engineering.fb.com\/author\/vasileios-lakafosis\/"}]}</script>
+	<!-- / Yoast SEO Premium plugin. -->
+
+
+<link rel="dns-prefetch" href="//secure.gravatar.com">
+<link rel="dns-prefetch" href="//v0.wordpress.com">
+<link rel="alternate" type="application/rss+xml" title="Engineering at Meta » Feed" href="https://engineering.fb.com/feed/">
+<link rel="alternate" type="application/rss+xml" title="Engineering at Meta » Comments Feed" href="https://engineering.fb.com/comments/feed/">
+	<script async="" src="https://www.googleoptimize.com/optimize.js?id=OPT-TPNDQC5" onerror="dataLayer.hide.end &amp;&amp; dataLayer.hide.end()"></script>
+	<link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed" href="https://engineering.fb.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fengineering.fb.com%2F2026%2F06%2F25%2Fsecurity%2Fprivacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study%2F">
+<link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed" href="https://engineering.fb.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fengineering.fb.com%2F2026%2F06%2F25%2Fsecurity%2Fprivacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study%2F&amp;format=xml">
+<style id="wp-img-auto-sizes-contain-inline-css">
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+<style id="wp-emoji-styles-inline-css">
+
+	img.wp-smiley, img.emoji {
+		display: inline !important;
+		border: none !important;
+		box-shadow: none !important;
+		height: 1em !important;
+		width: 1em !important;
+		margin: 0 0.07em !important;
+		vertical-align: -0.1em !important;
+		background: none !important;
+		padding: 0 !important;
+	}
+/*# sourceURL=wp-emoji-styles-inline-css */
+</style>
+<style id="wp-block-library-inline-css">
+:root{--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color);--wp-editor-canvas-background:#ddd;--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,160.5;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#020381,#2874fc)}:root{--wp--preset--font-size--normal:16px;--wp--preset--font-size--huge:42px}.has-regular-font-size{font-size:1em}.has-larger-font-size{font-size:2.625em}.has-normal-font-size{font-size:var(--wp--preset--font-size--normal)}.has-huge-font-size{font-size:var(--wp--preset--font-size--huge)}:root .has-text-align-center{text-align:center}:root .has-text-align-left{text-align:left}:root .has-text-align-right{text-align:right}.has-fit-text{white-space:nowrap!important}#end-resizable-editor-section{display:none}.aligncenter{clear:both}.items-justified-left{justify-content:flex-start}.items-justified-center{justify-content:center}.items-justified-right{justify-content:flex-end}.items-justified-space-between{justify-content:space-between}.screen-reader-text{word-wrap:normal!important;border:0;clip-path:inset(50%);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px;word-break:normal!important}.screen-reader-text:focus{background-color:#ddd;clip-path:none;color:#444;display:block;font-size:1em;height:auto;left:5px;line-height:normal;padding:15px 23px 14px;text-decoration:none;top:5px;width:auto;z-index:100000}html :where(.has-border-color){border-style:solid}html :where([style^=border-color],[style*=";border-color"],[style*="; border-color"]){border-style:solid}html :where([style^=border-top-color],[style*=";border-top-color"],[style*="; border-top-color"]){border-top-style:solid}html :where([style^=border-right-color],[style*=";border-right-color"],[style*="; border-right-color"]){border-right-style:solid}html :where([style^=border-bottom-color],[style*=";border-bottom-color"],[style*="; border-bottom-color"]){border-bottom-style:solid}html :where([style^=border-left-color],[style*=";border-left-color"],[style*="; border-left-color"]){border-left-style:solid}html :where([style^=border-width],[style*=";border-width"],[style*="; border-width"]){border-style:solid}html :where([style^=border-top-width],[style*=";border-top-width"],[style*="; border-top-width"]){border-top-style:solid}html :where([style^=border-right-width],[style*=";border-right-width"],[style*="; border-right-width"]){border-right-style:solid}html :where([style^=border-bottom-width],[style*=";border-bottom-width"],[style*="; border-bottom-width"]){border-bottom-style:solid}html :where([style^=border-left-width],[style*=";border-left-width"],[style*="; border-left-width"]){border-left-style:solid}html :where(img[class*=wp-image-]){height:auto;max-width:100%}:where(figure){margin:0 0 1em}html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:var(--wp-admin--admin-bar--height,0px)}@media screen and (max-width:600px){html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:0px}}
+
+/*# sourceURL=/wp-includes/css/dist/block-library/common.min.css */
+</style>
+<style id="classic-theme-styles-inline-css">
+/*! This file is auto-generated */
+.wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{background:#32373c;color:#fff;text-decoration:none}
+/*# sourceURL=/wp-includes/css/classic-themes.min.css */
+</style>
+
+<style id="global-styles-inline-css">
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgb(252,185,0) 0%,rgb(255,105,0) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgb(255,105,0) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgb(255, 255, 255), 6px 6px rgb(0, 0, 0);--wp--preset--shadow--crisp: 6px 6px 0px rgb(0, 0, 0);}.wp-block-button{--wp--preset--dimension--25: 25%;--wp--preset--dimension--50: 50%;--wp--preset--dimension--75: 75%;--wp--preset--dimension--100: 100%;}:where(body) { margin: 0; }:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}body{padding-top: 0px;padding-right: 0px;padding-bottom: 0px;padding-left: 0px;}:root :where(.wp-element-button, .wp-block-button__link){background-color: #32373c;border-width: 0;color: #fff;font-family: inherit;font-size: inherit;font-style: inherit;font-weight: inherit;letter-spacing: inherit;line-height: inherit;padding-top: calc(0.667em + 2px);padding-right: calc(1.333em + 2px);padding-bottom: calc(0.667em + 2px);padding-left: calc(1.333em + 2px);text-decoration: none;text-transform: inherit;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+/*# sourceURL=global-styles-inline-css */
+</style>
+
+<link rel="stylesheet" id="all-css-12" href="https://engineering.fb.com/_static/??-eJyNjUsOwjAMRC9EahUKhQXiKFVqhzSQn+pEiNuTFJBAbNjZTzNv4BYFBp+UTxBt1sYzFKQpzpVz5WQ4QSUv0CDzCj6KaVJOMWAgJc5jwe7ZKTnAyVgSS6Jxxv90XRbv3YtKUeJVtLtmDS5QtkXKk5wVSaL7chqv/1YMxiOMuewDBzTSCht04K+nyk7u2Pb7Q99t+m77AIpaY4w=" type="text/css" media="all">
+<script id="gdprconsent-js" src="https://engineering.fb.com/wp-content/plugins/wp-gdpr-consent/dist/gdprconsent.js?ver=2.0.0"></script>
+<script id="gdprconsent-js-after">
+if (window.gdprSafeTrack) {
+  						window.gdprSafeTrack('https://www.googletagmanager.com/gtag/js?id=391063774');
+						window.gdprSafeTrack(function() {
+							var google_analytics_g4  = decodeURIComponent( '391063774' );
+							window.dataLayer = window.dataLayer || [];
+							function gtag(){dataLayer.push(arguments);}
+							gtag('js', new Date());
+							gtag('config', google_analytics_g4);
+						});
+					}
+if (window.gdprSafeTrack) {
+						window.gdprSafeTrack(function() {
+							var google_tag_manager  = decodeURIComponent( 'GTM-KZRLGZ8' );
+							(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+							new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+							j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+							'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+							})(window,document,'script','dataLayer',google_tag_manager);
+						});
+					}
+if (window.gdprSafeTrack) {
+						window.gdprSafeTrack(function() {
+							var facebook_pixel  = decodeURIComponent( '660742068067366' );
+							!function(f,b,e,v,n,t,s)
+							{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+							n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+							if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+							n.queue=[];t=b.createElement(e);t.async=!0;
+							t.src=v;s=b.getElementsByTagName(e)[0];
+							s.parentNode.insertBefore(t,s)}(window, document,'script',
+							'https://connect.facebook.net/en_US/fbevents.js');
+							fbq('init', facebook_pixel);
+							fbq('track', 'PageView');
+						});
+					}
+//# sourceURL=gdprconsent-js-after
+</script>
+<script type="text/javascript" src="https://engineering.fb.com/_static/??-eJzTLy/QzcxLzilNSS3WzwKiwtLUokoopZebmaeXVayjj0+Rbm5melFiSSpUsX2uraG5haW5iZGFmWUWAK/xIjU="></script><script type="text/javascript" src="https://engineering.fb.com/wp-content/themes/understrap/js/popper.min.js?m=1773259670g"></script><link rel="https://api.w.org/" href="https://engineering.fb.com/wp-json/"><link rel="alternate" title="JSON" type="application/json" href="https://engineering.fb.com/wp-json/wp/v2/posts/24095"><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://engineering.fb.com/xmlrpc.php?rsd">
+<meta name="generator" content="WordPress 7.1.1">
+<link rel="shortlink" href="https://wp.me/pa0Lhq-6gD">
+<link rel="preload" href="https://engineering.fb.com/wp-content/themes/code-fb-com/fonts/FacebookReader-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous"><link rel="preload" href="https://engineering.fb.com/wp-content/themes/code-fb-com/fonts/FacebookReader-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous"><link rel="preload" href="https://engineering.fb.com/wp-content/themes/code-fb-com/fonts/Optimistic_Display_W_Md.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<!-- Jetpack Open Graph Tags -->
+<meta property="og:type" content="article">
+<meta property="og:title" content="Privacy-Aware Infrastructure in the AI-Native Era: An Asset Classification Case Study">
+<meta property="og:url" content="https://engineering.fb.com/2026/06/25/security/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study/">
+<meta property="og:description" content="&nbsp; Privacy controls — systems that enforce retention, access, allowed-purpose, downstream-sharing, or anonymization policies — require a reliable understanding of data to function. Before such …">
+<meta property="article:published_time" content="2026-06-25T22:30:51+00:00">
+<meta property="article:modified_time" content="2026-06-30T17:17:20+00:00">
+<meta property="og:site_name" content="Engineering at Meta">
+<meta property="og:image" content="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-HERO.png">
+<meta property="og:image:width" content="1376">
+<meta property="og:image:height" content="768">
+<meta property="og:image:alt" content="">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:text:title" content="Privacy-Aware Infrastructure in the AI-Native Era: An Asset Classification Case Study">
+<meta name="twitter:image" content="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-HERO.png?w=640">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- End Jetpack Open Graph Tags -->
+<style id="wp-custom-css">
+.table-of-contents {
+  position: sticky;
+  top: 20px;
+  background: #fff;
+  padding: 1em;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-width: 250px;
+}
+</style>
+
+	<link rel="shortcut icon" href="https://engineering.fb.com/wp-content/themes/code-fb-com/favicon.ico">
+<link rel="stylesheet" id="all-css-0" href="https://engineering.fb.com/wp-content/mu-plugins/jetpack-16.2/jetpack_vendor/automattic/jetpack-classic-theme-helper/dist/responsive-videos/responsive-videos.css?m=1789743745g" type="text/css" media="all">
+
+<script src="https://engineering.fb.com/wp-includes/js/wp-emoji-release.min.js?ver=7.1.1" defer=""></script><style type="text/css" data-fbcssmodules="css:fb.css.base css:fb.css.dialog css:fb.css.iframewidget">.fb_hidden{position:absolute;top:-10000px;z-index:10001}.fb_reposition{overflow:hidden;position:relative}.fb_invisible{display:none}.fb_reset{background:none;border:0px;border-spacing:0;color:#000;cursor:auto;direction:ltr;font-family:lucida grande,tahoma,verdana,arial,sans-serif;font-size:11px;font-style:normal;font-variant:normal;font-weight:400;letter-spacing:normal;line-height:1;margin:0;overflow:visible;padding:0;text-align:left;text-decoration:none;text-indent:0;text-shadow:none;text-transform:none;visibility:visible;white-space:normal;word-spacing:normal}.fb_reset>div{overflow:hidden}@keyframes fb_transform{0%{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}.fb_animate{animation:fb_transform .3s forwards}
+
+.fb_dialog{background:#525252b3;position:absolute;top:-10000px;z-index:10001}.fb_dialog_advanced{border-radius:8px;padding:10px}.fb_dialog_content{background:#fff;color:#373737}.fb_dialog_close_icon{background:url(https://connect.facebook.net/rsrc.php/v4/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 0 transparent;cursor:pointer;display:block;height:15px;position:absolute;right:18px;top:17px;width:15px}.fb_dialog_mobile .fb_dialog_close_icon{left:5px;right:auto;top:5px}.fb_dialog_padding{background-color:transparent;position:absolute;width:1px;z-index:-1}.fb_dialog_close_icon:hover{background:url(https://connect.facebook.net/rsrc.php/v4/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 -15px transparent}.fb_dialog_close_icon:active{background:url(https://connect.facebook.net/rsrc.php/v4/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 -30px transparent}.fb_dialog_iframe{line-height:0}.fb_dialog_content .dialog_title{background:#6d84b4;border:1px solid #365899;color:#fff;font-size:14px;font-weight:700;margin:0}.fb_dialog_content .dialog_title>span{background:url(https://connect.facebook.net/rsrc.php/v4/yd/r/Cou7n-nqK52.gif) no-repeat 5px 50%;float:left;padding:5px 0 7px 26px}body.fb_hidden{height:100%;left:0;margin:0;overflow:visible;position:absolute;top:-10000px;transform:none;width:100%}.fb_dialog.fb_dialog_mobile.loading{background:url(https://connect.facebook.net/rsrc.php/v4/ya/r/3rhSv5V8j3o.gif) #fff no-repeat 50% 50%;min-height:100%;min-width:100%;overflow:hidden;position:absolute;top:0;z-index:10001}.fb_dialog.fb_dialog_mobile.loading.centered{background:none;height:auto;min-height:initial;min-width:initial;width:auto}.fb_dialog.fb_dialog_mobile.loading.centered #fb_dialog_loader_spinner{width:100%}.fb_dialog.fb_dialog_mobile.loading.centered .fb_dialog_content{background:none}.loading.centered #fb_dialog_loader_close{clear:both;color:#fff;display:block;font-size:18px;padding-top:20px}#fb-root #fb_dialog_ipad_overlay{background:#0006;inset:0;min-height:100%;position:absolute;width:100%;z-index:10000}#fb-root #fb_dialog_ipad_overlay.hidden{display:none}.fb_dialog.fb_dialog_mobile.loading iframe{visibility:hidden}.fb_dialog_mobile .fb_dialog_iframe{position:sticky;top:0}.fb_dialog_content .dialog_header{background:linear-gradient(from(#738aba),to(#2c4987));border-bottom:1px solid;border-color:#043b87;box-shadow:#fff 0 1px 1px -1px inset;color:#fff;font:700 14px Helvetica,sans-serif;text-overflow:ellipsis;text-shadow:rgba(0,30,84,.296875) 0px -1px 0px;vertical-align:middle;white-space:nowrap}.fb_dialog_content .dialog_header table{height:43px;width:100%}.fb_dialog_content .dialog_header td.header_left{font-size:12px;padding-left:5px;vertical-align:middle;width:60px}.fb_dialog_content .dialog_header td.header_right{font-size:12px;padding-right:5px;vertical-align:middle;width:60px}.fb_dialog_content .touchable_button{background:linear-gradient(from(#4267B2),to(#2a4887));background-clip:padding-box;border:1px solid #29487d;border-radius:3px;display:inline-block;line-height:18px;margin-top:3px;max-width:85px;padding:4px 12px;position:relative}.fb_dialog_content .dialog_header .touchable_button input{background:none;border:none;color:#fff;font:700 12px Helvetica,sans-serif;margin:2px -12px;padding:2px 6px 3px;text-shadow:rgba(0,30,84,.296875) 0px -1px 0px}.fb_dialog_content .dialog_header .header_center{color:#fff;font-size:16px;font-weight:700;line-height:18px;text-align:center;vertical-align:middle}.fb_dialog_content .dialog_content{background:url(https://connect.facebook.net/rsrc.php/v4/y9/r/jKEcVPZFk-2.gif) no-repeat 50% 50%;border:1px solid #4A4A4A;border-bottom:0;border-top:0;height:150px}.fb_dialog_content .dialog_footer{background:#f5f6f7;border:1px solid #4A4A4A;border-top-color:#ccc;height:40px}#fb_dialog_loader_close{float:left}.fb_dialog.fb_dialog_mobile .fb_dialog_close_icon{visibility:hidden}#fb_dialog_loader_spinner{animation:rotateSpinner 1.2s linear infinite;background-color:transparent;background-image:url(https://connect.facebook.net/rsrc.php/v4/y2/r/onuUJj0tCqE.png);background-position:50% 50%;background-repeat:no-repeat;height:24px;width:24px}@keyframes rotateSpinner{0%{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+.fb_iframe_widget{display:inline-block;position:relative}.fb_iframe_widget span{display:inline-block;position:relative;text-align:justify}.fb_iframe_widget iframe{position:absolute}.fb_iframe_widget_fluid_desktop,.fb_iframe_widget_fluid_desktop span,.fb_iframe_widget_fluid_desktop iframe{max-width:100%}.fb_iframe_widget_fluid_desktop iframe{min-width:220px;position:relative}.fb_iframe_widget_lift{z-index:1}.fb_iframe_widget_fluid{display:inline}.fb_iframe_widget_fluid span{width:100%}
+</style></head>
+
+<body class="wp-singular post-template-default single single-post postid-24095 single-format-standard wp-theme-understrap wp-child-theme-code-fb-com group-blog">
+
+<div class="hfeed site" id="page">
+
+<!-- ******************* The Navbar Area ******************* -->
+<div class="wrapper-fluid wrapper-navbar" id="wrapper-navbar">
+	<a class="skip-link screen-reader-text sr-only" href="#content">
+	Skip to content	</a>
+
+	<nav class="navbar navbar-expand-std">
+
+			<div class="nav-container">
+	
+
+				<!-- Your site title as branding in the menu -->
+
+	<div class="nav-top-row">
+	
+		<h1 class="navbar-brand mb-0">
+			<a rel="home" href="https://engineering.fb.com/" title="Engineering at Meta">
+				<img class="navbar-brand-logo" src="https://engineering.fb.com/wp-content/themes/code-fb-com/img/logo-meta.svg" alt="Engineering at Meta" width="215" height="40" loading="lazy">
+			</a>
+		</h1>
+
+	<!-- end custom logo -->
+				<label for="search" class="screen-reader-text">Search this site</label>
+				<input type="text" id="search" name="search" class="form-control-lg navbar-search" autocomplete="off">
+
+				<button class="navbar-toggler navbar-searchbar-toggler" type="button" data-toggle="collapse" data-target="#searchbarDropdown" aria-controls="searchbarDropdown" aria-expanded="false" aria-label="Toggle navigation">
+					<img src="https://engineering.fb.com/wp-content/themes/code-fb-com/img/icon-search.svg" class="navbar-mobile-search-icon" loading="lazy" width="24" height="25">
+				</button>
+
+				<!-- desktop language menu (mobile language menu is implemented via jQuery)-->
+				<div class="notranslate nice-select navbar-language form-control">
+				</div>
+
+				<button class="navbar-toggler collapsed navbar-menu-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+
+			</div>
+
+			<div class="navbar-border"></div>
+
+			<!-- The WordPress Menu goes here -->
+	<div id="navbarNavDropdown" class="collapse navbar-collapse"><ul id="main-menu" class="navbar-nav"><li id="menu-item-60" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-60 dropdown"><a title="Open Source" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Open Source <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-12330" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-12330"><a title="Open Source" href="https://engineering.fb.com/category/open-source/" class="nav-link">Open Source</a></li>
+	<li id="menu-item-12331" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-12331"><a title="Meta Open Source" href="https://opensource.fb.com" class="nav-link" target="_blank" rel="noopener">Meta Open Source</a></li>
+</ul>
+</li>
+<li id="menu-item-2686" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-2686 dropdown"><a title="Platforms" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Platforms <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-65" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-65"><a title="Android" href="https://engineering.fb.com/category/android/" class="nav-link">Android</a></li>
+	<li id="menu-item-66" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-66"><a title="iOS" href="https://engineering.fb.com/category/ios/" class="nav-link">iOS</a></li>
+	<li id="menu-item-67" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-67"><a title="Web" href="https://engineering.fb.com/category/web/" class="nav-link">Web</a></li>
+</ul>
+</li>
+<li id="menu-item-2682" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-2682 dropdown"><a title="Infrastructure Systems" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Infrastructure Systems <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-218" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-218"><a title="Core Infra" href="https://engineering.fb.com/category/core-infra/" class="nav-link">Core Infra</a></li>
+	<li id="menu-item-219" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-219"><a title="Data Infrastructure" href="https://engineering.fb.com/category/data-infrastructure/" class="nav-link">Data Infrastructure</a></li>
+	<li id="menu-item-220" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-220"><a title="DevInfra" href="https://engineering.fb.com/category/developer-tools/" class="nav-link">DevInfra</a></li>
+	<li id="menu-item-226" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-226"><a title="Production Engineering" href="https://engineering.fb.com/category/production-engineering/" class="nav-link">Production Engineering</a></li>
+	<li id="menu-item-227" class="menu-item menu-item-type-taxonomy menu-item-object-category current-post-ancestor current-menu-parent current-post-parent nav-item menu-item-227"><a title="Security &amp; Privacy" href="https://engineering.fb.com/category/security/" class="nav-link">Security &amp; Privacy</a></li>
+	<li id="menu-item-18607" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-18607"><a title="Research Publications" href="https://research.facebook.com/publications/research-areas/systems-infrastructure/" class="nav-link" target="_blank" rel="noopener">Research Publications</a></li>
+</ul>
+</li>
+<li id="menu-item-2683" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-2683 dropdown"><a title="Physical Infrastructure" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Physical Infrastructure <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-215" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-215"><a title="Connectivity" href="https://engineering.fb.com/category/connectivity/" class="nav-link">Connectivity</a></li>
+	<li id="menu-item-216" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-216"><a title="Data Center Engineering" href="https://engineering.fb.com/category/data-center-engineering/" class="nav-link">Data Center Engineering</a></li>
+	<li id="menu-item-217" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-217"><a title="Networking &amp; Traffic" href="https://engineering.fb.com/category/networking-traffic/" class="nav-link">Networking &amp; Traffic</a></li>
+	<li id="menu-item-18608" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-18608"><a title="Research Publications" href="https://research.facebook.com/publications/research-areas/networking-connectivity/" class="nav-link" target="_blank" rel="noopener">Research Publications</a></li>
+</ul>
+</li>
+<li id="menu-item-2684" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-2684 dropdown"><a title="Video Engineering &amp; AR/VR" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Video Engineering &amp; AR/VR <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-225" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-225"><a title="Video Engineering" href="https://engineering.fb.com/category/video-engineering/" class="nav-link">Video Engineering</a></li>
+	<li id="menu-item-223" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-223"><a title="Virtual Reality" href="https://engineering.fb.com/category/virtual-reality/" class="nav-link">Virtual Reality</a></li>
+	<li id="menu-item-13388" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-13388"><a title="Research Publications" href="https://research.facebook.com/publications/research-areas/augmented-reality-virtual-reality/" class="nav-link" target="_blank" rel="noopener">Research Publications</a></li>
+</ul>
+</li>
+<li id="menu-item-2685" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children nav-item menu-item-2685 dropdown"><a title="Artificial Intelligence" href="#" data-toggle="dropdown" class="nav-link dropdown-toggle">Artificial Intelligence <span class="caret"></span><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 129 129" enable-background="new 0 0 129 129" width="12px" height="15px">
+							<polyline points="40 50 80 90 120 50" stroke="#adb1b8" stroke-width="10" stroke-linecap="butt" fill="none" stroke-linejoin="miter"></polyline>
+						  </svg></a>
+<ul class=" dropdown-menu" role="menu">
+	<li id="menu-item-222" class="menu-item menu-item-type-taxonomy menu-item-object-category current-post-ancestor current-menu-parent current-post-parent nav-item menu-item-222"><a title="ML Applications" href="https://engineering.fb.com/category/ml-applications/" class="nav-link">ML Applications</a></li>
+	<li id="menu-item-221" class="menu-item menu-item-type-taxonomy menu-item-object-category nav-item menu-item-221"><a title="AI Research" href="https://engineering.fb.com/category/ai-research/" class="nav-link">AI Research</a></li>
+	<li id="menu-item-13387" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-13387"><a title="Research Publications" href="https://ai.facebook.com/results/?content_types%5B0%5D=publication" class="nav-link" target="_blank" rel="noopener">Research Publications</a></li>
+</ul>
+</li>
+<li id="menu-item-228" class="menu-item menu-item-type-custom menu-item-object-custom nav-item menu-item-228"><a title="Watch Videos" href="/videos" class="nav-link">Watch Videos</a></li>
+</ul></div>		</div><!-- .container -->
+	
+		<div class="search-container collapse" id="searchbarDropdown">
+			<div class="searchbar-search">
+				<div class="searchbar-container">
+
+					<div class="navbar-mobile-search-margin"></div>
+					<input type="text" name="search" placeholder="Search" class="form-control-lg navbar-mobile-search" autofocus="" autocomplete="off">
+					<button class="searchbar-clear">
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+				</div>
+			</div>
+		</div>
+	</nav><!-- .site-navigation -->
+
+</div><!-- .wrapper-navbar end -->
+
+<div class="wrapper" id="single-wrapper">
+
+	<div class="single-container row" id="content" tabindex="-1">
+
+		<!-- Do the left sidebar check. -->
+		
+
+
+<div class="content-area col-lg-8_75" id="primary">
+		<main class="site-main" id="main">
+
+			
+				
+<article class="post-24095 post type-post status-publish format-standard has-post-thumbnail hentry category-ml-applications category-security" id="post-24095">
+
+	<header class="entry-header">
+		<div class="entry-meta">
+			POSTED ON <span class="posted-on entry-date"><time class="published updated" datetime="2026-06-25">JUNE 25, 2026</time></span> TO <span class="cat-links"><a href="https://engineering.fb.com/category/ml-applications/" rel="category tag">ML Applications</a>, <a href="https://engineering.fb.com/category/security/" rel="category tag">Security &amp; Privacy</a></span>
+			<h1 class="entry-title"><div>Privacy-Aware Infrastructure in the AI-Native Era: An Asset Classification Case Study</div></h1>		</div><!-- .entry-meta -->
+
+	</header><!-- .entry-header -->
+
+			<figure id="post-feat-image-container">
+				<img width="1376" height="768" src="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-HERO.png" class="wp-post-image" alt="">						</figure>
+		
+	<div class="entry-authors-social">
+					<div class="entry-authors">
+				By <a href="https://engineering.fb.com/author/rituraj-kirti/" title="Posts by Rituraj Kirti" class="author url fn" rel="author">Rituraj Kirti</a>, <a href="https://engineering.fb.com/author/vasileios-lakafosis/" title="Posts by Vasileios Lakafosis" class="author url fn" rel="author">Vasileios Lakafosis</a>			</div>
+			</div>
+
+	
+	<div class="entry-content">
+
+		<div class="jetpack-video-wrapper"><span class="embed-youtube" style="text-align:center; display: block;"><iframe class="youtube-player" src="https://www.youtube.com/embed/q9RSv2ltZtU?version=3&amp;rel=1&amp;showsearch=0&amp;showinfo=1&amp;iv_load_policy=1&amp;fs=1&amp;hl=en-US&amp;autohide=2&amp;wmode=transparent" allowfullscreen="true" style="border: 0px; display: block; margin: 0px; width: 769px; height: 432.562px;" sandbox="allow-scripts allow-same-origin allow-popups allow-presentation allow-popups-to-escape-sandbox" data-ratio="0.5625" data-width="4000" data-height="2250"></iframe></span></div>
+<p>&nbsp;</p>
+<p><span style="font-weight: 400;">Privacy controls — systems that enforce retention, access, allowed-purpose, downstream-sharing, or anonymization policies — require a reliable understanding of data to function. Before such a control can operate effectively, it must know exactly what it is looking at. This can be complex, as demonstrated by a field simply named “</span><span style="font-weight: 400; font-family: 'courier new', courier;">age</span><span style="font-weight: 400;">“: In one context, it might describe a person and require strict protections, while in another, it could be a cache time-to-live (TTL) numerical value in an infrastructure pipeline.</span></p>
+<p class="fig" style="text-align: center;"><figure id="attachment_24098" aria-describedby="caption-attachment-24098" style="width: 1996px" class="wp-caption alignnone"><img decoding="async" class="wp-image-24098 size-full" src="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-1-e1782178036492.png" alt="" width="1996" height="1163" srcset="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-1-e1782178036492.png 1996w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-1-e1782178036492.png?resize=916,534 916w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-1-e1782178036492.png?resize=768,447 768w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-1-e1782178036492.png?resize=1024,597 1024w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-1-e1782178036492.png?resize=1536,895 1536w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-1-e1782178036492.png?resize=96,56 96w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-1-e1782178036492.png?resize=192,112 192w" sizes="(max-width: 992px) 100vw, 62vw"><figcaption id="caption-attachment-24098" class="wp-caption-text" style="text-align: left;">Figure 1: One column name, two governance outcomes. The identical field <span style="font-family: 'courier new', courier;">age</span> is <strong>personal data</strong> when it describes a person, but ordinary <strong>system metadata</strong> when it is a cache TTL. Which is why a name alone cannot determine the privacy requirement.</figcaption></figure></p>
+<p><span style="font-weight: 400;">This is the everyday problem behind </span><a href="https://engineering.fb.com/2025/10/23/security/scaling-privacy-infrastructure-for-genai-product-innovation/" target="_blank" rel="noopener"><span style="font-weight: 400;">privacy-aware infrastructure (PAI)</span></a><span style="font-weight: 400;">: The inputs are noisy and probabilistic, but the outputs need to be precise enough to drive enforcement.&nbsp;</span></p>
+<p><span style="font-weight: 400;">AI-native products make that problem harder. They introduce new data modalities, faster iteration cycles, derived features, embeddings, multimodal inputs, and changing policy interpretations. Manual review remains important for judgment and accountability, but it cannot keep up with the volume and pace of change.</span></p>
+<p><span style="font-weight: 400;">At Meta, we apply a hybrid pattern for asset classification at scale:</span></p>
+<ul>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Build a rich context before asking a model to reason.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Use LLMs to handle ambiguity, cold start, and novelty.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Keep human-reviewed labels separate from model-generated recommendations.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Distill stable behavior into deterministic, versioned rules for routine enforcement.</span></li>
+</ul>
+<p><span style="font-weight: 400;">The end goal is not “LLMs everywhere.” Instead, it is a system that can learn from ambiguous signals while moving production enforcement toward logic that is low latency, replayable, and easier to audit.</span></p>
+<p><span style="font-weight: 400;">The LLM does not make the production decision in the common case, deterministic rules do. We use LLMs deliberately and narrowly, to interpret novel or ambiguous assets, and then to distill what they learn into versioned human-reviewed deterministic rules, which steadily shrinks the LLM’s role in production over time. Humans stay in the loop where it matters most. People adjudicate the reviewed reference labels, and they review and approve rule promotions that could change how protection is enforced.</span></p>
+<p><span style="font-weight: 400;">PAI addresses four operational concerns:&nbsp;</span></p>
+<ol>
+<li style="font-weight: 400;" aria-level="1"><b>Understand</b><span style="font-weight: 400;"> what data exists and how it is governed.&nbsp;</span></li>
+<li style="font-weight: 400;" aria-level="1"><b>Discover</b><span style="font-weight: 400;"> which data flows are relevant to a policy question.&nbsp;</span></li>
+<li style="font-weight: 400;" aria-level="1"><b>Enforce</b><span style="font-weight: 400;"> retention/access/purpose/sharing constraints.</span></li>
+<li style="font-weight: 400;" aria-level="1"><b>Demonstrate</b><span style="font-weight: 400;"> compliance through verifiable evidence.</span></li>
+</ol>
+<p><span style="font-weight: 400;">Asset classification sits at the </span><b>understand</b><span style="font-weight: 400;"> layer. It provides the foundation that every downstream concern depends on.</span></p>
+<p class="fig" style="text-align: center;"><figure id="attachment_24099" aria-describedby="caption-attachment-24099" style="width: 1996px" class="wp-caption alignnone"><img loading="lazy" decoding="async" class="wp-image-24099 size-full" src="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-2-e1782178335368.png" alt="" width="1996" height="1303" srcset="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-2-e1782178335368.png 1996w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-2-e1782178335368.png?resize=916,598 916w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-2-e1782178335368.png?resize=768,501 768w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-2-e1782178335368.png?resize=1024,668 1024w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-2-e1782178335368.png?resize=1536,1003 1536w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-2-e1782178335368.png?resize=96,63 96w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-2-e1782178335368.png?resize=192,125 192w" sizes="auto, (max-width: 992px) 100vw, 62vw"><figcaption id="caption-attachment-24099" class="wp-caption-text" style="text-align: left; max-width: 728.5px;">Figure 2: The privacy-aware infrastructure stack is a dependency pyramid: each capability rests on the one below it. <strong>Understand</strong> —classifying what the data actually is — is the load-bearing base. If it is wrong, everything above (discover, enforce, demonstrate) inherits the error.</figcaption></figure></p>
+<h2><span style="font-weight: 400;">Why Asset Classification Matters</span></h2>
+<p><span style="font-weight: 400;">Asset classification is the foundation for many privacy controls. Before a system can enforce retention, access, allowed-purpose, downstream-sharing, or anonymization policies, it needs a reliable view of what the asset is and how it should be governed.</span></p>
+<p><span style="font-weight: 400;">An asset can be more than a table or column. It can be a nested field inside a payload, a log key, an event parameter, an API field, a machine learning (ML) feature, an embedding, or a derived dataset produced by an intermediate pipeline. That breadth matters because AI-native systems often transform data across many representations. A single source signal can move through pipelines, become a feature, appear in a model-training workflow, or be joined with other derived signals. Classification has to follow the meaning of the data, not just its shape.</span></p>
+<p><span style="font-weight: 400;">There are four recurring challenges:</span></p>
+<p><b>First, noisy and weak signals</b><span style="font-weight: 400;">: Dozens of context fields are fetched per asset, which forces the model to rediscover what matters each time. High token usage dilutes attention, and decision boundaries get buried in irrelevant or misleading fields. A field called </span><span style="font-weight: 400;">age</span><span style="font-weight: 400;"> in a caching pipeline is a concrete example: Without code resolution and lineage analysis, a classifier will trigger false restrictions on the entire pipeline.</span></p>
+<p><b>Second, the relevant context is distributed</b><span style="font-weight: 400;">. Code, lineage, ownership, semantic annotations, documentation, and usage patterns often live in different systems. A good classifier needs to assemble that context before making a decision.</span></p>
+<p><b>Third, requirements evolve</b><span style="font-weight: 400;">. Product teams move quickly, and policy interpretation can change as new product capabilities appear. A static rule set or periodic manual review process can leave gaps between reviews.</span></p>
+<p><b>Fourth, classification is only useful if it feeds enforcement</b><span style="font-weight: 400;">. A false positive can trigger unnecessary restrictions downstream. A false negative can leave a protection gap. The classifier sits near the front of the enforcement pipeline, so its error profile affects every system that depends on it.</span></p>
+<p><span style="font-weight: 400;">This creates the central tension: Classification needs to reason under ambiguity, but enforcement needs decisions that can be explained and reproduced later.</span></p>
+<p class="fig" style="text-align: center;"><figure id="attachment_24100" aria-describedby="caption-attachment-24100" style="width: 1996px" class="wp-caption alignnone"><img loading="lazy" decoding="async" class="wp-image-24100 size-full" src="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-3-e1782178426532.png" alt="" width="1996" height="880" srcset="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-3-e1782178426532.png 1996w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-3-e1782178426532.png?resize=916,404 916w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-3-e1782178426532.png?resize=768,339 768w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-3-e1782178426532.png?resize=1024,451 1024w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-3-e1782178426532.png?resize=1536,677 1536w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-3-e1782178426532.png?resize=96,42 96w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-3-e1782178426532.png?resize=192,85 192w" sizes="auto, (max-width: 992px) 100vw, 62vw"><figcaption id="caption-attachment-24100" class="wp-caption-text" style="text-align: left; max-width: 728.516px;">Figure 3: Four distinct difficulties (context dependence, sparse signal, a heavy long tail, and constant schema drift) all collapse into a single tension: Classification wants to <strong>reason under ambiguity</strong>, while enforcement demands results it can <strong>explain and reproduce</strong>. The whole design exists to hold these two in balance.</figcaption></figure></p>
+<h2><span style="font-weight: 400;">The Pattern</span></h2>
+<p><span style="font-weight: 400;">Our approach is built around three principles that emerged from building and operating the system:</span></p>
+<p><b>First, context beats prompts.</b><span style="font-weight: 400;"> Most classification failures were not caused by weak instructions; they were caused by weak or missing evidence. Hours of prompt optimization produced marginal improvement when the model was reasoning over raw, noisy fields. </span><i><span style="font-weight: 400;">Structuring context into evidence briefs, with supporting signals, contradicting signals, provenance, and masked circular fields, produced much larger accuracy improvements.</span></i><span style="font-weight: 400;"> The practical lesson is simple: Focus on what goes into the model before optimizing how you ask.</span></p>
+<p><b>Second, decouple evaluation from optimization.</b><span style="font-weight: 400;"> LLM outputs are useful recommendations, but they cannot become their own ground truth. </span><i><span style="font-weight: 400;">The evaluation loop needs to stay independent from the classifier</span></i><span style="font-weight: 400;">: different models, different prompt strategies, frozen reference sets, human-reviewed labels, and regression gates. If evaluation and optimization share the same loop, the system can end up measuring drift instead of progress.</span></p>
+<p><b>Third, distill stable behavior into deterministic rules.</b><span style="font-weight: 400;"> LLMs are useful for ambiguity, cold start, and new patterns. They are not the right default enforcement mechanism at scale. </span><i><span style="font-weight: 400;">When the system finds stable, validated patterns, those patterns should become versioned, auditable rules that run without the LLM</span></i><span style="font-weight: 400;">. Over time, the classifier should progressively shrink its own LLM surface area, leaving model inference for novel or ambiguous assets while routine enforcement becomes deterministic, low-latency, and replayable.</span></p>
+<p><span style="font-weight: 400;">These principles translate into a concrete operating pattern: Define a stable classification contract, build a context mesh, route decisions through a deterministic-first funnel, and keep the learning loop safe with independent evaluation and reviewed labels.</span></p>
+<p><span style="font-weight: 400;">To execute on this pattern, we break the work down into seven practical stages. These stages transform the high-level architecture into a concrete, repeatable process.</span></p>
+<p><span style="font-weight: 400;">The rest of this post walks through those pieces using asset classification as the case study.</span></p>
+<p class="fig" style="text-align: center;"><figure id="attachment_24101" aria-describedby="caption-attachment-24101" style="width: 1999px" class="wp-caption alignnone"><img loading="lazy" decoding="async" class="size-full wp-image-24101" src="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-4.png" alt="" width="1999" height="1358" srcset="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-4.png 1999w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-4.png?resize=916,622 916w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-4.png?resize=768,522 768w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-4.png?resize=1024,696 1024w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-4.png?resize=1536,1043 1536w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-4.png?resize=96,65 96w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-4.png?resize=192,130 192w" sizes="auto, (max-width: 992px) 100vw, 62vw"><figcaption id="caption-attachment-24101" class="wp-caption-text" style="text-align: left; max-width: 728.516px;"><span style="font-weight: 400;">Figure 4: The two-lane operating pattern: </span><b>(1)</b><span style="font-weight: 400;"> Most requests (~85%) resolve on the deterministic path in single-digit milliseconds, and within ~40 ms including context assembly; the ~15% LLM fallback is slower (seconds) and budgeted separately; </span><b>(2-3)</b><span style="font-weight: 400;"> a nightly offline lane samples served decisions, adjudicates them against reviewed truth, and re-evaluates; </span><b>(4)</b><span style="font-weight: 400;"> distilled rules are promoted back into the live decision funnel by content-addressed swap. The masking invariant holds on both lanes.</span></figcaption></figure></p>
+<h3><span style="font-weight: 400;">1.) Start With the Contract</span></h3>
+<p><span style="font-weight: 400;">A classifier should behave like a platform service. That means its contract should be small, explicit, and stable. For each asset, the classifier receives an identifier and a bundle of context. It returns a structured result with:</span></p>
+<ul>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">A category from the classifier’s taxonomy.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">A confidence score – a raw model self-assessment whose calibration we evaluate against reviewed labels (see below).</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">A decision trace showing which evidence influenced the result.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">The rule that matched, if the decision came from deterministic logic.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Version information for the context, rules, and prompt used to make the decision.</span></li>
+</ul>
+<p><span style="font-weight: 400;">The taxonomy is domain-specific. One classifier might distinguish user data from operational data. Another might classify whether an asset is eligible for a particular AI-training use case. We avoid forcing every classifier into one universal taxonomy. Instead, each classifier owns one scoped question, and downstream systems compose the answers when they need multiple facets.</span></p>
+<p><span style="font-weight: 400;">That scoping is important. A narrow classifier is easier to evaluate, easier to debug, and easier to govern. It also makes the decision trace more meaningful because the classifier is explaining one decision, not trying to solve every policy question at once.</span></p>
+<p class="fig" style="text-align: center;"><figure id="attachment_24102" aria-describedby="caption-attachment-24102" style="width: 1999px" class="wp-caption alignnone"><img loading="lazy" decoding="async" class="wp-image-24102 size-full" src="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-5-e1782178564887.png" alt="" width="1999" height="900" srcset="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-5-e1782178564887.png 1999w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-5-e1782178564887.png?resize=916,412 916w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-5-e1782178564887.png?resize=768,346 768w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-5-e1782178564887.png?resize=1024,461 1024w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-5-e1782178564887.png?resize=1536,692 1536w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-5-e1782178564887.png?resize=96,43 96w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-5-e1782178564887.png?resize=192,86 192w" sizes="auto, (max-width: 992px) 100vw, 62vw"><figcaption id="caption-attachment-24102" class="wp-caption-text" style="text-align: left; max-width: 728.5px;">Figure 5.:The classifier is a <strong>service contract</strong>, not a prompt: a fixed request in, a typed result out. Three response fields — <span style="font-family: 'courier new', courier;">matched_rule</span>, <span style="font-family: 'courier new', courier;">decision_trace</span>, and <span style="font-family: 'courier new', courier;">versions</span> — are what make every classification replayable and auditable after the fact.</figcaption></figure></p>
+<h3><span style="font-weight: 400;">2.) Build Context Before Prompting</span></h3>
+<p><span style="font-weight: 400;">Most classification failures are not prompt failures. They are context failures. If the only signal is a field name, the model has to guess. If the system can also provide code references, lineage, ownership, semantic annotations, and nearby usage, the model can reason from better evidence.</span></p>
+<p><span style="font-weight: 400;">In practice, the context mesh may include:</span></p>
+<ul>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Source-code resolution, including where a field is defined or used.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Ownership and organizational metadata.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Semantic annotations, such as data type or origin.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Lineage signals that show where data came from and where it flows.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">ML heuristic outputs from scanners or embedding-based classifiers.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Code search results that show references, logging declarations, or call sites.</span></li>
+</ul>
+<p><span style="font-weight: 400;">The point is not to pass everything to the LLM. More context is not automatically better. Some fields are redundant. Some are noisy. Some can create circular reasoning if they already encode the label we are trying to predict.</span></p>
+<p><span style="font-weight: 400;">So the system creates an </span><b>evidence brief – </b><span style="font-weight: 400;">a compact summary of the strongest supporting signals, contradicting signals, and provenance chains. Instead of asking the model to sift through raw context, we ask it to reason over the evidence that is most relevant to the classification decision.</span></p>
+<p class="fig" style="text-align: center;"><figure id="attachment_24103" aria-describedby="caption-attachment-24103" style="width: 1426px" class="wp-caption alignnone"><img loading="lazy" decoding="async" class="size-full wp-image-24103" src="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-6.png" alt="" width="1426" height="850" srcset="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-6.png 1426w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-6.png?resize=916,546 916w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-6.png?resize=768,458 768w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-6.png?resize=1024,610 1024w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-6.png?resize=96,57 96w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-6.png?resize=192,114 192w" sizes="auto, (max-width: 992px) 100vw, 62vw"><figcaption id="caption-attachment-24103" class="wp-caption-text" style="text-align: left; max-width: 728.516px;">Figure 6: The evidence brief assembled for one asset. Each signal is weighted by reliability (bar length) and split into <strong>support</strong> versus <strong>contra</strong>. The pre-existing privacy label is deliberately <strong>masked</strong>. Feeding it back would let the model grade its own homework and collapse the signal.</figcaption></figure></p>
+<p><span style="font-weight: 400;">Without this structuring, the model receives dozens of raw fields per asset and must rediscover what matters leading to high token consumption, diluted attention, and decision boundaries buried in noise. The evidence brief solves this by pre-ranking signals. For a field like </span><span style="font-weight: 400; font-family: 'courier new', courier;">user_payload.email_address</span><span style="font-weight: 400;">, an evidence brief might say:</span></p>
+<ul>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Supporting signal: Lineage connects the asset to a user-facing logging pipeline (weight 0.8).</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Supporting signal: Semantic annotation indicates EMAIL-like data (weight 0.9).</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Contradicting signal: Ownership metadata points to an infrastructure team, not a user-facing product (weight 0.3).</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Suppressed signal: An existing privacy label was removed to avoid circular reasoning.</span></li>
+</ul>
+<p><span style="font-weight: 400;">That last point matters. A model should not be allowed to “discover” the correct answer by reading a field that already contains the answer. Masking is not just prompt hygiene, it is a system invariant. Fields masked from the LLM are also blocked from learned rule distillation so the model cannot smuggle the answer into a rule by way of a circular field. Deterministic rules that use high-risk fields require explicit review.</span></p>
+<p><span style="font-weight: 400;">Over time, the system can also learn which context fields are useful. Fields that consistently improve classification can be prioritized. Fields that are unstable, redundant, or harmful can be suppressed. This turns signal quality from a matter of intuition into something measurable.</span></p>
+<h3><span style="font-weight: 400;">3.) Use a Decision Funnel</span></h3>
+<p><span style="font-weight: 400;">Once the context is assembled, the classifier routes the asset through a decision funnel.</span></p>
+<p><span style="font-weight: 400;">The first path is </span><b>deterministic</b><span style="font-weight: 400;">. If a known, versioned rule matches the asset, the classifier can return a decision quickly and with a clear explanation. Deterministic rules work well for stable patterns – a well-understood namespace, a semantic annotation with high precision, or a combination of signals that has been validated over time.</span></p>
+<p><span style="font-weight: 400;">The second path is </span><b>LLM-based</b><span style="font-weight: 400;">. If the asset is novel, ambiguous, or outside current rule coverage, the classifier asks the model to reason over the evidence brief. The model returns a candidate label, confidence indicators, a decision path, and cited evidence.</span><span style="font-weight: 400;"><br>
+</span><span style="font-weight: 400;"><br>
+</span><span style="font-weight: 400;">In our production deployment, Figure 7 shows how cheap deterministic rules resolve the large majority of traffic, roughly 85%, in single-digit milliseconds. The LLM is reserved as a fallback for the roughly 15% that is novel or ambiguous. That path is slower — on the order of seconds — and roughly 400 times the compute cost, so it is budgeted separately. Both paths emit the identical result schema. The masking invariant is enforced on each.</span></p>
+<p class="fig" style="text-align: center;"><figure id="attachment_24104" aria-describedby="caption-attachment-24104" style="width: 1996px" class="wp-caption alignnone"><img loading="lazy" decoding="async" class="wp-image-24104 size-full" src="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-7-e1782178654322.png" alt="" width="1996" height="986" srcset="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-7-e1782178654322.png 1996w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-7-e1782178654322.png?resize=916,452 916w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-7-e1782178654322.png?resize=768,379 768w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-7-e1782178654322.png?resize=1024,506 1024w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-7-e1782178654322.png?resize=1536,759 1536w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-7-e1782178654322.png?resize=96,47 96w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-7-e1782178654322.png?resize=192,95 192w" sizes="auto, (max-width: 992px) 100vw, 62vw"><figcaption id="caption-attachment-24104" class="wp-caption-text" style="text-align: left; max-width: 728.516px;"><span style="font-weight: 400;">Figure 7: Cheap, deterministic rules resolve the large majority of traffic (~85%) in single-digit milliseconds; the LLM is reserved as a fallback for the ~15% that is novel or ambiguous, a path that is slower (on the order of seconds) and roughly 400 times the compute cost, budgeted separately. Both paths emit the identical result schema, and the masking invariant is enforced on each.</span></figcaption></figure></p>
+<p><span style="font-weight: 400;">That confidence deserves a careful read. The raw score is a model self-assessment, a number the model produces from its own judgment, not an inherent probability of being correct. So we evaluate its calibration against reviewed labels. Raw scores are compared to the correctness rate actually observed on the human-reviewed reference set, which tells us how well a given score tracks a real probability of being right. Confidence-based routing in the funnel, for example, accept automatically versus route to human review, should use calibrated scores where that calibrated path is enabled, rather than the raw number</span></p>
+<p><span style="font-weight: 400;">Both paths emit the same result format. Downstream enforcement systems do not need to know whether a decision came from a rule or from model-based reasoning. They receive a category, confidence, trace, and versioned decision metadata.</span></p>
+<p><span style="font-weight: 400;">This split is what makes the pattern practical. LLMs are useful for ambiguity and cold start. Rules are better for routine enforcement. The more stable behavior we can distill into rules, the less often the serving path needs model inference.</span></p>
+<p><span style="font-weight: 400;">Rule coverage becomes an important operational metric. If coverage rises while quality holds steady, the classifier is moving toward a healthier steady state: fewer routine calls to the model, lower resource use, lower latency, and decisions that are easier to replay.</span></p>
+<p><span style="font-weight: 400;">A critical system invariant: Fields masked from the LLM are also blocked from learned rule distillation, so a masked signal cannot re-enter the decision through an automatically distilled rule. In one production deployment, a subtle bug in how masked context was handled during rule evaluation caused rules to silently fall through to LLM fallback, so rule coverage appeared to plateau even as the rule set grew. Fixing that handling immediately increased rule coverage and cut LLM inference calls significantly.&nbsp;</span></p>
+<p><span style="font-weight: 400;">The lesson: Masking is not a prompt-engineering concern, it is a system invariant. And deterministic rules that rely on high-risk fields require explicit review rather than inheriting masking implicitly.</span></p>
+<h3><span style="font-weight: 400;">4.) Solve Cold Start Deliberately</span></h3>
+<p><span style="font-weight: 400;">On day zero, a classifier has a hard problem: There may be millions of assets and very few reviewed labels. Random sampling is not enough. The categories that matter most for privacy can be rare, and rare categories are easy to miss if you wait for examples to appear naturally.</span></p>
+<p><span style="font-weight: 400;">Instead, we seed the process with policy-guided examples:</span></p>
+<ul>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Rare sensitive categories.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Borderline cases where policy interpretation is difficult.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Negative examples that look sensitive but are not.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Assets where context signals disagree.</span></li>
+</ul>
+<p><span style="font-weight: 400;">The goal is not to eliminate human review. It is to focus human attention on the cases where judgment matters most.</span></p>
+<h3><span style="font-weight: 400;">5.) Keep the Learning Loop Safe</span></h3>
+<p><span style="font-weight: 400;">Once the classifier is live, it needs to improve without grading its own homework.</span></p>
+<p><span style="font-weight: 400;">We separate two loops:</span></p>
+<p><span style="font-weight: 400;">The </span><b>reference loop</b><span style="font-weight: 400;"> produces reviewed labels. These labels are append-only, versioned, and tracked with provenance. If a label changes, the history is preserved rather than overwritten. Model-generated labels are useful recommendations, but they do not become reference labels automatically. Humans adjudicate uncertain or high-risk cases, and those adjudicated labels become the reference set for evaluation.</span></p>
+<p><span style="font-weight: 400;">The </span><b>optimization loop</b><span style="font-weight: 400;"> improves prompts, routing, context usage, and candidate rules. It can evolve quickly, but it is evaluated against the reviewed reference set, not against labels produced by the same model it is trying to optimize. This distinction matters: A classifier that trains or validates itself on its own predictions can appear to improve while drifting away from the policy intent.</span></p>
+<p><span style="font-weight: 400;">For quality control, we use a </span><b>multi-panel judge – </b><span style="font-weight: 400;">three independent LLM evaluations, each with a different prompt strategy. One classifies directly from evidence. One critiques the reasoning first, then classifies. One focuses exclusively on metadata signals, such as on-call, lineage, and semantic annotations, while ignoring names and descriptions. All three share a single judge model, a larger reasoning model deliberately different from the classifier model.</span></p>
+<p><span style="font-weight: 400;">The three judges share one scaffold and differ only in how they are asked to reason. The skeleton below is illustrative, not the literal production prompts, but it shows the structure. Each judge receives the same masked evidence brief, the masking invariant still holds, and each returns a structured verdict.</span></p>
+<pre class="line-numbers language-none" tabindex="0"><code class="language-none"># Shared scaffold (all three judges)
+INPUT  = masked_evidence_brief   # pre-existing privacy label removed; masking invariant holds
+OUTPUT = {label, rationale, confidence}
+JUDGE_MODEL = larger reasoning model, deliberately != classifier model
+ 
+# V1 - direct-from-evidence
+verdict_1 = judge(brief, instruction="Classify the asset directly from the evidence.")
+ 
+# V2 - critique-then-classify
+verdict_2 = judge(brief, instruction="First critique the supporting and contradicting signals, then classify.")
+ 
+# V3 - metadata-only
+verdict_3 = judge(brief, instruction="Use ONLY metadata signals (on-call, lineage, semantic annotations). Ignore names and descriptions.")
+ 
+# Aggregate
+final_label = majority_vote(verdict_1, verdict_2, verdict_3)
+Agreement = cohens_kappa(verdict_1, verdict_2, verdict_3)   # inter-rater reliability
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><span style="font-weight: 400;">Results aggregate by majority vote. We track panel agreement across the three judge framings as a stability signal, while Cohen’s kappa (κ) compares the judge consensus against the reference labels (or against the classifier output), providing a statistical signal about classification reliability. These kappa scores drive structured loop decisions: </span><b>Continue</b><span style="font-weight: 400;"> when the system is healthy, </span><b>WidenAudit</b><span style="font-weight: 400;"> when label noise is suspected, </span><b>FreezeAndAudit</b><span style="font-weight: 400;"> when quality declines for two or more iterations, and </span><b>DataProblem</b><span style="font-weight: 400;"> when labels or taxonomy appear fundamentally broken and the system should halt and escalate. This prevents the iteration loop from shipping regressions to production.</span></p>
+<p><span style="font-weight: 400;">For imbalanced taxonomies, we use metrics that expose rare-class failures. Accuracy alone can be misleading: A classifier that labels everything as non-sensitive may look accurate if sensitive assets are rare. Matthews correlation coefficient, macro F1, per-class recall, balanced accuracy, and calibration checks give a more complete picture.</span></p>
+<p><span style="font-weight: 400;">We also look for fragile decisions. One useful test is counterfactual masking: Remove one context field at a time and classify again. If the decision flips when a single weak signal disappears, the asset is flagged for review. The original prediction may still be correct, but the reasoning may be too brittle for confident automation.</span></p>
+<p><span style="font-weight: 400;">When quality drops, the system should slow down or stop. That can mean widening the audit sample, freezing optimization, or escalating a taxonomy or labeling problem for human review. A learning system needs brakes, not just accelerators.</span></p>
+<h3><span style="font-weight: 400;">6.) Distill Stable Behavior Into Rules</span></h3>
+<p><span style="font-weight: 400;">Even a strong LLM classifier should not be the default enforcement path forever. This distillation (not autonomous decision-making) is where we concentrate the model’s value. Any rule that could change how sensitive data is protected is reviewed and approved by a person before it goes live.</span></p>
+<p><span style="font-weight: 400;">As the system collects reviewed labels and decision traces, it can identify patterns that are stable enough to encode as deterministic rules. A rule might capture a high-precision semantic annotation, a reliable ownership and lineage combination, or a repeated pattern across a class of assets.</span></p>
+<p><span style="font-weight: 400;">Candidate rules go through validation before they affect serving decisions. A typical flow looks like this:</span></p>
+<ul>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Propose a rule from stable context and label patterns.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Test it against a held-out reviewed set.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Run it in shadow mode on production-like traffic without changing serving behavior.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Promote it only if quality, coverage, and regression checks clear the required gates.</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Retire or revise it if the pattern becomes stale or quality degrades.</span></li>
+</ul>
+<p><span style="font-weight: 400;">Distillation operates in stages of increasing complexity:</span></p>
+<p><b>Stage 1: Field-based rules.</b><span style="font-weight: 400;"> Extract single-field patterns (exact match, keyword, numeric range, value-set membership, namespace patterns), with a minimum support of two assets and minimum purity of 80%.These are candidate-mining thresholds for surfacing rules to evaluate, not promotion thresholds. Every candidate from any stage still has to clear holdout validation, a higher dev-precision bar, shadow mode, and human review where protection could change before it can serve.&nbsp;</span></p>
+<p><b>Stage 2: Composite rules.</b><span style="font-weight: 400;"> For uncovered categories, search for conjunctions (e.g., “on-call contains X AND semantic type is ACCOUNT_ID”) under stricter gates — 95% purity, 10 examples minimum, and a stability check on 50% subsamples.&nbsp;</span></p>
+<p><b>Stage 3 (optional): LLM-assisted rule generation</b><span style="font-weight: 400;">. The model proposes custom conditions combining lineage depth with ownership patterns that manual heuristics miss, gated by rollout controls and default-off. Each candidate rule then proceeds through: holdout validation → blacklist if failed (bounded-TTL) → shadow mode (log, don’t apply) → promote to rules.yaml only if quality gates clear. Promoted rules shrink the LLM surface area.</span></p>
+<p><span style="font-weight: 400;">The important principle is that deterministic rules should not quietly reduce protection. Rule promotion needs safeguards that are designed to catch regressions, especially for sensitive classes.</span></p>
+<p><span style="font-weight: 400;">Validated rules are exported to Python, SQL, JSON, or Hack for deployment in production systems with zero LLM dependency. We manage these rollouts using compare-and-swap (CAS) semantics: We write immutable rule and prompt versions, then activate them via a lease-guarded compare-and-swap on the published pointer (atomic within our single-writer model). This ensures the production path remains a deterministic engine, while the LLM is reserved solely for novel assets that lack rule coverage.</span></p>
+<p><span style="font-weight: 400;">This is what makes the hybrid approach sustainable. LLMs help the system learn. Deterministic rules help the system enforce.</span></p>
+<h3><span style="font-weight: 400;">7.) Automate the Right Things</span></h3>
+<p><span style="font-weight: 400;">Automation is necessary, but the boundary matters.</span></p>
+<p><span style="font-weight: 400;">We automate context acquisition, evidence brief generation, candidate classification, evaluation runs, failure analysis, and candidate rule proposal. These are high-volume tasks where automation can reduce manual toil and make the process more consistent.</span></p>
+<p><span style="font-weight: 400;">We keep human review in the places where judgment matters – ambiguous policy interpretation, reviewed reference labels, high-risk disagreements, and promotion decisions that could materially affect protection. This is a routing policy, not a prompt.&nbsp;</span></p>
+<p><span style="font-weight: 400;">A decision is escalated for human review when any of the following hold:</span></p>
+<ul>
+<li style="font-weight: 400;" aria-level="1"><b>Low calibrated confidence</b><span style="font-weight: 400;">. The calibrated confidence falls below the auto-accept threshold, so the decision is not safe to ship automatically.</span></li>
+<li style="font-weight: 400;" aria-level="1"><b>Judge-panel disagreement</b><span style="font-weight: 400;">. The three independent judges produce no clear majority, or inter-rater agreement (Cohen’s kappa) is low, a signal that the case is genuinely ambiguous.</span></li>
+<li style="font-weight: 400;" aria-level="1"><b>High-cost rare class</b><span style="font-weight: 400;">. The candidate is a rare sensitive category where a false negative is expensive, so the asymmetric error cost warrants a human check even at moderate confidence.</span></li>
+<li style="font-weight: 400;" aria-level="1"><b>Fragile reasoning</b><span style="font-weight: 400;">. Counterfactual masking flips the label when a single weak signal is removed.The prediction may still be right, but the reasoning is too brittle for confident automation.</span></li>
+<li style="font-weight: 400;" aria-level="1"><b>Protection-reducing rule promotion</b><span style="font-weight: 400;">. A candidate rule would change enforcement for a sensitive class in a way that could reduce protection. Deterministic rules should not quietly weaken it.</span></li>
+<li style="font-weight: 400;" aria-level="1"><b>Controller escalation</b><span style="font-weight: 400;">. The tuning controller enters Pausing or Diagnosing, indicating a quality concern or a fundamental labeling or taxonomy problem that a human must resolve.</span></li>
+</ul>
+<p><span style="font-weight: 400;">That balance is deliberate. Privacy-aware infrastructure should not hide uncertainty. If the model, judge, or evaluation loop disagrees, the system should surface that disagreement as a useful signal. Sometimes the right answer is not a better prompt. Sometimes the right answer is clearer policy guidance, better labels, or a narrower taxonomy.</span></p>
+<p><span style="font-weight: 400;">The best automation in this space does not replace people. It concentrates human attention on the hardest cases, records the reasoning, and turns stable learning into repeatable enforcement over time.</span></p>
+<h2><span style="font-weight: 400;">What We Learned</span></h2>
+<p class="fig" style="text-align: center;"><figure id="attachment_24124" aria-describedby="caption-attachment-24124" style="width: 1999px" class="wp-caption alignnone"><img loading="lazy" decoding="async" class="size-full wp-image-24124" src="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-figure-8-updated.png" alt="" width="1999" height="1234" srcset="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-figure-8-updated.png 1999w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-figure-8-updated.png?resize=916,565 916w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-figure-8-updated.png?resize=768,474 768w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-figure-8-updated.png?resize=1024,632 1024w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-figure-8-updated.png?resize=1536,948 1536w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-figure-8-updated.png?resize=96,59 96w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-figure-8-updated.png?resize=192,119 192w" sizes="auto, (max-width: 992px) 100vw, 62vw"><figcaption id="caption-attachment-24124" class="wp-caption-text" style="text-align: left; max-width: 728.5px;">Figure 8: Seven principles separate a robust hybrid classifier from a naive “just ask the model” approach. Each row contrasts the failure mode (left) with the design choice that fixes it (right) — favoring richer context, replayable decisions, honest metrics, an uncontaminated reference set, quality-gated coverage, distillation into rules, and a controller that knows when to stop.</figcaption></figure></p>
+<h3><span style="font-weight: 400;">Context Quality Beats Prompt Quality</span></h3>
+<p><span style="font-weight: 400;">When classification stalls, it is tempting to keep tuning the prompt. In our experience, better context often matters more. Code resolution, lineage, ownership, and semantic annotations can change the decision space in a way prompt edits cannot.</span></p>
+<p><span style="font-weight: 400;">The practical lesson is simple: Before asking whether the model needs a better instruction, ask whether it has the evidence a human reviewer would need. We saw this with a field named </span><span style="font-weight: 400;">age</span><span style="font-weight: 400;"> in a caching pipeline. It was a cache TTL, not a person’s age, and prompt-only changes did not fix it reliably, adding code resolution and lineage did. Once the model could see that the field resolved to a TTL, the false positive went away.</span></p>
+<h3><span style="font-weight: 400;">Determinism Means Replayability</span></h3>
+<p><span style="font-weight: 400;">The goal is not to make an LLM produce the same text every time. The goal is to reproduce a decision later using the same versioned inputs, context, and logic.</span></p>
+<p><span style="font-weight: 400;">That is why versioning matters. A useful decision trace should tell us what evidence was used, which rule or prompt version was active, and how the decision can be replayed during debugging, incident review, or audit support. In one review, we replayed a single past classification from its stored decision trace and the pinned context, rule, and prompt versions, and reconstructed exactly why the asset received the label it did, without rerunning the LLM.</span></p>
+<h3><span style="font-weight: 400;">Accuracy Alone Is Not Enough</span></h3>
+<p><span style="font-weight: 400;">For imbalanced taxonomies, accuracy can hide the failures that matter most. If a sensitive category is rare, a classifier can look good while missing too many examples of that category.</span></p>
+<p><span style="font-weight: 400;">Balanced metrics, per-class recall, calibration checks, and review of false negatives are all part of the quality picture. No single metric carries the whole story. We saw a classifier that labeled almost everything non-sensitive show a high overall accuracy while its per-class recall on a rare sensitive category stayed low. Matthews correlation coefficient and macro F1 surfaced the gap that accuracy hid, and the misses became the cases we routed back for review.</span></p>
+<h3><span style="font-weight: 400;">Keep Recommendation Separate From Truth</span></h3>
+<p><span style="font-weight: 400;">Model-generated labels are useful, but they should not automatically become reference labels. The reference set needs reviewed provenance, and holdout evaluation should not be contaminated by the same model outputs being evaluated.</span></p>
+<p><span style="font-weight: 400;">This separation adds friction by design. It is the friction that prevents a self-reinforcing loop from looking better while becoming less grounded. We saw the pattern directly. An optimization run scored against the same model’s earlier labels appeared to improve, but when we re-evaluated it against the frozen human-reviewed reference set, the apparent gains turned out to drift away from policy intent.</span></p>
+<h3><span style="font-weight: 400;">Coverage Is Not Correctness</span></h3>
+<p><span style="font-weight: 400;">Higher automation coverage is only useful if quality holds. A classifier can auto-resolve more assets while becoming less reliable on the cases that matter.</span></p>
+<p><span style="font-weight: 400;">That is why coverage should be tracked alongside recall, precision, regression checks, and robustness tests. The goal is not to classify more assets automatically at any cost. It is to automate the cases that are stable enough to automate. In one case, promoting a broad rule lifted automation coverage but dropped shadow-mode per-class recall on a sensitive class. Because we track coverage alongside recall, we caught the regression and narrowed the rule before it reached serving.</span></p>
+<h3><span style="font-weight: 400;">Distillation Is the Production Model</span></h3>
+<p><span style="font-weight: 400;">LLMs are useful for ambiguity, cold start, and new patterns. Deterministic logic is better for the routine path where decisions need to be fast, explainable, and reproducible.</span></p>
+<p><span style="font-weight: 400;">The sustainable model is a funnel: Let LLMs help discover and reason, then distill stable patterns into versioned rules that enforcement systems can run efficiently.</span></p>
+<h3><span style="font-weight: 400;">Self-Regulation Is Architectural, Not Operational</span></h3>
+<p><span style="font-weight: 400;">A learning system that does not know when to stop is a potential liability. We built a tuning controller that transitions through regimes:</span></p>
+<ul>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Observing (gathering signal).&nbsp;</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Maintaining (healthy iteration).</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Conserving (gains slowing).</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Pausing (quality concerns).</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Diagnosing (halt for fundamental issues).&nbsp;</span></li>
+</ul>
+<p><span style="font-weight: 400;">In practice, the oscillation detector identifies stalled optimization, classifiers cycling between two candidate prompts without improving, and terminates them early, saving thousands of wasted classification calls per stalled run. This self-regulation was designed into the architecture from the start; retrofitting it would have been significantly harder.</span></p>
+<p class="fig" style="text-align: center;"><figure id="attachment_24106" aria-describedby="caption-attachment-24106" style="width: 1996px" class="wp-caption alignnone"><img loading="lazy" decoding="async" class="wp-image-24106 size-full" src="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-9-e1782178824141.png" alt="" width="1996" height="1310" srcset="https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-9-e1782178824141.png 1996w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-9-e1782178824141.png?resize=916,601 916w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-9-e1782178824141.png?resize=768,504 768w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-9-e1782178824141.png?resize=1024,672 1024w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-9-e1782178824141.png?resize=1536,1008 1536w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-9-e1782178824141.png?resize=96,63 96w, https://engineering.fb.com/wp-content/uploads/2026/06/Privacy-Aware-Infrastructure-in-the-AI-Native-Era-Figure-9-e1782178824141.png?resize=192,126 192w" sizes="auto, (max-width: 992px) 100vw, 62vw"><figcaption id="caption-attachment-24106" class="wp-caption-text" style="text-align: left; max-width: 728.516px;">Figure 9: The controller is a state machine, not a retry loop. It escalates only as severity demands, <span style="font-family: 'courier new', courier;">Maintaining</span> → <span style="font-family: 'courier new', courier;">Conserving</span> → <span style="font-family: 'courier new', courier;">Pausing</span>, and can recover back down when health returns (dashed). Crucially, <span style="font-family: 'courier new', courier;">Diagnosing</span> is an absorbing state: once the systemic fault repeats, the loop halts and hands off to a human rather than burning budget on more retries.</figcaption></figure></p>
+<h2><span style="font-weight: 400;">Upcoming Directions</span></h2>
+<p><span style="font-weight: 400;">Three directions follow from this work:</span></p>
+<ol>
+<li style="font-weight: 400;" aria-level="1"><b>Migrate legacy classifiers</b><span style="font-weight: 400;"> to this system, replacing ad-hoc heuristics with the full context-mesh + distillation pipeline.</span></li>
+<li style="font-weight: 400;" aria-level="1"><b>Expand to other PAI workflows:</b><span style="font-weight: 400;"> The same pattern (context → LLM reasoning → distillation → deterministic enforcement) applies to lineage validation, purpose-boundary checking, and retention policy assignment.</span></li>
+<li style="font-weight: 400;" aria-level="1"><b>Apply beyond privacy:</b><span style="font-weight: 400;"> Early experiments suggest these techniques generalize to agent observability and oversight, where the same tension exists between probabilistic reasoning and auditable enforcement.</span></li>
+</ol>
+<h2><span style="font-weight: 400;">AI-Native Products Raise the Bar for PAI</span></h2>
+<p><span style="font-weight: 400;">AI-native products raise the bar for privacy-aware infrastructure. They create new data modalities, faster iteration cycles, and more ambiguous signals. At the same time, privacy enforcement still needs decisions that are consistent, explainable, and reproducible.</span></p>
+<p><span style="font-weight: 400;">Asset classification shows how to bridge that gap. Start with a clear contract. Build rich context. Use LLMs for novelty and ambiguity. Keep reviewed labels separate from model recommendations. Evaluate with metrics that expose rare-class failures. Distill stable behavior into deterministic, versioned rules.</span></p>
+<p><span style="font-weight: 400;">That pattern lets the system learn from ambiguity without making ambiguity the foundation of enforcement.</span></p>
+<p><span style="font-weight: 400;">The pattern also generalizes beyond our own use. A separate enforcement team compared this pattern against three alternatives head-to-head and chose it for their classification layer, independently of our work. In their evaluation, deterministic-first classification with LLM fallback produced more consistent, debuggable, and auditable decisions than end-to-end LLM approaches. Two teams independently arriving at the same trade-off (reasoning with LLMs, enforcing with rules) suggests a robust pattern.</span></p>
+<p><span style="font-weight: 400;">The broader lesson is that privacy-aware infrastructure is not a tax on engineering. It is a driving force for better architecture: clearer contracts, richer context, stronger evaluation, safer publication, and systems that know when to ask for human judgment.</span></p>
+<h1><span style="font-weight: 400;">Acknowledgements</span></h1>
+<p><em><span style="font-weight: 400;">The authors would like to acknowledge the contributions of many members of the Privacy-Aware Infrastructure team who have played a crucial role in the work described here. In particular, we extend special thanks to Alex Basiuk, Dionisios Sotirios Krongos, Fanghao Song, Kartikey Sachdeva, and Loka Potnuru for their foundational contributions to classifier analysis, runtime feature migration, scanner hardening, false-positive reduction, and age-flow precision improvements — as well as the broader PAI team for context enrichment and evaluation.</span></em></p>
+<p><em><span style="font-weight: 400;">We are also grateful to Dave Kurtzberg, Inchara Shivalingaiah, Juemin Wei, Nithya Arumugam, Zhe Wang, and team for independently validating the classification pattern within their autonomous remediation pipeline, to Jonathan Bergeron for sponsorship and support throughout, and to Deborah Davis for editorial guidance throughout.</span></em></p>
+<div class="sharedaddy sd-sharing-enabled"><div class="robots-nocontent sd-block sd-social sd-social-icon-text sd-sharing"><h3 class="sd-title">Share this:</h3><div class="sd-content"><ul data-sharing-events-added="true"><li class="share-facebook"><a rel="nofollow noopener noreferrer" data-shared="sharing-facebook-24095" class="share-facebook sd-button share-icon" href="https://engineering.fb.com/2026/06/25/security/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study/?share=facebook&amp;nb=1" target="_blank" aria-labelledby="sharing-facebook-24095">
+				<span id="sharing-facebook-24095" hidden="">Share on Facebook (Opens in new window)</span>
+				<span>Facebook</span>
+			</a></li><li class="share-threads"><a rel="nofollow noopener noreferrer" data-shared="sharing-threads-24095" class="share-threads sd-button share-icon" href="https://engineering.fb.com/2026/06/25/security/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study/?share=threads&amp;nb=1" target="_blank" aria-labelledby="sharing-threads-24095">
+				<span id="sharing-threads-24095" hidden="">Share on Threads (Opens in new window)</span>
+				<span>Threads</span>
+			</a></li><li class="share-jetpack-whatsapp"><a rel="nofollow noopener noreferrer" data-shared="sharing-whatsapp-24095" class="share-jetpack-whatsapp sd-button share-icon" href="https://engineering.fb.com/2026/06/25/security/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study/?share=jetpack-whatsapp&amp;nb=1" target="_blank" aria-labelledby="sharing-whatsapp-24095">
+				<span id="sharing-whatsapp-24095" hidden="">Share on WhatsApp (Opens in new window)</span>
+				<span>WhatsApp</span>
+			</a></li><li class="share-linkedin"><a rel="nofollow noopener noreferrer" data-shared="sharing-linkedin-24095" class="share-linkedin sd-button share-icon" href="https://engineering.fb.com/2026/06/25/security/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study/?share=linkedin&amp;nb=1" target="_blank" aria-labelledby="sharing-linkedin-24095">
+				<span id="sharing-linkedin-24095" hidden="">Share on LinkedIn (Opens in new window)</span>
+				<span>LinkedIn</span>
+			</a></li><li class="share-reddit"><a rel="nofollow noopener noreferrer" data-shared="sharing-reddit-24095" class="share-reddit sd-button share-icon" href="https://engineering.fb.com/2026/06/25/security/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study/?share=reddit&amp;nb=1" target="_blank" aria-labelledby="sharing-reddit-24095">
+				<span id="sharing-reddit-24095" hidden="">Share on Reddit (Opens in new window)</span>
+				<span>Reddit</span>
+			</a></li><li class="share-x"><a rel="nofollow noopener noreferrer" data-shared="sharing-x-24095" class="share-x sd-button share-icon" href="https://engineering.fb.com/2026/06/25/security/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study/?share=x&amp;nb=1" target="_blank" aria-labelledby="sharing-x-24095">
+				<span id="sharing-x-24095" hidden="">Share on X (Opens in new window)</span>
+				<span>X</span>
+			</a></li><li class="share-bluesky"><a rel="nofollow noopener noreferrer" data-shared="sharing-bluesky-24095" class="share-bluesky sd-button share-icon" href="https://engineering.fb.com/2026/06/25/security/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study/?share=bluesky&amp;nb=1" target="_blank" aria-labelledby="sharing-bluesky-24095">
+				<span id="sharing-bluesky-24095" hidden="">Share on Bluesky (Opens in new window)</span>
+				<span>Bluesky</span>
+			</a></li><li class="share-mastodon"><a rel="nofollow noopener noreferrer" data-shared="sharing-mastodon-24095" class="share-mastodon sd-button share-icon" href="https://engineering.fb.com/2026/06/25/security/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study/?share=mastodon&amp;nb=1" target="_blank" aria-labelledby="sharing-mastodon-24095">
+				<span id="sharing-mastodon-24095" hidden="">Share on Mastodon (Opens in new window)</span>
+				<span>Mastodon</span>
+			</a></li><li class="share-custom share-custom-hackernews"><a rel="nofollow noopener noreferrer" data-shared="sharing-custom-24095" class="share-custom share-custom-hackernews sd-button share-icon" href="https://engineering.fb.com/2026/06/25/security/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study/?share=custom-1699562127&amp;nb=1" target="_blank" aria-labelledby="sharing-custom-24095">
+				<span id="sharing-custom-24095" hidden="">Share on Hacker News (Opens in new window)</span>
+				<span style="background-image:url(&quot;https://news.ycombinator.com/y18.svg&quot;);">Hacker News</span>
+			</a></li><li class="share-email share-service-visible"><a rel="noopener" data-shared="sharing-email-24095" class="share-email sd-button share-icon" href="mailto:?subject=%5BShared%20Post%5D%20Privacy-Aware%20Infrastructure%20in%20the%20AI-Native%20Era%3A%20An%20Asset%20Classification%20Case%20Study&amp;body=https%3A%2F%2Fengineering.fb.com%2F2026%2F06%2F25%2Fsecurity%2Fprivacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study%2F&amp;share=email&amp;nb=1" target="_blank" aria-labelledby="sharing-email-24095" data-email-share-error-title="Do you have email set up?" data-email-share-error-text="If you're having problems sharing via email, you might not have email set up for your browser. You may need to create a new email yourself." data-email-share-nonce="b25b6aa790" data-email-share-track-url="https://engineering.fb.com/2026/06/25/security/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study/?share=email" jetpack-share-click-count="0">
+				<span id="sharing-email-24095" hidden="">Email a link to a friend (Opens in new window)</span>
+				<span>Email</span>
+			</a></li><li class="share-end"></li></ul></div></div></div>
+		
+	</div><!-- .entry-content -->
+
+
+</article><!-- #post-## -->
+
+<footer class="entry-footer">
+
+	
+</footer><!-- .entry-footer -->
+
+<div class="fb-like fb_iframe_widget" data-href="https://engineering.fb.com/2026/06/25/security/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study/" data-width="" data-layout="standard" data-action="like" data-size="small" data-share="true" fb-xfbml-state="rendered" fb-iframe-plugin-query="action=like&amp;app_id=&amp;container_width=904&amp;href=https%3A%2F%2Fengineering.fb.com%2F2026%2F06%2F25%2Fsecurity%2Fprivacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study%2F&amp;layout=standard&amp;locale=en_US&amp;sdk=joey&amp;share=true&amp;size=small&amp;width="><span style="vertical-align: bottom; width: 0px; height: 0px;"><iframe name="f1f8513d30c9bd754" width="1000px" height="1000px" data-testid="fb:like Facebook Social Plugin" title="fb:like Facebook Social Plugin" frameborder="0" allowtransparency="true" allowfullscreen="true" scrolling="no" allow="encrypted-media" src="https://www.facebook.com/v2.6/plugins/like.php?action=like&amp;app_id=&amp;channel=https%3A%2F%2Fstaticxx.facebook.com%2Fx%2Fconnect%2Fxd_arbiter%2F%3Fversion%3D46%23cb%3Df1acb1c22f828f69d%26domain%3Dengineering.fb.com%26is_canvas%3Dfalse%26origin%3Dhttps%253A%252F%252Fengineering.fb.com%252Ff597928f65da46278%26relation%3Dparent.parent&amp;container_width=904&amp;href=https%3A%2F%2Fengineering.fb.com%2F2026%2F06%2F25%2Fsecurity%2Fprivacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study%2F&amp;layout=standard&amp;locale=en_US&amp;sdk=joey&amp;share=true&amp;size=small&amp;width=" style="border-width: medium; border-style: none; border-color: currentcolor; border-image: none; visibility: visible; width: 0px; height: 0px;" class=""></iframe></span></div>
+
+
+<div class="more-articles"><a class="prev" aria-label="View the previous article: How Meta Engineered Ultra-Narrow Batteries for AI Glasses" href="https://engineering.fb.com/2026/06/23/production-engineering/how-meta-built-ultra-narrow-batteries-for-ai-glasses-meta-tech-podcast/"><div class="prev__thumb-wrapper"><img src="https://engineering.fb.com/wp-content/uploads/2026/06/Meta-Tech-Podcast-How-Meta-Built-Ultra-Narrow-Batteries-for-AI-Glasses-HERO.png?w=580&amp;h=326&amp;crop=1" width="580" height="326" alt="How Meta Engineered Ultra-Narrow Batteries for AI Glasses" class="prev__thumb"></div><div class="prev__details"><span class="prev__details__btn">Prev</span><br><span class="prev__details__title">How Meta Engineered Ultra-Narrow Batteries for AI Glasses</span></div></a><a class="next" aria-label="View the next article: 10 Years of Meta’s Commitment to Python" href="https://engineering.fb.com/2026/06/30/open-source/10-years-of-metas-commitment-to-python/"><div class="next__thumb-wrapper"><img src="https://engineering.fb.com/wp-content/uploads/2026/06/10-Years-Meta-Python-HERO-large.png?w=580&amp;h=326&amp;crop=1" width="580" height="326" alt="10 Years of Meta’s Commitment to Python" class="next__thumb"></div><div class="next__details"><span class="next__details__btn">Next</span><br><span class="next__details__title">10 Years of Meta’s Commitment to Python</span></div></a></div><div class="related-articles">
+	<div class="related-articles__header">
+		<h3 class="related-articles__header__headline">Read More in ML Applications</h3>
+		<a aria-label="View all articles in this ML Applications" class="related-articles__header__link" href="https://engineering.fb.com/category/ml-applications/">
+			View All		</a>
+	</div>
+
+	<div class="article-grids related-articles__grid">
+		<div class="row">
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-24095 type-post status-publish format-standard has-post-thumbnail hentry category-ml-applications category-security" id="post-24419">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2026/08/Domain-Expert-AI-Hero-1.png?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2026-09-02T02:00:29-07:00">
+					SEP 2, 2026				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2026/09/02/ml-applications/organizational-second-brain-ai-learns-from-experts/" rel="bookmark" aria-label="Read More about An Organizational Second Brain: Building an AI That Learns From Experts">
+					An Organizational Second Brain: Building an AI That Learns From Experts				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-24095 type-post status-publish format-standard has-post-thumbnail hentry category-ml-applications category-security" id="post-23996">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2026/05/Meta-Mult-stage-Ads-Ranking.png?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2026-08-05T12:20:20-07:00">
+					AUG 5, 2026				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2026/08/05/ml-applications/from-user-sequences-to-scaling-laws-a-multi-stage-architecture-for-metas-ads-ranking/" rel="bookmark" aria-label="Read More about From User Sequences to Scaling Laws: A Multi-Stage Architecture for Meta’s Ads Ranking">
+					From User Sequences to Scaling Laws: A Multi-Stage Architecture for Meta’s Ads Ranking				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-24095 type-post status-publish format-standard has-post-thumbnail hentry category-ml-applications category-security" id="post-24167">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2026/07/Training-GEM-at-LLM-Scale-Hero.png?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2026-08-03T11:00:17-07:00">
+					AUG 3, 2026				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2026/08/03/ml-applications/training-gem-at-llm-scale-meta-ads-recommendation-foundation-model/" rel="bookmark" aria-label="Read More about GEM Training: How Meta Doubled the Efficiency of Its LLM-Scale Ads Foundation Model">
+					GEM Training: How Meta Doubled the Efficiency of Its LLM-Scale Ads Foundation Model				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-24095 type-post status-publish format-standard has-post-thumbnail hentry category-ml-applications category-security" id="post-24221">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2026/07/image3.jpg?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy" title="image3">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2026-07-13T09:00:50-07:00">
+					JUL 13, 2026				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2026/07/13/ml-applications/modernizing-the-meta-ads-service-with-an-open-source-kernel-scheduler/" rel="bookmark" aria-label="Read More about Modernizing the Meta Ads Service With an Open-Source Kernel Scheduler">
+					Modernizing the Meta Ads Service With an Open-Source Kernel Scheduler				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-24095 type-post status-publish format-standard has-post-thumbnail hentry category-ml-applications category-security" id="post-23988">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2026/05/SilverTorch-Hero-Final.png?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2026-05-26T09:00:01-07:00">
+					MAY 26, 2026				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2026/05/26/ml-applications/silvertorch-index-as-model-new-retrieval-paradigm-recommendation-systems/" rel="bookmark" aria-label="Read More about SilverTorch: Index as Model — A New Retrieval Paradigm for Recommendation Systems">
+					SilverTorch: Index as Model — A New Retrieval Paradigm for Recommendation Systems				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+							<div class="article-grid col-12 col-md-4">
+					
+<article class="post post-24095 type-post status-publish format-standard has-post-thumbnail hentry category-ml-applications category-security" id="post-23982">
+	<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2026/05/Meta-Tech-Podcast-episode-85-Facebook-Friend-Bubbles.webp?w=580&amp;h=326&amp;crop=1" class="attachment-thumbnail size-thumbnail" alt="" loading="lazy">
+<header class="entry-header">
+		<div class="entry-header__top">
+			<span class="posted-on">
+				<time class="entry-date published" datetime="2026-05-13T06:00:44-07:00">
+					MAY 13, 2026				</time>
+			</span>
+		</div>
+
+		<div class="entry-title">
+			<div>
+				<a href="https://engineering.fb.com/2026/05/13/ml-applications/reel-friends-building-social-discovery-that-scales-to-billions/" rel="bookmark" aria-label="Read More about Reel Friends: Building Social Discovery that Scales to Billions">
+					Reel Friends: Building Social Discovery that Scales to Billions				</a>
+			</div>
+		</div>
+
+	</header><!-- .entry-header -->
+
+</article><!-- #post-## -->
+				</div><!-- /.article-grid -->
+					</div><!-- /.row -->
+	</div><!--/.article-grids -->
+
+</div><!-- /.related-articles -->
+
+					
+	 <!-- include the carousel nav here. -->
+
+		
+				
+			
+		</main><!-- #main -->
+
+	</div><!-- #primary -->
+
+		<!-- Do the right sidebar check. -->
+	
+
+
+  
+<div class="widget-area col-lg-3 offset-lg-0_25" id="right-sidebar" role="complementary">
+	<aside id="fb_related_post_widget-4" class="widget widget_fb_related_post_widget"><h3 class="widget-title">Related Posts</h3><hr>
+            <div class="aside-related-projects"><div class="article-grid-redesign">
+              <article class="post-23212 post type-post status-publish has-post-thumbnail hentry" id="post-23212">
+								<a href="https://engineering.fb.com/2025/10/23/security/scaling-privacy-infrastructure-for-genai-product-innovation/" rel="bookmark" aria-label="Read More about Scaling Privacy Infrastructure for GenAI Product Innovation">
+									<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2025/10/Meta-PAI-for-GenAI-Hero.png?w=580&amp;h=326&amp;crop=1" class="wp-post-image" alt="" srcset="https://engineering.fb.com/wp-content/uploads/2025/10/Meta-PAI-for-GenAI-Hero.png?w=580&amp;h=326&amp;crop=1 580w, https://engineering.fb.com/wp-content/uploads/2025/10/Meta-PAI-for-GenAI-Hero.png?w=580&amp;h=326&amp;crop=1 326w" sizes="(max-width: 580px) 100vw, 580px" loading="lazy">
+									<header class="entry-header">
+										<span class="posted-on"><time class="entry-date published" datetime="Oct 23, 2025">Oct 23, 2025</time></span>
+										<h4 class="entry-title">Scaling Privacy Infrastructure for GenAI Product Innovation</h4>
+									</header><!-- .entry-header -->
+								</a>
+              </article><!-- #post-## -->
+              </div><div class="article-grid-redesign">
+              <article class="post-22393 post type-post status-publish has-post-thumbnail hentry" id="post-22393">
+								<a href="https://engineering.fb.com/2025/04/28/security/how-meta-understands-data-at-scale/" rel="bookmark" aria-label="Read More about How Meta understands data at scale">
+									<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2025/04/How-Meta-understands-data-at-scale-HERO.png?w=580&amp;h=326&amp;crop=1" class="wp-post-image" alt="" srcset="https://engineering.fb.com/wp-content/uploads/2025/04/How-Meta-understands-data-at-scale-HERO.png?w=580&amp;h=326&amp;crop=1 580w, https://engineering.fb.com/wp-content/uploads/2025/04/How-Meta-understands-data-at-scale-HERO.png?w=580&amp;h=326&amp;crop=1 326w" sizes="(max-width: 580px) 100vw, 580px" loading="lazy">
+									<header class="entry-header">
+										<span class="posted-on"><time class="entry-date published" datetime="Apr 28, 2025">Apr 28, 2025</time></span>
+										<h4 class="entry-title">How Meta understands data at scale</h4>
+									</header><!-- .entry-header -->
+								</a>
+              </article><!-- #post-## -->
+              </div><div class="article-grid-redesign">
+              <article class="post-21618 post type-post status-publish has-post-thumbnail hentry" id="post-21618">
+								<a href="https://engineering.fb.com/2024/08/27/security/privacy-aware-infrastructure-purpose-limitation-meta/" rel="bookmark" aria-label="Read More about How Meta enforces purpose limitation via Privacy Aware Infrastructure at scale">
+									<img width="580" height="326" src="https://engineering.fb.com/wp-content/uploads/2024/08/PAI-EngFair-Blog-Header-Final.png?w=580&amp;h=326&amp;crop=1" class="wp-post-image" alt="" srcset="https://engineering.fb.com/wp-content/uploads/2024/08/PAI-EngFair-Blog-Header-Final.png?w=580&amp;h=326&amp;crop=1 580w, https://engineering.fb.com/wp-content/uploads/2024/08/PAI-EngFair-Blog-Header-Final.png?w=580&amp;h=326&amp;crop=1 326w" sizes="(max-width: 580px) 100vw, 580px" loading="lazy">
+									<header class="entry-header">
+										<span class="posted-on"><time class="entry-date published" datetime="Aug 27, 2024">Aug 27, 2024</time></span>
+										<h4 class="entry-title">How Meta enforces purpose limitation via Privacy Aware Infrastructure at scale</h4>
+									</header><!-- .entry-header -->
+								</a>
+              </article><!-- #post-## -->
+              </div></div></aside><aside id="wpb_widget-3" class="widget widget_wpb_widget"><h3 class="widget-title">Related Positions</h3><hr><ul class="available-positions-list"><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			SUNNYVALE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			BELLEVUE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			MENLO PARK, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			SEATTLE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			NEW YORK, US
+                      		</div>
+                          </a>
+                      	</li>		</ul>
+		<a href="https://www.metacareers.com" target="_blank" rel="noopener">
+			<div class="btn available-positions-btn">
+				See All Jobs			</div>
+		</a>
+		</aside>
+</div><!-- #secondary -->
+
+
+
+	<!-- <php get_template_part('content-single-side-bar'); ?> -->
+
+	<!-- Do the right sidebar check. -->
+	
+</div><!-- Container end -->
+
+</div><!-- Wrapper end -->
+
+</div>
+
+	<!-- ******************* The Footer Full-width Widget Area ******************* -->
+
+	<div class="wrapper wrapper-community-outer">
+		<div class="wrapper-community">
+
+			<div class="community" tabindex="-1">
+
+				<div class="row">
+					<!-- community section is generated through WordPress widget -->
+					<div id="wpb_widget-2" class="footer-widget widget_wpb_widget widget-count-3 col-md-4"><h3 class="widget-title">Available Positions</h3><hr><ul class="available-positions-list"><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			SUNNYVALE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			BELLEVUE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			MENLO PARK, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			SEATTLE, US
+                      		</div>
+                          </a>
+                      	</li><li class="available-positions-item">
+                          <a href="https://www.metacareers.com/jobs/1645503493182815/" target="_blank" rel="noopener">
+                      		<div class="job-description">
+                      			Software Engineer, Machine Learning RecSys
+                      		</div>
+                      		<div class="job-location">
+                      			NEW YORK, US
+                      		</div>
+                          </a>
+                      	</li>		</ul>
+		<a href="https://www.metacareers.com" target="_blank" rel="noopener">
+			<div class="btn available-positions-btn">
+				See All Jobs			</div>
+		</a>
+		</div><!-- .footer-widget --><div id="custom_html-2" class="widget_text footer-widget widget_custom_html widget-count-3 col-md-4"><h3 class="widget-title">Technology at Meta</h3><div class="textwidget custom-html-widget"><ul class="stay-connected-lists">
+	<li class="stay-connected-item">
+<img class="footer-fb-engineering stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/meta_logo.png" alt="footer-fb-engineering" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				Engineering at Meta - X
+			</div>
+			<a onclick="return twitterFollow(&quot;Meta_Engineers&quot;)" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Follow
+				</button>
+			</a>
+		</div>
+	</li>
+	<li class="stay-connected-item">
+<img class="footer-fb-engineering stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/meta_logo.png" alt="footer-AI" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				AI at Meta
+			</div>
+			<a href="https://ai.meta.com/blog/" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Read
+			</button>
+			</a>
+		</div>
+	</li>
+<li class="stay-connected-item">
+<img class="footer-fb-engineering stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/meta_logo.png" alt="footer-developers" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				Meta Quest Blog
+			</div>
+			<a href="https://www.meta.com/blog/quest/" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Read
+			</button>
+			</a>
+		</div>
+	</li>
+
+	<li class="stay-connected-item">
+<img class="footer-fb-engineering stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/meta_logo.png" alt="footer-developers" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				Meta for Developers
+			</div>
+			<a href="https://developers.facebook.com/" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Read
+			</button>
+			</a>
+		</div>
+	</li>
+	<li class="stay-connected-item">
+<img class="footer-fb-engineering stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/meta_logo.png" alt="footer-bug-bounty" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				Meta Bug Bounty
+			</div>
+			<a href="https://bugbounty.meta.com/" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Learn more
+			</button>
+			</a>
+		</div>
+	</li>
+
+	<li class="stay-connected-item">
+		<img class="stay-connected-item-left" src="/wp-content/themes/code-fb-com/img/rss.png" alt="footer-rss" loading="lazy" width="70" height="70">
+		<div class="stay-connected-item-right">
+			<div class="stay-connected-label">
+				RSS
+			</div>
+			<a href="https://code.facebook.com/posts/rss/" target="_blank" rel="noopener">
+			<button class="btn stay-connected-btn">
+				Subscribe
+			</button>
+			</a>
+		</div>
+	</li>
+</ul>
+</div></div><!-- .footer-widget --><div id="custom_html-3" class="widget_text footer-widget widget_custom_html widget-count-3 col-md-4"><h3 class="widget-title">Open Source</h3><div class="textwidget custom-html-widget"><p class="opensource-desc">
+	Meta believes in building community through open source technology. Explore our latest projects in Artificial Intelligence, Data Infrastructure, Development Tools, Front End, Languages, Platforms, Security, Virtual Reality, and more.
+</p>
+<ul class="opensource-cats">
+	<li class="opensource-cat">
+		<img src="/wp-content/themes/code-fb-com/img/android.png" alt="android" loading="lazy" width="50" height="59">
+		<div class="opensource-cap">
+			ANDROID
+		</div>
+	</li>
+	<li class="opensource-cat">
+		<img src="/wp-content/themes/code-fb-com/img/ios.png" alt="ios" loading="lazy" width="48" height="58">
+		<div class="opensource-cap">
+			iOS
+		</div>
+	</li>
+	<li class="opensource-cat">
+		<img src="/wp-content/themes/code-fb-com/img/web.png" alt="web" loading="lazy" width="55" height="49">
+		<div class="opensource-cap">		
+			WEB
+		</div>
+	</li>
+	<li class="opensource-cat">
+		<img src="/wp-content/themes/code-fb-com/img/backend.png" alt="backend" loading="lazy" width="56" height="51">
+		<div class="opensource-cap">
+			BACKEND
+		</div>
+	</li>
+	<li class="opensource-cat">
+		<img src="/wp-content/themes/code-fb-com/img/hardware.png" alt="hardware" loading="lazy" width="55" height="44">
+		<div class="opensource-cap">
+			HARDWARE
+		</div>
+	</li>
+</ul>
+
+<button class="btn opensource-btn" onclick="window.location.href='https://opensource.fb.com/'">
+	Learn More
+</button>
+
+</div></div><!-- .footer-widget -->
+				</div>
+
+			</div>
+			</div>
+
+	</div><!-- #wrapper-footer-full -->
+
+
+<div class="wrapper-footer" id="wrapper-footer">
+	<div class="inner-container">
+		<div class="footer">
+			<div class="row">
+				<div class="col-md-12">
+					<footer class="meta-footer" id="meta-footer">
+						<div class="site-info row justify-content-between">
+							<div class="col-md-5 meta-logo-container">
+								<a href="https://about.facebook.com/" target="_blank" rel="noopener">
+									<img src="https://engineering.fb.com/wp-content/themes/code-fb-com/img/meta_logo_full.svg" width="89" height="18" alt="Meta">
+								</a>
+								<div id="text-2" class="widget widget_text">			<div class="textwidget"><p>Engineering at Meta is a technical news resource for engineers interested in how we solve large-scale technical challenges at Meta.</p>
+</div>
+		</div>							</div>
+							<div class="col-md-6 footer-meta-links-container">
+														<ul class="meta-footer-links">
+									<li class="footer-link"><a href="https://engineering.fb.com">Home</a></li><li class="footer-link"><a href="https://about.meta.com/" target="_blank" rel="noopener">Company Info</a></li><li class="footer-link"><a href="https://www.metacareers.com/?ref=engineering.fb.com" target="_blank" rel="noopener">Careers</a></li>								</ul>
+							</div>
+						</div>
+					</footer>
+				</div>
+			</div>
+		</div>
+	</div>
+
+		<div class="footer">
+			<div class="row">
+
+				<div class="col-md-12">
+
+					<footer class="site-footer" id="colophon">
+						<div class="inner-container">
+							<div class="site-info row justify-content-between">
+
+								<div class="col-md-4 copyright-container">
+									<div class="copyright"> © 2026 Meta</div>
+								</div>
+
+								<!-- static footer -->
+								<div class="col-md-7 footer-links-container">
+									<ul class="footer-links">
+										<li class="footer-link"><a href="https://www.facebook.com/policies" target="_blank" rel="noopener">Terms</a></li><li class="footer-link"><a href="https://www.facebook.com/privacy/policy" target="_blank" rel="noopener">Privacy</a></li><li class="footer-link"><a href="/privacy">Cookies</a></li><li class="footer-link"><a href="https://www.facebook.com/help" target="_blank" rel="noopener">Help</a></li>									</ul>
+								</div>
+							</div>
+						</div><!-- .site-info -->
+
+					</footer><!-- #colophon -->
+
+				</div><!--col end -->
+
+			</div><!-- row end -->
+
+	</div><!-- //.inner-container -->
+</div><!-- wrapper end -->
+
+<!-- #page we need this extra closing tag here -->
+
+<script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/code-fb-com/*","/wp-content/themes/understrap/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+  <div class="gdprconsent-container" id="GDPRConsentBar" style="display: block;">
+    <div class="gdprconsent-wrapper">
+      <div class="gdprconsent-content">
+        <p>To help personalize content, tailor and measure ads and provide a safer experience, we use cookies. By clicking or navigating the site, you agree to allow our collection of information on and off Facebook through cookies. Learn more, including about available controls: <a href="/privacy">Cookie Policy</a></p>
+                <div class="gdprconsent-button">
+          <button type="button" data-gdpr-accept="">Accept</button>
+        </div>
+              </div>
+    </div>
+  </div>
+  	
+	<!-- Twitter universal website tag code -->
+	<script>
+		if (window.gdprSafeTrack) {
+			window.gdprSafeTrack(function() {
+				!function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments);
+				},s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='//static.ads-twitter.com/uwt.js',
+				a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,'script');
+				// Insert Twitter Pixel ID and Standard Event data below
+				twq('init','o31u0');
+				twq('track','PageView');
+			});
+		}
+	</script>
+	<!-- End Twitter universal website tag code -->
+
+	
+	<script type="text/javascript">
+		window.WPCOM_sharing_counts = {"https://engineering.fb.com/2026/06/25/security/privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study/":24095};
+	</script>
+				
+					<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KZRLGZ8" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+		
+					<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=660742068067366&ev=PageView&noscript=1"/></noscript>
+		<script id="child-understrap-scripts-js-extra">
+var loadmore_params = {"restfulURL":"https://engineering.fb.com/wp-json/fb/v1/loadmore","searchText":"","posts":"{\"page\":0,\"year\":2026,\"monthnum\":6,\"day\":25,\"name\":\"privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study\",\"category_name\":\"security\",\"error\":\"\",\"m\":\"\",\"p\":0,\"post_parent\":\"\",\"subpost\":\"\",\"subpost_id\":\"\",\"attachment\":\"\",\"attachment_id\":0,\"pagename\":\"\",\"page_id\":0,\"second\":\"\",\"minute\":\"\",\"hour\":\"\",\"w\":0,\"tag\":\"\",\"cat\":\"\",\"tag_id\":\"\",\"author\":\"\",\"author_name\":\"\",\"feed\":\"\",\"tb\":\"\",\"paged\":0,\"meta_key\":\"\",\"meta_value\":\"\",\"preview\":\"\",\"s\":\"\",\"sentence\":\"\",\"title\":\"\",\"fields\":\"all\",\"menu_order\":\"\",\"embed\":\"\",\"category__in\":[],\"category__not_in\":[],\"category__and\":[],\"post__in\":[],\"post__not_in\":[],\"post_name__in\":[],\"tag__in\":[],\"tag__not_in\":[],\"tag__and\":[],\"tag_slug__in\":[],\"tag_slug__and\":[],\"post_parent__in\":[],\"post_parent__not_in\":[],\"author__in\":[],\"author__not_in\":[],\"search_columns\":[],\"ignore_sticky_posts\":false,\"suppress_filters\":false,\"cache_results\":true,\"update_post_term_cache\":true,\"update_menu_item_cache\":false,\"lazy_load_term_meta\":true,\"update_post_meta_cache\":true,\"post_type\":\"\",\"posts_per_page\":12,\"nopaging\":false,\"comments_per_page\":\"50\",\"no_found_rows\":false,\"order\":\"DESC\"}","current_page":"1","max_page":"0","post_type":"post"};
+var search_params = {"ajaxurl":"https://engineering.fb.com/wp-admin/admin-ajax.php","posts":"{\"page\":0,\"year\":2026,\"monthnum\":6,\"day\":25,\"name\":\"privacy-aware-infrastructure-in-the-ai-native-era-an-asset-classification-case-study\",\"category_name\":\"security\",\"error\":\"\",\"m\":\"\",\"p\":0,\"post_parent\":\"\",\"subpost\":\"\",\"subpost_id\":\"\",\"attachment\":\"\",\"attachment_id\":0,\"pagename\":\"\",\"page_id\":0,\"second\":\"\",\"minute\":\"\",\"hour\":\"\",\"w\":0,\"tag\":\"\",\"cat\":\"\",\"tag_id\":\"\",\"author\":\"\",\"author_name\":\"\",\"feed\":\"\",\"tb\":\"\",\"paged\":0,\"meta_key\":\"\",\"meta_value\":\"\",\"preview\":\"\",\"s\":\"\",\"sentence\":\"\",\"title\":\"\",\"fields\":\"all\",\"menu_order\":\"\",\"embed\":\"\",\"category__in\":[],\"category__not_in\":[],\"category__and\":[],\"post__in\":[],\"post__not_in\":[],\"post_name__in\":[],\"tag__in\":[],\"tag__not_in\":[],\"tag__and\":[],\"tag_slug__in\":[],\"tag_slug__and\":[],\"post_parent__in\":[],\"post_parent__not_in\":[],\"author__in\":[],\"author__not_in\":[],\"search_columns\":[],\"ignore_sticky_posts\":false,\"suppress_filters\":false,\"cache_results\":true,\"update_post_term_cache\":true,\"update_menu_item_cache\":false,\"lazy_load_term_meta\":true,\"update_post_meta_cache\":true,\"post_type\":\"\",\"posts_per_page\":12,\"nopaging\":false,\"comments_per_page\":\"50\",\"no_found_rows\":false,\"order\":\"DESC\"}","current_page":"1","max_page":"0","article_filter":"89380bf628"};
+var more_articles = {"next_article":{"label":"Next","permalink":"https://engineering.fb.com/2026/06/30/open-source/10-years-of-metas-commitment-to-python/","title":"10 Years of Meta\u2019s Commitment to Python","thumbnail":["https://engineering.fb.com/wp-content/uploads/2026/06/10-Years-Meta-Python-HERO-large.png?w=580&h=326&crop=1",580,326,true]},"prev_article":{"label":"Prev","permalink":"https://engineering.fb.com/2026/06/23/production-engineering/how-meta-built-ultra-narrow-batteries-for-ai-glasses-meta-tech-podcast/","title":"How Meta Engineered Ultra-Narrow Batteries for AI Glasses","thumbnail":["https://engineering.fb.com/wp-content/uploads/2026/06/Meta-Tech-Podcast-How-Meta-Built-Ultra-Narrow-Batteries-for-AI-Glasses-HERO.png?w=580&h=326&crop=1",580,326,true]}};
+//# sourceURL=child-understrap-scripts-js-extra
+</script>
+<script type="text/javascript" src="https://engineering.fb.com/_static/??-eJx9zF0KAjEMBOAL2Q2K7M+DeBebLk1Nk7Kpire3uygIgq8z3ww8ivMqNUiFGkMOBl4xuPnS4gxIViG1LBKj20CXSbpkO/i/bKOykOUPJfF8w4Zasb3eg6Aua1WUnzMxfz//8Kh6tbc459N+GKfheBj7Kb0Aa7pGSw=="></script><script id="wp-i18n-js" src="https://engineering.fb.com/wp-includes/js/dist/i18n.min.js?ver=1dfe7db3940c23ea9216"></script>
+<script id="wp-i18n-js-after">
+wp.i18n.setLocaleData( { 'text direction\u0004ltr': [ 'ltr' ] } );
+//# sourceURL=wp-i18n-js-after
+</script>
+<script id="jetpack-responsive-videos-js" src="https://engineering.fb.com/wp-content/mu-plugins/jetpack-16.2/jetpack_vendor/automattic/jetpack-classic-theme-helper/dist/responsive-videos/responsive-videos.js?minify=false&amp;ver=1a16f71f21c6d197f51b"></script>
+<script id="sharing-js-js-extra">
+var sharing_js_options = {"lang":"en","counts":"1","is_stats_active":""};
+//# sourceURL=sharing-js-js-extra
+</script>
+<script id="sharing-js-js" src="https://engineering.fb.com/wp-content/mu-plugins/jetpack-16.2/_inc/build/sharedaddy/sharing.min.js?ver=16.2"></script>
+<script id="sharing-js-js-after">
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "facebook" ] = "menubar=1,resizable=1,width=600,height=400";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "threads" ] = "menubar=1,resizable=1,width=600,height=400";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "linkedin" ] = "menubar=1,resizable=1,width=580,height=450";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "x" ] = "menubar=1,resizable=1,width=600,height=350";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "bluesky" ] = "menubar=1,resizable=1,width=600,height=400";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "mastodon" ] = "menubar=1,resizable=1,width=460,height=400";
+//# sourceURL=sharing-js-js-after
+</script>
+<script id="video-analytics-js-after">
+if (window.gdprSafeTrack) {
+					window.gdprSafeTrack(function() {
+						let youtube = document.querySelectorAll('[src*="youtube-nocookie"]');
+						for (let i = 0; i < youtube.length; i++) {
+							youtube[i].src = youtube[i].src.replace('youtube-nocookie.com', 'youtube.com');
+						}
+						let vimeo = document.querySelectorAll('[src*="vimeo"]');
+						for (let i = 0; i < vimeo.length; i++) {
+							vimeo[i].src = vimeo[i].src.replace('&dnt=true', '');
+						}
+					});
+				}
+//# sourceURL=video-analytics-js-after
+</script>
+<script id="wp-emoji-settings" type="application/json">
+{"baseUrl":"https://s.w.org/images/core/emoji/17.0.2/72x72/","ext":".png","svgUrl":"https://s.w.org/images/core/emoji/17.0.2/svg/","svgExt":".svg","source":{"concatemoji":"https://engineering.fb.com/wp-includes/js/wp-emoji-release.min.js?ver=7.1.1"}}
+</script>
+<script type="module">
+/*! This file is auto-generated */
+var e="script#wp-emoji-settings",t=document.querySelector(e);if(!(t instanceof HTMLScriptElement))throw new Error("Element missing: "+e);const r=JSON.parse(t.text),s=(window._wpemojiSettings=r,"wpEmojiSettingsSupports"),o=["flag","emoji"];function i(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(s,JSON.stringify(t))}catch(e){}}function c(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0);const r=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);return t.every((e,t)=>e===r[t])}function p(e,t){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var n=e.getImageData(16,16,1,1);for(let e=0;e<n.data.length;e++)if(0!==n.data[e])return!1;return!0}function u(e,t,n,r){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\udde8\ud83c\uddf6","\ud83c\udde8\u200b\ud83c\uddf6")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!r(e,"\ud83e\u1fac8")}return!1}function f(e,t,n,r){let a;const s=(a="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):document.createElement("canvas")).getContext("2d",{willReadFrequently:!0}),o=(s.textBaseline="top",s.font="600 32px Arial",{});return e.forEach(e=>{o[e]=t(s,e,n,r)}),o}function a(e){var t=document.createElement("script");t.src=e,t.defer=!0,document.head.appendChild(t)}r.supports={everything:!0,everythingExceptFlag:!0},new Promise(t=>{let n=function(){try{var e=JSON.parse(sessionStorage.getItem(s));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+f.toString()+"("+[JSON.stringify(o),u.toString(),c.toString(),p.toString()].join(",")+"));",r=new Blob([e],{type:"text/javascript"});const a=new Worker(URL.createObjectURL(r),{name:"wpTestEmojiSupports"});return void(a.onmessage=e=>{i(n=e.data),a.terminate(),t(n)})}catch(e){}i(n=f(o,u,c,p))}t(n)}).then(e=>{for(const n in e)r.supports[n]=e[n],r.supports.everything=r.supports.everything&&r.supports[n],"flag"!==n&&(r.supports.everythingExceptFlag=r.supports.everythingExceptFlag&&r.supports[n]);var t;r.supports.everythingExceptFlag=r.supports.everythingExceptFlag&&!r.supports.flag,r.supports.everything||((t=r.source||{}).concatemoji?a(t.concatemoji):t.wpemoji&&t.twemoji&&(a(t.twemoji),a(t.wpemoji)))});
+//# sourceURL=https://engineering.fb.com/wp-includes/js/wp-emoji-loader.min.js
+</script>
+
+
+
+
+<div id="fb-root" class=" fb_reset"><div style="position: absolute; top: -10000px; width: 0px; height: 0px;"><div></div></div></div></body></html>
