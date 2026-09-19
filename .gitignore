@@ -13,3 +13,6 @@ wheels/
 # env vars
 secrets.env
 *.env
+
+# Local crawl data and generated extraction artifacts
+data/
