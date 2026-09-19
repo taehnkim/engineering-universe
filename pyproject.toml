@@ -23,6 +23,7 @@ dependencies = [
     "redis>=5.0.0",
     "torch>=2.5.0",
     "uvicorn>=0.30.0",
+    "typesafe-sdk>=0.7.0",
 ]
 
 [project.scripts]
