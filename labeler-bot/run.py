@@ -57,7 +57,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    load_dotenv(ROOT / ".env")
+    load_dotenv(Path(__file__).resolve().parent / ".env")
     if not args.prepare_only and not os.environ.get("TYPESAFE_API_KEY"):
         print("TYPESAFE_API_KEY is not set. Add it to .env or export it.", file=sys.stderr)
         return 2

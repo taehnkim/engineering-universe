@@ -5,7 +5,7 @@ change the human labels in `data/learned_extraction/raw/annotations/`.
 
 ## Run the bot
 
-Create a TypeSafe API key and put it in the project `.env` file:
+Create a TypeSafe API key and put it in `labeler-bot/.env`:
 
 ```text
 TYPESAFE_API_KEY=your-key
