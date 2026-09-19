@@ -4,6 +4,12 @@ import importlib.util
 from pathlib import Path
 import sys
 
+from eng_universe.extraction.contract import (
+    Annotation,
+    Field,
+    load_annotation,
+    save_annotation,
+)
 from eng_universe.extraction.manifest import PageRecord
 
 
@@ -105,3 +111,31 @@ def test_question_choices_include_candidates_and_missing() -> None:
 
 def test_cli_uses_pinned_jev_model() -> None:
     assert jev_labeler_run.build_parser().parse_args([]).model == "jev-1.13.0"
+
+
+def test_labeler_bot_seeds_draft_and_preserves_reviewed_annotation(
+    tmp_path: Path,
+) -> None:
+    bot = jev_labeler.LabelerBot()
+    result = {
+        "page_id": "page-1",
+        "html_hash": "hash",
+        "labels": {field.value: index for index, field in enumerate(Field)},
+    }
+
+    assert bot.seed_core_annotation(result, tmp_path)
+    seeded = load_annotation(tmp_path / "annotations/page-1.json")
+    assert seeded.review_status == "draft"
+    assert seeded.needs_review
+    assert seeded.labels[Field.AUTHORS] == 2
+
+    reviewed = Annotation(
+        page_id="page-1",
+        html_hash="hash",
+        labels={field: None for field in Field},
+        review_status="reviewed",
+    )
+    save_annotation(tmp_path / "annotations/page-1.json", reviewed)
+
+    assert not bot.seed_core_annotation(result, tmp_path)
+    assert load_annotation(tmp_path / "annotations/page-1.json") == reviewed

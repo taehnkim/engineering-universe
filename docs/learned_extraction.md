@@ -112,6 +112,7 @@ and evaluation output.
 uv run python scripts/sample_extraction_html.py
 uv run python scripts/bootstrap_extraction_annotations.py
 uv run python scripts/migrate_extraction_schema.py
+uv run python labeler-bot/run.py
 uv run python -m eng_universe.extraction.annotation_app \
   --dataset-dir data/learned_extraction/raw
 uv run python scripts/prepare_extraction_dataset.py
@@ -129,11 +130,13 @@ to highlight, choose a field and click an element, move to its parent when a
 wrapper is too narrow, preview the chosen text, mark a field missing, or mark
 the page for review.
 
-The bootstrap command creates conservative drafts to accelerate labeling. All
-drafts are excluded from preprocessing and training, even when the heuristic
-is confident. Inspect every draft in the annotation UI and click Save to mark
-it human-reviewed. Existing human-edited annotations are preserved unless
-`--overwrite` is explicitly passed.
+The bootstrap command creates conservative fallback drafts. `LabelerBot` then
+uses Jev to replace each selected fallback draft before human review. It keeps
+the full Jev result in `labeler-bot/data` and copies the selected node IDs to
+the core annotation. It does not replace a human-reviewed annotation. All
+drafts are excluded from preprocessing and training, even when Jev is
+confident. Inspect every draft in the annotation UI and click Save to mark it
+human-reviewed.
 
 The collector records `scraped_at` when it fetches each page. After extraction,
 ordinary code keeps an absolute `date` unchanged. If only `relative_date` is

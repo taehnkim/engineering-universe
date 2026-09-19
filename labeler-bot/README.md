@@ -1,7 +1,8 @@
 # Jev labeler bot
 
-This experiment uses `jev-1.13.0` as a first-pass labeler for ten pages. It
-does not change the human labels in `data/learned_extraction/raw/annotations/`.
+`LabelerBot` uses `jev-1.13.0` as the first-pass labeler for ten pages. Its
+implementation is the importable
+`eng_universe.extraction.labeler_bot.LabelerBot` module.
 
 ## Run the bot
 
@@ -24,9 +25,15 @@ Jev answers all six questions in one API request per page: article, title,
 authors, absolute date, summary, and relative date. Reading durations such as
 `5 min read` are not relative dates.
 
+Each result is stored in `labeler-bot/data` with its confidence metadata. The
+six selections also replace the matching core annotation when that annotation
+is not human-reviewed. The core copy is a draft with `needs_review: true`, so
+the small model cannot train on it until a person saves it in the human
+labeler. A reviewed human annotation is never overwritten.
+
 Use `--prepare-only` to inspect the cleaned inputs without an API key or API
 calls. Use `--overwrite` to call Jev again for pages that already have bot
-labels.
+labels. Use `--separate-only` to keep a run out of the core annotation drafts.
 
 ## Review the result
 
@@ -51,7 +58,8 @@ labeler-bot/data/
     `-- <page-id>.json
 ```
 
-The generated data is ignored by Git. Each annotation has the same `labels`
-map and original HTML hash as the core labeler. It also has Jev confidence,
-choice probabilities, model name, token usage, and preparation statistics.
-The terminal and review UI also show request latency in milliseconds.
+The generated data is ignored by Git. Each bot annotation has the same
+`labels` map and original HTML hash as the core labeler. It also has Jev
+confidence, choice probabilities, model name, token usage, and preparation
+statistics. The terminal and review UI also show request latency in
+milliseconds.

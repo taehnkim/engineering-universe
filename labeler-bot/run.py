@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Run Jev against at most ten HTML files and save separate bot labels."""
+"""Run Jev on ten HTML files and seed core annotations for human review."""
 
 from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import json
 import os
 from pathlib import Path
 import sys
-from typing import Sequence
+from typing import Any, Sequence
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,8 +19,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from dotenv import load_dotenv
 
 from jev_labeler import (  # noqa: E402
+    FIELDS,
+    LabelerBot,
     MAX_PAGES,
-    label_with_jev,
+    PreparedPage,
     load_records,
     prepare_html,
     run_entry,
@@ -52,7 +55,31 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Replace an existing bot label and call Jev again.",
     )
+    parser.add_argument(
+        "--separate-only",
+        action="store_true",
+        help="Keep Jev output separate and do not seed the core annotation drafts.",
+    )
     return parser
+
+
+def _print_annotation(annotation: dict[str, Any], prepared: PreparedPage) -> None:
+    labels = annotation["labels"]
+    metadata = annotation["metadata"]
+    page = prepared.page
+    for field in FIELDS:
+        node_id = labels[field.value]
+        confidence = metadata[field.value]["confidence"]
+        if node_id is None:
+            print(f"  {field.value.upper():13} missing  confidence={confidence:.0%}")
+            continue
+        text = " ".join(page.candidate(node_id).get_text(" ", strip=True).split())
+        if len(text) > 110:
+            text = text[:109] + "…"
+        print(
+            f"  {field.value.upper():13} node={node_id:<5} "
+            f"confidence={confidence:.0%}  {text}"
+        )
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -69,6 +96,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
 
     output_dir: Path = args.output_dir
+    bot = LabelerBot(model=args.model)
     prepared_dir = output_dir / "prepared"
     annotations_dir = output_dir / "annotations"
     entries = [run_entry(record) for record in records]
@@ -78,6 +106,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "created_at": datetime.now(timezone.utc).isoformat(),
         "dataset_dir": str(args.dataset_dir.resolve()),
         "prepare_only": args.prepare_only,
+        "seed_core_annotations": not args.separate_only,
         "pages": entries,
     }
     save_json(output_dir / "run.json", run)
@@ -99,23 +128,23 @@ def main(argv: Sequence[str] | None = None) -> int:
             elif annotation_path.exists() and not args.overwrite:
                 entry["status"] = "already_labeled"
                 print("  kept existing bot label (use --overwrite to call Jev again)")
+                annotation = json.loads(annotation_path.read_text(encoding="utf-8"))
             else:
-                annotation = label_with_jev(prepared, record, model=args.model)
+                annotation = bot.label_prepared(prepared, record)
                 save_json(annotation_path, annotation)
                 entry["status"] = "labeled"
-                summary = "  ".join(
-                    f"{field}={annotation['labels'][field]} "
-                    f"({annotation['metadata'][field]['confidence']:.0%})"
-                    for field in (
-                        "article",
-                        "title",
-                        "authors",
-                        "date",
-                        "summary",
-                        "relative_date",
-                    )
+            if not args.prepare_only:
+                if args.separate_only:
+                    entry["core_annotation"] = "not_requested"
+                elif bot.seed_core_annotation(annotation, args.dataset_dir):
+                    entry["core_annotation"] = "seeded_draft"
+                else:
+                    entry["core_annotation"] = "preserved_reviewed"
+                _print_annotation(annotation, prepared)
+                print(
+                    f"  inference={annotation['latency_ms']:.1f} ms  "
+                    f"core={entry['core_annotation']}"
                 )
-                print(f"  {summary}  inference={annotation['latency_ms']:.1f} ms")
         except Exception as error:  # Keep the small batch inspectable after one failure.
             failures += 1
             entry["status"] = "error"
