@@ -1,0 +1,16 @@
+# Ignore local crawl data and generated extraction artifacts.
+*
+
+# Keep this policy file.
+!.gitignore
+
+# Keep the learned-extraction source data and its guides.
+!learned_extraction/
+learned_extraction/*
+!learned_extraction/README.md
+!learned_extraction/anthropic-engineering-001-string.md
+!learned_extraction/raw/
+!learned_extraction/raw/**
+
+# Do not keep macOS directory metadata.
+learned_extraction/raw/.DS_Store
