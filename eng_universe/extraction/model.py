@@ -5,17 +5,19 @@ from __future__ import annotations
 import torch
 from torch import nn
 
+from eng_universe.extraction.contract import FIELDS
+
 
 class DOMNodeSelector(nn.Module):
-    """Score every candidate for four fields plus a learned missing option."""
+    """Score every candidate for each field plus a learned missing option."""
 
     def __init__(
         self,
         tag_count: int,
-        numeric_feature_count: int = 7,
+        numeric_feature_count: int = 8,
         embedding_dim: int = 8,
         hidden_dim: int = 64,
-        field_count: int = 4,
+        field_count: int = len(FIELDS),
     ) -> None:
         super().__init__()
         self.tag_embedding = nn.Embedding(tag_count, embedding_dim, padding_idx=0)

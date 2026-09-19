@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from dataclasses import asdict, dataclass
 from typing import Literal
 
 import torch
@@ -16,9 +17,24 @@ from eng_universe.extraction.features import (
     featurize_page,
 )
 from eng_universe.extraction.model import DOMNodeSelector
+from eng_universe.extraction.postprocess import derive_published_at, normalize_scraped_at
 
 
-FieldName = Literal["article", "title", "author", "date"]
+FieldName = Literal[
+    "article", "title", "authors", "date", "summary", "relative_date"
+]
+
+
+@dataclass(frozen=True, slots=True)
+class ExtractedDocument:
+    article: str | None
+    title: str | None
+    authors: str | None
+    date: str | None
+    summary: str | None
+    relative_date: str | None
+    scraped_at: str
+    published_at: str | None
 
 
 class DOMExtractor:
@@ -27,10 +43,19 @@ class DOMExtractor:
             Path(checkpoint_path), map_location="cpu", weights_only=False
         )
         preprocessing = checkpoint["preprocessing"]
+        checkpoint_fields = checkpoint.get("fields", preprocessing.get("fields"))
+        expected_fields = [field.value for field in FIELDS]
+        if checkpoint_fields != expected_fields:
+            raise ValueError(
+                f"checkpoint field schema {checkpoint_fields} does not match "
+                f"runtime schema {expected_fields}"
+            )
         self.vocabulary = TagVocabulary.from_dict(preprocessing["vocabulary"])
         self.normalizer = FeatureNormalizer.from_dict(preprocessing["normalizer"])
         self.model = DOMNodeSelector(
-            int(checkpoint["tag_count"]), int(checkpoint["numeric_feature_count"])
+            int(checkpoint["tag_count"]),
+            int(checkpoint["numeric_feature_count"]),
+            field_count=len(FIELDS),
         )
         self.model.load_state_dict(checkpoint["model_state"])
         self.model.eval()
@@ -69,6 +94,35 @@ class DOMExtractor:
             )
             for field, node_id in self.predict_ids(html).items()
         }
+
+    def extract_document(self, html: str, scraped_at: str) -> ExtractedDocument:
+        """Return text values and derive an absolute publication timestamp."""
+
+        selections = self.extract_all(html)
+        values = {
+            field.value: (
+                None
+                if selections[field.value] is None
+                else str(selections[field.value]["text"])
+            )
+            for field in FIELDS
+        }
+        normalized_scraped_at = normalize_scraped_at(scraped_at)
+        return ExtractedDocument(
+            article=values["article"],
+            title=values["title"],
+            authors=values["authors"],
+            date=values["date"],
+            summary=values["summary"],
+            relative_date=values["relative_date"],
+            scraped_at=normalized_scraped_at,
+            published_at=derive_published_at(
+                values["date"], values["relative_date"], normalized_scraped_at
+            ),
+        )
+
+    def extract_document_dict(self, html: str, scraped_at: str) -> dict[str, str | None]:
+        return asdict(self.extract_document(html, scraped_at))
 
 
 _DEFAULT_EXTRACTOR: DOMExtractor | None = None

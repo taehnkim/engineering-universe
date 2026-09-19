@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -56,6 +57,10 @@ ARTICLE_TOKENS = re.compile(r"article|body|content|entry|main|post", re.IGNORECA
 AUTHOR_TOKENS = re.compile(r"author|byline", re.IGNORECASE)
 DATE_TOKENS = re.compile(r"date|publish|time", re.IGNORECASE)
 TITLE_TOKENS = re.compile(r"headline|title", re.IGNORECASE)
+SUMMARY_TOKENS = re.compile(
+    r"subtitle|sub-title|subhead|standfirst|dek|excerpt|description|lead",
+    re.IGNORECASE,
+)
 DATE_TEXT = re.compile(
     r"\b(?:19|20)\d{2}\b|\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|"
     r"may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|"
@@ -127,6 +132,7 @@ def _looks_like_chrome(tag: Tag) -> bool:
         AUTHOR_TOKENS.search(semantic_value)
         or DATE_TOKENS.search(semantic_value)
         or TITLE_TOKENS.search(semantic_value)
+        or SUMMARY_TOKENS.search(semantic_value)
     ):
         return False
     return bool(CHROME_TOKENS.search(semantic_value))
@@ -156,6 +162,8 @@ def _candidate_score(tag: Tag) -> tuple[int, int]:
     if DATE_TOKENS.search(semantic_value):
         score += 220
     if TITLE_TOKENS.search(semantic_value):
+        score += 220
+    if SUMMARY_TOKENS.search(semantic_value):
         score += 220
     if text_length >= 3_000:
         score += 90
@@ -287,13 +295,23 @@ def build_questions(candidate_ids: Iterable[int]) -> dict[str, Choice]:
             "same article wrapper. Exclude navigation, recommendations, and page chrome."
         ),
         Field.TITLE: "Which `prepared_html` element is the article's primary title?",
-        Field.AUTHOR: (
+        Field.AUTHORS: (
             "Which `prepared_html` element is the tightest wrapper around the article "
-            "author or byline? Choose missing when no author is present."
+            "byline containing all authors? Select one wrapper containing every author, "
+            "not one author link. Choose missing when no authors are present."
         ),
         Field.DATE: (
             "Which `prepared_html` element is the tightest wrapper around the article's "
-            "publication date? Choose missing when no publication date is present."
+            "absolute publication date? Choose missing when only a relative date is present."
+        ),
+        Field.SUMMARY: (
+            "Which `prepared_html` element is the article subtitle, standfirst, deck, or "
+            "short summary directly associated with the title? Choose missing when absent."
+        ),
+        Field.RELATIVE_DATE: (
+            "Which `prepared_html` element contains a relative publication date such as "
+            "'2 days ago'? Do not select reading times such as '5 min read'. Choose "
+            "missing when no relative publication date is present."
         ),
     }
     return {
@@ -308,17 +326,19 @@ def label_with_jev(
     *,
     model: str = "jev-1.13.0",
 ) -> dict[str, Any]:
-    """Call Jev once for all four fields and return a bot annotation."""
+    """Call Jev once for all extraction fields and return a bot annotation."""
 
     state = {
         "page_url": record.url,
         "prepared_html": prepared.html,
     }
+    started = time.perf_counter()
     with TypeSafeClient(model=model) as client:
         response = client.system_one(
             state=state,
             questions=build_questions(prepared.candidate_ids),
         )
+    latency_ms = (time.perf_counter() - started) * 1000
 
     valid_ids = set(prepared.candidate_ids)
     labels: dict[str, int | None] = {}
@@ -343,6 +363,7 @@ def label_with_jev(
         "labels": labels,
         "label_source": "jev",
         "model": response.model,
+        "latency_ms": latency_ms,
         "labeled_at": datetime.now(timezone.utc).isoformat(),
         "metadata": metadata,
         "usage": response.usage.model_dump(),

@@ -1,14 +1,14 @@
 # Learned DOM extraction v1
 
 Version one is a node selector. Given HTML and one of `article`, `title`,
-`author`, or `date`, it selects a single DOM element or the learned `missing`
-option. Ordinary code returns the selected element's original-DOM HTML and
-plain text. The model sees structural features and tag embeddings, **not the
-article's words**.
+`authors`, `date`, `summary`, or `relative_date`, it selects one DOM element or
+the learned `missing` option. Ordinary code returns the selected element's
+original-DOM HTML and plain text. The model sees structural features and tag
+embeddings, **not the article's words**.
 
 ## Labeling guide
 
-All four fields must be either one candidate node ID or `null`:
+All six fields must be either one candidate node ID or `null`:
 
 - `article`: the tightest single wrapper containing the article body, including
   its headings, paragraphs, lists, code, tables, and content images. Exclude the
@@ -16,11 +16,18 @@ All four fields must be either one candidate node ID or `null`:
 - `title`: the one element wrapping the displayed article headline, normally an
   `h1`. Do not select the site name, browser `<title>`, or a card/link on an
   index page.
-- `author`: the tightest byline wrapper containing the displayed author name or
-  names. A wrapper may include an avatar or a literal “By”. Do not select a
-  broad header that also contains the title/date.
+- `authors`: the tightest byline wrapper that contains all displayed author
+  names. A wrapper may include an avatar or a literal “By”. Do not select one
+  author link when the article has several authors. Do not select a broad
+  header that also contains the title or date.
 - `date`: the tightest element containing the displayed publication date. Do
-  not use an updated date when a distinct publication date is shown.
+  not use an updated date when a distinct publication date is shown. Use this
+  field only for an absolute date.
+- `summary`: the subtitle, standfirst, deck, or short summary that belongs to
+  the title. Use `null` when the page has no such element.
+- `relative_date`: the tightest element containing a relative publication date
+  such as `2 days ago`. A reading time such as `5 min read` is not a relative
+  date.
 
 Use `null` only when the field is genuinely absent. Bootstrap output has
 `review_status: "draft"` and is always excluded from training. Saving a page in
@@ -33,9 +40,10 @@ Correct article selections preserve nested code blocks, lists, tables, and
 figures while avoiding recommendations, navigation, comments, and the footer.
 Selecting only the paragraph text is too narrow; selecting `<main>` when it
 also includes the title/byline and related stories is too broad. Correct title,
-author, and date selections are the smallest semantic wrappers; selecting the
-entire article header is too broad. Listing pages intentionally included in the
-corpus should normally have all four fields set to `null`, not
+authors, date, summary, and relative-date selections are the smallest semantic
+wrappers; selecting the entire article header is too broad. Listing pages
+intentionally included in the corpus should normally have all six fields set
+to `null`, not
 `needs_review`—they are useful negative examples.
 
 Annotations contain only positive selections and missing values, never labels
@@ -47,7 +55,14 @@ for incorrect candidates:
   "html_hash": "<sha256>",
   "needs_review": false,
   "review_status": "reviewed",
-  "labels": {"article": 42, "title": 45, "author": 48, "date": null}
+  "labels": {
+    "article": 42,
+    "title": 45,
+    "authors": 48,
+    "date": null,
+    "summary": 46,
+    "relative_date": null
+  }
 }
 ```
 
@@ -61,7 +76,7 @@ HTML string remains untouched; annotations and manifest rows contain its UTF-8
 SHA-256 hash, so changed HTML invalidates labels.
 
 For each candidate the model receives two categorical IDs (its lowercase tag
-and its parent's lowercase tag) plus these seven numeric values:
+and its parent's lowercase tag) plus these eight numeric values:
 
 1. `log1p` of Unicode character count in stripped descendant text.
 2. `log1p` of descendant `p` count, including the candidate itself if it is a
@@ -73,6 +88,7 @@ and its parent's lowercase tag) plus these seven numeric values:
 6. One when the candidate itself has a `datetime` attribute, else zero.
 7. One when descendant text matches the documented ISO/numeric or English
    month-name date pattern, else zero.
+8. One when descendant text contains a relative publication date, else zero.
 
 The five continuous columns are standardized with means and standard
 deviations fit on training websites only. The tag vocabulary is also fit on
@@ -87,15 +103,15 @@ configured sitemaps when a listing is short, renders every selected page in
 Chrome, and rejects duplicate canonical URLs. Its default target is 30 articles
 per source plus listing-page negatives.
 
-The checked-in raw corpus currently contains 757 rendered DOMs from 29
-websites: 520 train, 206 validation, and 31 test. Whole websites belong to one
-split only. Raw HTML, the manifest, and annotations are versioned; prepared
-NumPy matrices, checkpoints, and evaluation output remain ignored because they
-are reproducible build artifacts.
+The local raw corpus currently contains 757 rendered DOMs from 29 websites: 520
+train, 206 validation, and 31 test. Whole websites belong to one split only.
+The root `.gitignore` excludes local data, prepared NumPy matrices, checkpoints,
+and evaluation output.
 
 ```bash
 uv run python scripts/sample_extraction_html.py
 uv run python scripts/bootstrap_extraction_annotations.py
+uv run python scripts/migrate_extraction_schema.py
 uv run python -m eng_universe.extraction.annotation_app \
   --dataset-dir data/learned_extraction/raw
 uv run python scripts/prepare_extraction_dataset.py
@@ -119,11 +135,17 @@ is confident. Inspect every draft in the annotation UI and click Save to mark
 it human-reviewed. Existing human-edited annotations are preserved unless
 `--overwrite` is explicitly passed.
 
-The current corpus has 751 bootstrap drafts and 6 human-reviewed annotations.
-Do not train or report final accuracy until the desired split has been manually
-reviewed. The older local checkpoint predates explicit review provenance and
-was trained mostly on unverified bootstrap labels; it is intentionally not
-versioned as a release artifact.
+The collector records `scraped_at` when it fetches each page. After extraction,
+ordinary code keeps an absolute `date` unchanged. If only `relative_date` is
+present, it subtracts that duration from `scraped_at` and stores the result as
+`published_at`.
+
+The current local corpus has 750 bootstrap drafts and 7 human-reviewed
+annotations. Only 2 reviewed pages are in the training split, 5 are in the
+validation split, and none are in the test split. A local six-field checkpoint
+can confirm that the pipeline works. Do not treat its validation score as a
+useful quality estimate, and do not report held-out accuracy until test pages
+have been reviewed.
 
 Training first tries to overfit four pages, then trains the full training split
 and keeps the checkpoint with the lowest validation loss. Batches pad candidate
@@ -146,6 +168,10 @@ from eng_universe.extraction import DOMExtractor
 extractor = DOMExtractor("data/learned_extraction/model/best.pt")
 result = extractor.extract(html, field="article")
 # {"node_id": 42, "html": "<article>...</article>", "text": "..."} or None
+
+document = extractor.extract_document(html, scraped_at="2026-09-19T12:00:00Z")
+# document.authors is one string containing the full byline.
+# document.published_at uses date, or relative_date resolved from scraped_at.
 ```
 
 For the convenience function with the requested two-argument shape, set

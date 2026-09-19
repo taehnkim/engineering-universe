@@ -106,9 +106,16 @@ def main(argv: Sequence[str] | None = None) -> int:
                 summary = "  ".join(
                     f"{field}={annotation['labels'][field]} "
                     f"({annotation['metadata'][field]['confidence']:.0%})"
-                    for field in ("article", "title", "author", "date")
+                    for field in (
+                        "article",
+                        "title",
+                        "authors",
+                        "date",
+                        "summary",
+                        "relative_date",
+                    )
                 )
-                print(f"  {summary}")
+                print(f"  {summary}  inference={annotation['latency_ms']:.1f} ms")
         except Exception as error:  # Keep the small batch inspectable after one failure.
             failures += 1
             entry["status"] = "error"

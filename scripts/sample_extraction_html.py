@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 from dataclasses import replace
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import subprocess
@@ -55,6 +56,10 @@ UTILITY_SLUGS = frozenset(
         "subscribe",
     }
 )
+
+
+def _scraped_at() -> str:
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 class BrowserUse:
@@ -253,7 +258,7 @@ def collect(
                 (output_dir / record.html_path).unlink(missing_ok=True)
                 (output_dir / "annotations" / f"{page_id}.json").unlink(missing_ok=True)
                 records.pop(page_id)
-        DatasetManifest(1, tuple(sorted(records.values(), key=lambda item: item.page_id))).save(
+        DatasetManifest(2, tuple(sorted(records.values(), key=lambda item: item.page_id))).save(
             manifest_path
         )
     try:
@@ -329,11 +334,12 @@ def collect(
                             split=splits[source.host],
                             capture_kind="browser",
                             html_hash=html_sha256(html),
+                            scraped_at=_scraped_at(),
                             is_article=False,
                         )
                         seen_urls.add(seed_url)
                         DatasetManifest(
-                            1,
+                            2,
                             tuple(sorted(records.values(), key=lambda item: item.page_id)),
                         ).save(manifest_path)
                         print(f"saved {listing_id}: {seed_url}", flush=True)
@@ -385,9 +391,10 @@ def collect(
                         split=splits[source.host],
                         capture_kind="browser",
                         html_hash=html_sha256(html),
+                        scraped_at=_scraped_at(),
                         is_article=True,
                     )
-                    DatasetManifest(1, tuple(sorted(records.values(), key=lambda item: item.page_id))).save(
+                    DatasetManifest(2, tuple(sorted(records.values(), key=lambda item: item.page_id))).save(
                         manifest_path
                     )
                     print(f"saved {page_id}: {url}", flush=True)
@@ -398,7 +405,7 @@ def collect(
     finally:
         browser.close()
     manifest = DatasetManifest(
-        1, tuple(sorted(records.values(), key=lambda item: item.page_id))
+        2, tuple(sorted(records.values(), key=lambda item: item.page_id))
     )
     manifest.save(manifest_path)
     counts = Counter(page.split for page in manifest.pages)

@@ -116,6 +116,7 @@ def prepare_dataset(dataset_dir: Path, output_dir: Path) -> dict[str, int]:
     (output_dir / "preprocessing.json").write_text(
         json.dumps(
             {
+                "fields": [field.value for field in FIELDS],
                 "vocabulary": vocabulary.to_dict(),
                 "normalizer": normalizer.to_dict(),
             },
@@ -128,6 +129,9 @@ def prepare_dataset(dataset_dir: Path, output_dir: Path) -> dict[str, int]:
     counts: dict[str, int] = {}
     for split, pages in by_split.items():
         split_dir = output_dir / split
+        split_dir.mkdir(parents=True, exist_ok=True)
+        for stale_path in split_dir.glob("*.npz"):
+            stale_path.unlink()
         counts[split] = len(pages)
         for item in pages:
             prepared = prepare_page(item, vocabulary, normalizer)

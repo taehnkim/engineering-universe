@@ -40,6 +40,8 @@ def _write_page(dataset_dir: Path, review_status: str) -> None:
                     "title": 3,
                     "author": None,
                     "date": None,
+                    "summary": None,
+                    "relative_date": None,
                 },
             }
         )
@@ -73,3 +75,17 @@ def test_annotation_round_trip_includes_review_status(tmp_path: Path) -> None:
         review_status="reviewed",
     )
     assert annotation.to_dict()["review_status"] == "reviewed"
+
+
+def test_legacy_author_key_migrates_to_authors() -> None:
+    annotation = Annotation.from_dict(
+        {
+            "page_id": "page",
+            "html_hash": "hash",
+            "labels": {"author": 7},
+        }
+    )
+
+    assert annotation.labels[Field.AUTHORS] == 7
+    assert "author" not in annotation.to_dict()["labels"]
+    assert annotation.to_dict()["labels"]["authors"] == 7

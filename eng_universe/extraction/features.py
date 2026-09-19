@@ -20,6 +20,11 @@ DATE_LIKE_RE = re.compile(
     r"Dec(?:ember)?)\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+(?:19|20)\d{2}\b)",
     re.IGNORECASE,
 )
+RELATIVE_DATE_RE = re.compile(
+    r"\b(?:an?|one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+"
+    r"(?:minute|hour|day|week|month|year)s?\s+ago\b",
+    re.IGNORECASE,
+)
 
 NUMERIC_FEATURE_NAMES = (
     "log_descendant_text_length",
@@ -29,6 +34,7 @@ NUMERIC_FEATURE_NAMES = (
     "relative_document_position",
     "has_datetime_attribute",
     "contains_date_like_text",
+    "contains_relative_date_text",
 )
 CONTINUOUS_FEATURE_INDICES = (0, 1, 2, 3, 4)
 
@@ -149,6 +155,7 @@ def raw_numeric_features(candidate: Candidate, candidate_count: int) -> np.ndarr
             position,
             float(element.has_attr("datetime")),
             float(bool(DATE_LIKE_RE.search(text))),
+            float(bool(RELATIVE_DATE_RE.search(text))),
         ],
         dtype=np.float32,
     )

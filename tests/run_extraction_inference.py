@@ -14,13 +14,14 @@ from typing import Sequence
 from bs4 import BeautifulSoup
 
 from eng_universe.extraction import DOMExtractor
+from eng_universe.extraction.contract import FIELDS as EXTRACTION_FIELDS
 from eng_universe.extraction.manifest import DatasetManifest, PageRecord
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATASET_DIR = PROJECT_ROOT / "data" / "learned_extraction" / "raw"
 DEFAULT_CHECKPOINT = PROJECT_ROOT / "data" / "learned_extraction" / "model" / "best.pt"
-FIELDS = ("article", "title", "author", "date")
+FIELDS = tuple(field.value for field in EXTRACTION_FIELDS)
 SPACE_RE = re.compile(r"\s+")
 
 
@@ -115,6 +116,7 @@ def run(
 
     selected_count = 0
     missing_count = 0
+    inference_latencies: list[float] = []
     total_started = time.perf_counter()
     extractor = DOMExtractor(checkpoint)
 
@@ -124,9 +126,10 @@ def run(
         started = time.perf_counter()
         results = extractor.extract_all(html)
         elapsed_ms = (time.perf_counter() - started) * 1000
+        inference_latencies.append(elapsed_ms)
 
         print(terminal.heading(f"[{index:02d}/{len(pages):02d}] {record.company} — {record.website}"))
-        print(terminal.muted(f"         {record.page_id} · {elapsed_ms:.1f} ms"))
+        print(terminal.muted(f"         {record.page_id} · inference={elapsed_ms:.1f} ms"))
         print(f"         input: {terminal.file_link(html_path)}")
         for field in fields:
             result = results[field]
@@ -148,6 +151,7 @@ def run(
     print(terminal.heading("Summary"))
     print(
         f"  pages={len(pages)}  selected={selected_count}  missing={missing_count}  "
+        f"mean_inference={sum(inference_latencies) / len(inference_latencies):.1f} ms  "
         f"total={total_ms:.1f} ms"
     )
     return 0

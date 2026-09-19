@@ -15,6 +15,7 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset
 
 from eng_universe.extraction.model import DOMNodeSelector
+from eng_universe.extraction.contract import FIELDS
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,7 +78,7 @@ def collate_pages(items: list[MatrixPage]) -> Batch:
         (len(items), max_candidates, feature_count), dtype=torch.float32
     )
     mask = torch.zeros((len(items), max_candidates), dtype=torch.bool)
-    targets = torch.empty((len(items), 4), dtype=torch.long)
+    targets = torch.empty((len(items), len(FIELDS)), dtype=torch.long)
     for index, item in enumerate(items):
         count = len(item.tag_ids)
         tag_ids[index, :count] = item.tag_ids
@@ -133,7 +134,7 @@ def _run_epoch(
         predicted = scores.argmax(dim=1)
         correct += int((predicted == batch.targets).sum())
         selections += batch.targets.numel()
-    page_count = selections // 4
+    page_count = selections // len(FIELDS)
     return {
         "loss": total_loss / max(1, page_count),
         "exact_selection_accuracy": correct / max(1, selections),
@@ -149,8 +150,13 @@ def _loader(paths: Sequence[Path], batch_size: int, shuffle: bool) -> DataLoader
     )
 
 
-def _new_model(tag_count: int, feature_count: int, device: torch.device) -> DOMNodeSelector:
-    return DOMNodeSelector(tag_count, feature_count).to(device)
+def _new_model(
+    tag_count: int,
+    feature_count: int,
+    device: torch.device,
+    field_count: int = len(FIELDS),
+) -> DOMNodeSelector:
+    return DOMNodeSelector(tag_count, feature_count, field_count=field_count).to(device)
 
 
 def train(
@@ -173,6 +179,9 @@ def train(
     preprocessing = json.loads(
         (prepared_dir / "preprocessing.json").read_text(encoding="utf-8")
     )
+    fields = preprocessing.get("fields", [field.value for field in FIELDS])
+    if fields != [field.value for field in FIELDS]:
+        raise ValueError(f"prepared field schema does not match runtime schema: {fields}")
     tag_count = len(preprocessing["vocabulary"]["tags"])
     with np.load(train_paths[0], allow_pickle=False) as first:
         feature_count = int(first["numeric"].shape[1])
@@ -180,7 +189,7 @@ def train(
     # Required smoke test: independently prove the architecture can memorize a
     # few pages before spending time on the full split.
     overfit_paths = train_paths[: min(4, len(train_paths))]
-    overfit_model = _new_model(tag_count, feature_count, device)
+    overfit_model = _new_model(tag_count, feature_count, device, len(fields))
     overfit_optimizer = torch.optim.Adam(overfit_model.parameters(), lr=learning_rate * 3)
     overfit_loader = _loader(overfit_paths, len(overfit_paths), shuffle=True)
     overfit_metrics: dict[str, float] = {}
@@ -189,7 +198,7 @@ def train(
             overfit_model, overfit_loader, device, overfit_optimizer
         )
 
-    model = _new_model(tag_count, feature_count, device)
+    model = _new_model(tag_count, feature_count, device, len(fields))
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     train_loader = _loader(train_paths, batch_size, shuffle=True)
     validation_loader = _loader(validation_paths, batch_size, shuffle=False)
@@ -209,6 +218,7 @@ def train(
                     "model_state": model.state_dict(),
                     "tag_count": tag_count,
                     "numeric_feature_count": feature_count,
+                    "fields": fields,
                     "preprocessing": preprocessing,
                     "epoch": epoch,
                     "validation": validation_metrics,
@@ -218,6 +228,7 @@ def train(
     metrics: dict[str, object] = {
         "seed": seed,
         "device": str(device),
+        "fields": fields,
         "training_pages": len(train_paths),
         "validation_pages": len(validation_paths),
         "overfit_pages": len(overfit_paths),

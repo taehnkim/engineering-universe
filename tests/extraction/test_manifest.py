@@ -53,3 +53,50 @@ def test_manifest_rejects_duplicate_canonical_urls(tmp_path: Path) -> None:
     assert canonical_url("HTTPS://EXAMPLE.COM/post/?source=x#top") == (
         "https://example.com/post"
     )
+
+
+def test_manifest_round_trips_scraped_at(tmp_path: Path) -> None:
+    manifest = DatasetManifest(
+        2,
+        (
+            PageRecord(
+                page_id="one",
+                source_id="source",
+                company="Company",
+                website="example.com",
+                url="https://example.com/post",
+                html_path="html/one.html",
+                split="train",
+                capture_kind="browser",
+                html_hash="abc",
+                scraped_at="2026-09-19T12:30:00Z",
+            ),
+        ),
+    )
+    path = tmp_path / "manifest.json"
+
+    manifest.save(path)
+
+    assert DatasetManifest.load(path).pages[0].scraped_at == "2026-09-19T12:30:00Z"
+
+
+def test_manifest_v2_requires_scraped_at(tmp_path: Path) -> None:
+    manifest = DatasetManifest(
+        2,
+        (
+            PageRecord(
+                page_id="one",
+                source_id="source",
+                company="Company",
+                website="example.com",
+                url="https://example.com/post",
+                html_path="html/one.html",
+                split="train",
+                capture_kind="browser",
+                html_hash="abc",
+            ),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="scraped_at is required"):
+        manifest.save(tmp_path / "manifest.json")

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from datetime import datetime
 import hashlib
 import json
 from pathlib import Path
@@ -25,6 +26,7 @@ class PageRecord:
     split: Split
     capture_kind: CaptureKind
     html_hash: str
+    scraped_at: str | None = None
     is_article: bool = True
 
     @classmethod
@@ -67,6 +69,15 @@ class DatasetManifest:
                     f"website {page.website} appears in both "
                     f"{previous_split} and {page.split}"
                 )
+            if self.version >= 2 and page.scraped_at is None:
+                raise ValueError(f"{page.page_id}: scraped_at is required in manifest v2")
+            if page.scraped_at is not None:
+                try:
+                    datetime.fromisoformat(page.scraped_at.replace("Z", "+00:00"))
+                except ValueError as exc:
+                    raise ValueError(
+                        f"{page.page_id}: scraped_at must be an ISO 8601 timestamp"
+                    ) from exc
 
     def save(self, path: Path) -> None:
         self.validate()

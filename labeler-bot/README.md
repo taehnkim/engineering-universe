@@ -20,7 +20,9 @@ uv run python labeler-bot/run.py
 The run uses four train pages, three validation pages, and three test pages. It
 removes scripts, styles, navigation, footers, forms, social controls, and other
 page chrome. It keeps original DOM node IDs on up to 254 likely candidates.
-Jev answers all four questions in one API request per page.
+Jev answers all six questions in one API request per page: article, title,
+authors, absolute date, summary, and relative date. Reading durations such as
+`5 min read` are not relative dates.
 
 Use `--prepare-only` to inspect the cleaned inputs without an API key or API
 calls. Use `--overwrite` to call Jev again for pages that already have bot
@@ -52,3 +54,4 @@ labeler-bot/data/
 The generated data is ignored by Git. Each annotation has the same `labels`
 map and original HTML hash as the core labeler. It also has Jev confidence,
 choice probabilities, model name, token usage, and preparation statistics.
+The terminal and review UI also show request latency in milliseconds.

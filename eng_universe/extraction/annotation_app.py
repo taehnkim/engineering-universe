@@ -29,7 +29,7 @@ body{margin:0;font:14px system-ui;background:#111827;color:#e5e7eb}header{displa
 <header><select id="pages"></select><button id="parent">Select parent</button><button id="save">Save</button><span id="status"></span></header>
 <main><iframe id="page" sandbox="allow-same-origin"></iframe><aside><h2>Selections</h2><p>Choose a field, then click the tightest correct wrapper. Hover highlights candidates.</p><div id="fields"></div><label><input id="review" type="checkbox"> Page needs review</label><h3>Preview</h3><div id="preview" class="preview"></div></aside></main>
 <script>
-const names=['article','title','author','date']; let active='article', current=null, payload=null, labels={};
+const names=['article','title','authors','date','summary','relative_date']; let active='article', current=null, payload=null, labels={};
 const $=id=>document.getElementById(id); const esc=s=>(s??'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function draw(){ $('fields').innerHTML=names.map(n=>`<div class="field"><button data-field="${n}" class="${active===n?'active':''}">${n}</button> <button data-missing="${n}">missing</button><div class="value">${labels[n]===null?'null':labels[n]??'unlabeled'}</div></div>`).join(''); document.querySelectorAll('[data-field]').forEach(b=>b.onclick=()=>{active=b.dataset.field;draw()}); document.querySelectorAll('[data-missing]').forEach(b=>b.onclick=()=>{labels[b.dataset.missing]=null;draw();preview()})}
 function preview(){const d=$('page').contentDocument, id=labels[active], el=id==null?null:d.querySelector(`[data-eu-node-id="${id}"]`); $('preview').textContent=el?el.innerText.slice(0,4000):(id===null?'Missing':'No selection')}
@@ -95,7 +95,7 @@ def create_app(dataset_dir: Path) -> FastAPI:
         if request.html_hash != page.html_hash:
             raise HTTPException(409, "HTML changed; reload before saving")
         if set(request.labels) != {field.value for field in FIELDS}:
-            raise HTTPException(422, "all four fields are required")
+            raise HTTPException(422, "all extraction fields are required")
         annotation = Annotation.from_dict(
             {
                 "page_id": page_id,

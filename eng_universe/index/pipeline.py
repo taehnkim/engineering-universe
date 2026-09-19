@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timezone
 import time
 import uuid
 from dataclasses import replace
@@ -108,6 +109,11 @@ async def index_worker(doc_key_prefix: str | None = None) -> None:
         domain = _decode_bytes(crawl_meta.get(b"domain"))
         depth = _decode_int(crawl_meta.get(b"depth"))
         fetched_at = _decode_int(crawl_meta.get(b"fetched_at"))
+        scraped_at = _decode_bytes(crawl_meta.get(b"scraped_at"))
+        if not scraped_at and fetched_at is not None:
+            scraped_at = datetime.fromtimestamp(
+                fetched_at, tz=timezone.utc
+            ).isoformat().replace("+00:00", "Z")
         status = _decode_int(crawl_meta.get(b"status"))
         raw_html = ""
         if r2_enabled():
@@ -130,9 +136,9 @@ async def index_worker(doc_key_prefix: str | None = None) -> None:
             )
             continue
         base_html = raw_html or cleaned_html
-        parsed = parse_html(url, base_html)
+        parsed = parse_html(url, base_html, scraped_at=scraped_at or None)
         if cleaned_html:
-            cleaned_parsed = parse_html(url, cleaned_html)
+            cleaned_parsed = parse_html(url, cleaned_html, scraped_at=parsed.scraped_at)
             parsed = replace(parsed, content=cleaned_parsed.content)
         if r2_enabled():
             index_payload = {
@@ -142,8 +148,11 @@ async def index_worker(doc_key_prefix: str | None = None) -> None:
                 "title": parsed.title,
                 "content": parsed.content,
                 "authors": parsed.authors,
+                "summary": parsed.summary,
                 "company": parsed.company,
                 "published_at": parsed.published_at,
+                "relative_date": parsed.relative_date,
+                "scraped_at": parsed.scraped_at,
                 "language": parsed.language,
                 "source": source,
                 "domain": domain,

@@ -46,11 +46,17 @@ def heuristic_select(page: ParsedPage, field: Field) -> int | None:
         elif field == Field.TITLE:
             if tag in {"h1", "h2"} and 4 <= len(text) <= 300:
                 score = (12 if tag == "h1" else 6) - candidate.node_id / 1000
-        elif field == Field.AUTHOR:
+        elif field == Field.AUTHORS:
             if "author" in attrs or "byline" in attrs or element.get("rel") == ["author"]:
                 score = 10 - len(text) / 1000
         elif field == Field.DATE:
             if tag == "time" or element.has_attr("datetime") or "date" in attrs:
+                score = 10 - len(text) / 1000
+        elif field == Field.SUMMARY:
+            if re.search(r"subtitle|subhead|standfirst|dek|excerpt|description", attrs):
+                score = 10 - len(text) / 1000
+        elif field == Field.RELATIVE_DATE:
+            if re.search(r"\b(?:minute|hour|day|week|month|year)s?\s+ago\b", text, re.I):
                 score = 10 - len(text) / 1000
         if best is None or score > best[0]:
             best = (score, candidate.node_id)
@@ -82,7 +88,16 @@ def _empty_counts() -> dict[str, float]:
     }
 
 
-def _finish(values: dict[str, float]) -> dict[str, float]:
+def _finish(values: dict[str, float]) -> dict[str, float | None]:
+    if values["count"] == 0:
+        return {
+            "exact_selected_node_accuracy": None,
+            "missing_precision": None,
+            "missing_recall": None,
+            "missing_desired_words": 0,
+            "included_unwanted_words": 0,
+            "examples": 0,
+        }
     return {
         "exact_selected_node_accuracy": values["correct"] / max(1, values["count"]),
         "missing_precision": values["missing_true_positive"] / max(1, values["missing_predicted"]),

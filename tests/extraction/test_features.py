@@ -17,13 +17,18 @@ def test_structural_features_and_unknown_tag() -> None:
     )
     article = next(item for item in page.candidates if item.element.name == "article")
     vector = raw_numeric_features(article, len(page.candidates))
-    assert vector.shape == (7,)
+    assert vector.shape == (8,)
     assert np.isclose(vector[1], np.log1p(2))
     assert 0 < vector[2] < 1
     assert vector[5] == 0
     assert vector[6] == 1
+    assert vector[7] == 0
     time = next(item for item in page.candidates if item.element.name == "time")
     assert raw_numeric_features(time, len(page.candidates))[5] == 1
+    assert len(raw_numeric_features(time, len(page.candidates))) == 8
+
+    relative = parse_html("<p>5 min read · 2 days ago</p>").candidates[0]
+    assert raw_numeric_features(relative, 1)[7] == 1
 
     vocabulary = TagVocabulary.fit([page])
     assert vocabulary.encode("article") > 1

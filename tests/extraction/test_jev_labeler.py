@@ -91,7 +91,14 @@ def test_prepare_html_removes_chrome_and_keeps_original_node_ids() -> None:
 def test_question_choices_include_candidates_and_missing() -> None:
     questions = jev_labeler.build_questions([4, 8])
 
-    assert set(questions) == {"article", "title", "author", "date"}
+    assert set(questions) == {
+        "article",
+        "title",
+        "authors",
+        "date",
+        "summary",
+        "relative_date",
+    }
     for question in questions.values():
         assert set(question.criteria) == {"node_4", "node_8", "missing"}
 

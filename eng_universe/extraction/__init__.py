@@ -4,6 +4,6 @@ Version one intentionally uses structural features and learned HTML-tag
 embeddings only. It does not feed article words into the model.
 """
 
-from eng_universe.extraction.inference import DOMExtractor, extract
+from eng_universe.extraction.inference import DOMExtractor, ExtractedDocument, extract
 
-__all__ = ["DOMExtractor", "extract"]
+__all__ = ["DOMExtractor", "ExtractedDocument", "extract"]

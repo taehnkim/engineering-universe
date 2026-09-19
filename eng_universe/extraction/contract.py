@@ -12,8 +12,10 @@ from typing import Any, Literal
 class Field(str, Enum):
     ARTICLE = "article"
     TITLE = "title"
-    AUTHOR = "author"
+    AUTHORS = "authors"
     DATE = "date"
+    SUMMARY = "summary"
+    RELATIVE_DATE = "relative_date"
 
 
 FIELDS: tuple[Field, ...] = tuple(Field)
@@ -32,7 +34,11 @@ class Annotation:
     def from_dict(cls, value: dict[str, Any]) -> Annotation:
         raw_labels = value.get("labels", {})
         labels = {
-            field: raw_labels.get(field.value)
+            field: (
+                raw_labels.get("author")
+                if field == Field.AUTHORS and field.value not in raw_labels
+                else raw_labels.get(field.value)
+            )
             for field in FIELDS
         }
         for field, node_id in labels.items():
