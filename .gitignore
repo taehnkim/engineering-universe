@@ -1,6 +1,7 @@
 # Python-generated files
 __pycache__/
 *.py[oc]
+.DS_Store
 build/
 dist/
 wheels/
@@ -8,8 +9,11 @@ wheels/
 data/*
 !data/learned_extraction/
 data/learned_extraction/*
+!data/learned_extraction/README.md
+!data/learned_extraction/anthropic-engineering-001-string.md
 !data/learned_extraction/raw/
 !data/learned_extraction/raw/**
+data/learned_extraction/raw/.DS_Store
 
 # Virtual environments
 .venv
