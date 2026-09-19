@@ -1,7 +1,7 @@
 # Jev labeler bot
 
-This experiment uses Jev as a first-pass labeler for ten pages. It does not
-change the human labels in `data/learned_extraction/raw/annotations/`.
+This experiment uses `jev-1.13.0` as a first-pass labeler for ten pages. It
+does not change the human labels in `data/learned_extraction/raw/annotations/`.
 
 ## Run the bot
 

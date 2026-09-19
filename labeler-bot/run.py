@@ -41,7 +41,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--limit", type=int, default=MAX_PAGES)
     parser.add_argument("--page-id", action="append", default=[])
-    parser.add_argument("--model", default="jev")
+    parser.add_argument("--model", default="jev-1.13.0")
     parser.add_argument(
         "--prepare-only",
         action="store_true",

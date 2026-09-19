@@ -14,6 +14,12 @@ jev_labeler = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = jev_labeler
 SPEC.loader.exec_module(jev_labeler)
 
+RUN_MODULE_PATH = Path(__file__).parents[2] / "labeler-bot/run.py"
+RUN_SPEC = importlib.util.spec_from_file_location("jev_labeler_run", RUN_MODULE_PATH)
+assert RUN_SPEC and RUN_SPEC.loader
+jev_labeler_run = importlib.util.module_from_spec(RUN_SPEC)
+RUN_SPEC.loader.exec_module(jev_labeler_run)
+
 
 def record(page_id: str, split: str, *, is_article: bool = True) -> PageRecord:
     return PageRecord(
@@ -88,3 +94,7 @@ def test_question_choices_include_candidates_and_missing() -> None:
     assert set(questions) == {"article", "title", "author", "date"}
     for question in questions.values():
         assert set(question.criteria) == {"node_4", "node_8", "missing"}
+
+
+def test_cli_uses_pinned_jev_model() -> None:
+    assert jev_labeler_run.build_parser().parse_args([]).model == "jev-1.13.0"

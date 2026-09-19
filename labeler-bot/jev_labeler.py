@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import json
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import json
 from pathlib import Path
-import re
 from typing import Any, Iterable, Sequence
 
 from bs4 import BeautifulSoup, Comment, NavigableString, Tag
@@ -15,7 +15,6 @@ from typesafe_sdk import Choice, TypeSafeClient
 from eng_universe.extraction.contract import FIELDS, Field
 from eng_universe.extraction.dom import ParsedPage, parse_html
 from eng_universe.extraction.manifest import DatasetManifest, PageRecord
-
 
 MAX_PAGES = 10
 MAX_CHOICES = 255
@@ -64,7 +63,9 @@ DATE_TEXT = re.compile(
     re.IGNORECASE,
 )
 AUTHOR_TEXT = re.compile(r"^(?:by|written by|author)\b", re.IGNORECASE)
-KEEP_ATTRIBUTES = frozenset({"aria-label", "class", "datetime", "id", "itemprop", "role"})
+KEEP_ATTRIBUTES = frozenset(
+    {"aria-label", "class", "datetime", "id", "itemprop", "role"}
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,13 +77,17 @@ class PreparedPage:
     prepared_char_count: int
 
 
-def select_records(records: Sequence[PageRecord], limit: int = MAX_PAGES) -> list[PageRecord]:
+def select_records(
+    records: Sequence[PageRecord], limit: int = MAX_PAGES
+) -> list[PageRecord]:
     """Select a stable mix of article pages from all three dataset splits."""
 
     if not 1 <= limit <= MAX_PAGES:
         raise ValueError(f"limit must be between 1 and {MAX_PAGES}")
     buckets = {
-        split: [record for record in records if record.is_article and record.split == split]
+        split: [
+            record for record in records if record.is_article and record.split == split
+        ]
         for split in ("train", "validation", "test")
     }
     selected: list[PageRecord] = []
@@ -221,10 +226,7 @@ def prepare_html(html: str, *, max_candidates: int = MAX_CHOICES - 1) -> Prepare
         if tag.has_attr("data-jev-node-id") and tag.get_text(" ", strip=True)
     ]
     ranked = sorted(surviving, key=_candidate_score, reverse=True)
-    selected_ids = {
-        int(tag["data-jev-node-id"])
-        for tag in ranked[:max_candidates]
-    }
+    selected_ids = {int(tag["data-jev-node-id"]) for tag in ranked[:max_candidates]}
     for tag in soup.find_all(True):
         raw_id = tag.get("data-jev-node-id")
         keep_node_id = raw_id is not None and int(raw_id) in selected_ids
@@ -304,7 +306,7 @@ def label_with_jev(
     prepared: PreparedPage,
     record: PageRecord,
     *,
-    model: str = "jev",
+    model: str = "jev-1.13.0",
 ) -> dict[str, Any]:
     """Call Jev once for all four fields and return a bot annotation."""
 
@@ -354,7 +356,9 @@ def label_with_jev(
 
 def save_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
 
 def run_entry(record: PageRecord) -> dict[str, Any]:
@@ -369,7 +373,9 @@ def run_entry(record: PageRecord) -> dict[str, Any]:
     }
 
 
-def load_records(dataset_dir: Path, page_ids: Sequence[str], limit: int) -> list[PageRecord]:
+def load_records(
+    dataset_dir: Path, page_ids: Sequence[str], limit: int
+) -> list[PageRecord]:
     manifest = DatasetManifest.load(dataset_dir / "manifest.json")
     if not page_ids:
         return select_records(manifest.pages, limit)
