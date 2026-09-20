@@ -24,8 +24,8 @@ from eng_universe.extraction.dom import ParsedPage, parse_html
 from eng_universe.extraction.manifest import DatasetManifest, PageRecord
 
 MAX_PAGES = 10
-MAX_CHOICES = 255
-MAX_STATE_CHARS = 145_000
+MAX_CHOICES = 129
+MAX_STATE_CHARS = 75_000
 MISSING_CHOICE = "missing"
 NODE_PREFIX = "node_"
 
@@ -172,11 +172,69 @@ def _normalize_text(soup: BeautifulSoup) -> None:
         value.replace_with(compact)
 
 
-def prepare_html(html: str, *, max_candidates: int = MAX_CHOICES - 1) -> PreparedPage:
+def _render_within_limit(root: Tag, max_chars: int) -> str:
+    """Compact prepared HTML without removing any selected candidate element."""
+
+    prepared_html = str(root)
+    if len(prepared_html) <= max_chars:
+        return prepared_html
+
+    overflow = len(prepared_html) - max_chars
+    for value in reversed(list(root.find_all(string=True))):
+        if overflow <= 0:
+            break
+        text = str(value)
+        if len(text) <= 80:
+            continue
+        remove_count = min(len(text) - 80, overflow)
+        value.replace_with(text[: len(text) - remove_count] + "…")
+        overflow -= remove_count
+
+    prepared_html = str(root)
+    if len(prepared_html) <= max_chars:
+        return prepared_html
+
+    for tag in reversed(list(root.find_all(True))):
+        if tag is root or tag.has_attr("data-jev-node-id"):
+            continue
+        tag.unwrap()
+
+    prepared_html = str(root)
+    if len(prepared_html) <= max_chars:
+        return prepared_html
+
+    overflow = len(prepared_html) - max_chars
+    for value in reversed(list(root.find_all(string=True))):
+        if overflow <= 0:
+            break
+        text = str(value)
+        if not text:
+            continue
+        keep_count = max(0, len(text) - overflow - 1)
+        value.replace_with((text[:keep_count] + "…") if keep_count else "")
+        overflow -= len(text) - keep_count
+
+    prepared_html = str(root)
+    if len(prepared_html) > max_chars:
+        raise ValueError(
+            f"prepared HTML is {len(prepared_html):,} characters; limit is "
+            f"{max_chars:,}"
+        )
+    return prepared_html
+
+
+def prepare_html(
+    html: str,
+    *,
+    max_candidates: int = MAX_CHOICES - 1,
+    max_state_chars: int = MAX_STATE_CHARS,
+) -> PreparedPage:
     """Remove page chrome and retain original IDs on likely extraction nodes."""
 
     if not 4 <= max_candidates < MAX_CHOICES:
         raise ValueError(f"max_candidates must be between 4 and {MAX_CHOICES - 1}")
+    if max_state_chars < 1_000:
+        raise ValueError("max_state_chars must be at least 1,000")
     page = parse_html(html)
     copy = parse_html(html, strip_chrome=True)
     soup = copy.dom
@@ -197,24 +255,7 @@ def prepare_html(html: str, *, max_candidates: int = MAX_CHOICES - 1) -> Prepare
     _normalize_text(soup)
 
     root = soup.body or soup
-    prepared_html = str(root)
-    if len(prepared_html) > MAX_STATE_CHARS:
-        overflow = len(prepared_html) - MAX_STATE_CHARS
-        for value in reversed(list(root.find_all(string=True))):
-            if overflow <= 0:
-                break
-            text = str(value)
-            if len(text) <= 80:
-                continue
-            remove_count = min(len(text) - 80, overflow)
-            value.replace_with(text[: len(text) - remove_count] + "…")
-            overflow -= remove_count
-        prepared_html = str(root)
-    if len(prepared_html) > MAX_STATE_CHARS:
-        raise ValueError(
-            f"prepared HTML is {len(prepared_html):,} characters; limit is "
-            f"{MAX_STATE_CHARS:,}"
-        )
+    prepared_html = _render_within_limit(root, max_state_chars)
 
     return PreparedPage(
         page=page,

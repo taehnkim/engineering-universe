@@ -106,6 +106,24 @@ def test_prepare_html_removes_chrome_and_keeps_original_node_ids() -> None:
     assert len(prepared.candidate_ids) <= 20
 
 
+def test_prepare_html_compacts_large_documents_below_api_limit() -> None:
+    paragraphs = "".join(
+        f"<div><span>Paragraph {index} {'word ' * 80}</span></div>"
+        for index in range(1_000)
+    )
+    html = f"<html><body><main><h1>Title</h1>{paragraphs}</main></body></html>"
+
+    prepared = jev_labeler.prepare_html(
+        html,
+        max_candidates=20,
+        max_state_chars=20_000,
+    )
+
+    assert len(prepared.html) <= 20_000
+    assert "Title" in prepared.html
+    assert "data-jev-node-id" in prepared.html
+
+
 def test_question_choices_include_candidates_and_missing() -> None:
     questions = jev_labeler.build_questions([4, 8])
 

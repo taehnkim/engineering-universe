@@ -46,7 +46,8 @@ uv run python scripts/label_extraction_with_jev.py \
 The run uses four train pages, three validation pages, and three test pages. It
 removes scripts, styles, navigation, footers, forms, social controls, and other
 page chrome. This is the same `chrome-v1` cleanup used by small-model training
-and inference. It keeps original DOM node IDs on up to 254 likely candidates.
+and inference. It keeps original DOM node IDs on up to 128 likely candidates
+and compacts prepared HTML below the Jev request limit.
 Jev answers all six questions in one API request per page: article, title,
 authors, absolute date, summary, and relative date. Reading durations such as
 `5 min read` are not relative dates.
