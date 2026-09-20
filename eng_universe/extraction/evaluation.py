@@ -112,7 +112,13 @@ def _tree_size(path: Path) -> int:
     return sum(item.stat().st_size for item in path.rglob("*") if item.is_file())
 
 
-def evaluate(dataset_dir: Path, checkpoint: Path, output_dir: Path) -> dict[str, object]:
+def evaluate(
+    dataset_dir: Path,
+    checkpoint: Path,
+    output_dir: Path,
+    *,
+    include_jev_drafts: bool = False,
+) -> dict[str, object]:
     extractor = DOMExtractor(checkpoint)
     counts = {field: _empty_counts() for field in FIELDS}
     baseline_counts = {field: _empty_counts() for field in FIELDS}
@@ -121,7 +127,13 @@ def evaluate(dataset_dir: Path, checkpoint: Path, output_dir: Path) -> dict[str,
     )
     failures: list[str] = []
     latencies: list[float] = []
-    pages = list(iter_labeled_pages(dataset_dir, "test"))
+    pages = list(
+        iter_labeled_pages(
+            dataset_dir,
+            "test",
+            include_jev_drafts=include_jev_drafts,
+        )
+    )
     for item in pages:
         started = time.perf_counter()
         predicted = extractor.predict_ids(item.page.original_html)
@@ -168,7 +180,16 @@ def evaluate(dataset_dir: Path, checkpoint: Path, output_dir: Path) -> dict[str,
     peak_rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     peak_rss_bytes = int(peak_rss if sys.platform == "darwin" else peak_rss * 1024)
     report: dict[str, object] = {
-        "scope": "held-out test websites only",
+        "scope": (
+            "held-out test websites with Jev pseudo-labels"
+            if include_jev_drafts
+            else "held-out test websites with human-reviewed labels only"
+        ),
+        "label_policy": (
+            "human_reviewed_and_jev_drafts"
+            if include_jev_drafts
+            else "human_reviewed_only"
+        ),
         "test_pages": len(pages),
         "fields": {field.value: _finish(counts[field]) for field in FIELDS},
         "heuristic_baseline": {
@@ -211,8 +232,23 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser.add_argument("--dataset-dir", type=Path, required=True)
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--include-jev-drafts",
+        action="store_true",
+        help="Evaluate against Jev-backed test drafts as pseudo-ground-truth.",
+    )
     args = parser.parse_args(argv)
-    print(json.dumps(evaluate(args.dataset_dir, args.checkpoint, args.output_dir), indent=2))
+    print(
+        json.dumps(
+            evaluate(
+                args.dataset_dir,
+                args.checkpoint,
+                args.output_dir,
+                include_jev_drafts=args.include_jev_drafts,
+            ),
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ from eng_universe.extraction.dom import html_sha256
 from eng_universe.extraction.manifest import DatasetManifest, PageRecord
 
 
-def _write_page(dataset_dir: Path, review_status: str) -> None:
+def _write_page(dataset_dir: Path, review_status: str, *, add_jev: bool = False) -> None:
     html = "<html><body><article><h1>Title</h1><p>Body</p></article></body></html>"
     (dataset_dir / "html").mkdir(parents=True)
     (dataset_dir / "annotations").mkdir()
@@ -46,6 +46,24 @@ def _write_page(dataset_dir: Path, review_status: str) -> None:
             }
         )
     )
+    if add_jev:
+        (dataset_dir / "jev_annotations").mkdir()
+        (dataset_dir / "jev_annotations/page.json").write_text(
+            json.dumps(
+                {
+                    "page_id": "page",
+                    "html_hash": html_sha256(html),
+                    "labels": {
+                        "article": 2,
+                        "title": 3,
+                        "authors": None,
+                        "date": None,
+                        "summary": None,
+                        "relative_date": None,
+                    },
+                }
+            )
+        )
 
 
 def test_training_uses_only_human_reviewed_annotations(tmp_path: Path) -> None:
@@ -55,6 +73,21 @@ def test_training_uses_only_human_reviewed_annotations(tmp_path: Path) -> None:
     value["review_status"] = "reviewed"
     (tmp_path / "annotations/page.json").write_text(json.dumps(value))
     assert len(list(iter_labeled_pages(tmp_path, "train"))) == 1
+
+
+def test_training_can_explicitly_include_jev_backed_drafts(tmp_path: Path) -> None:
+    _write_page(tmp_path, "draft", add_jev=True)
+
+    assert list(iter_labeled_pages(tmp_path, "train")) == []
+    assert len(
+        list(
+            iter_labeled_pages(
+                tmp_path,
+                "train",
+                include_jev_drafts=True,
+            )
+        )
+    ) == 1
 
 
 def test_legacy_annotation_does_not_count_as_reviewed(tmp_path: Path) -> None:

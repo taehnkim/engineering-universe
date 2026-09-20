@@ -37,6 +37,8 @@ class PreparedPage:
 def iter_labeled_pages(
     dataset_dir: Path,
     split: Split | None = None,
+    *,
+    include_jev_drafts: bool = False,
 ) -> Iterator[LabeledPage]:
     manifest = DatasetManifest.load(dataset_dir / "manifest.json")
     for record in manifest.pages:
@@ -52,8 +54,29 @@ def iter_labeled_pages(
             raise ValueError(f"annotation page mismatch for {record.page_id}")
         if annotation.html_hash != page.html_hash or record.html_hash != page.html_hash:
             raise ValueError(f"stale HTML or annotation for {record.page_id}")
-        if annotation.review_status != "reviewed" or annotation.needs_review:
-            continue
+        is_human_reviewed = (
+            annotation.review_status == "reviewed" and not annotation.needs_review
+        )
+        if not is_human_reviewed:
+            if not include_jev_drafts or annotation.review_status != "draft":
+                continue
+            jev_path = dataset_dir / "jev_annotations" / f"{record.page_id}.json"
+            if not jev_path.exists():
+                continue
+            jev = json.loads(jev_path.read_text(encoding="utf-8"))
+            if jev.get("html_hash") != page.html_hash:
+                raise ValueError(f"stale Jev annotation for {record.page_id}")
+            jev_labels = Annotation.from_dict(
+                {
+                    "page_id": record.page_id,
+                    "html_hash": page.html_hash,
+                    "labels": jev.get("labels", {}),
+                }
+            ).labels
+            if annotation.labels != jev_labels:
+                raise ValueError(
+                    f"core draft differs from Jev audit for {record.page_id}"
+                )
         for field, node_id in annotation.labels.items():
             if node_id is not None and node_id not in page.node_by_id:
                 raise ValueError(
@@ -108,9 +131,20 @@ def save_prepared_page(path: Path, item: PreparedPage) -> None:
     )
 
 
-def prepare_dataset(dataset_dir: Path, output_dir: Path) -> dict[str, int]:
+def prepare_dataset(
+    dataset_dir: Path,
+    output_dir: Path,
+    *,
+    include_jev_drafts: bool = False,
+) -> dict[str, int]:
     by_split = {
-        split: list(iter_labeled_pages(dataset_dir, split))
+        split: list(
+            iter_labeled_pages(
+                dataset_dir,
+                split,
+                include_jev_drafts=include_jev_drafts,
+            )
+        )
         for split in ("train", "validation", "test")
     }
     if not by_split["train"]:
@@ -122,6 +156,11 @@ def prepare_dataset(dataset_dir: Path, output_dir: Path) -> dict[str, int]:
             {
                 "dom_cleanup": DOM_CLEANUP_VERSION,
                 "fields": [field.value for field in FIELDS],
+                "label_policy": (
+                    "human_reviewed_and_jev_drafts"
+                    if include_jev_drafts
+                    else "human_reviewed_only"
+                ),
                 "vocabulary": vocabulary.to_dict(),
                 "normalizer": normalizer.to_dict(),
             },

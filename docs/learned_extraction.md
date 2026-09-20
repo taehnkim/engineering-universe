@@ -138,6 +138,27 @@ uv run python -m eng_universe.extraction.evaluation \
   --output-dir data/learned_extraction/evaluation
 ```
 
+Human-reviewed annotations remain the default training gate. To run an explicit
+pseudo-label experiment with reviewed labels plus Jev-backed drafts, keep its
+artifacts separate:
+
+```bash
+uv run python scripts/prepare_extraction_dataset.py \
+  --output-dir data/learned_extraction/prepared_jev \
+  --include-jev-drafts
+uv run python -m eng_universe.extraction.training \
+  --prepared-dir data/learned_extraction/prepared_jev \
+  --output-dir data/learned_extraction/model_jev
+uv run python -m eng_universe.extraction.evaluation \
+  --dataset-dir data/learned_extraction/raw \
+  --checkpoint data/learned_extraction/model_jev/best.pt \
+  --output-dir data/learned_extraction/evaluation_jev \
+  --include-jev-drafts
+```
+
+Metrics from this mode measure how well the small model reproduces Jev labels
+on held-out websites. They are not human-verified extraction accuracy.
+
 The annotation page uses a sandboxed iframe without script permission. Hover
 to highlight, choose a field and click an element, move to its parent when a
 wrapper is too narrow, preview the chosen text, mark a field missing, or mark
