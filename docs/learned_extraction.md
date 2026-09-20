@@ -159,6 +159,18 @@ uv run python -m eng_universe.extraction.evaluation \
 Metrics from this mode measure how well the small model reproduces Jev labels
 on held-out websites. They are not human-verified extraction accuracy.
 
+Start the read-only inference playground on port 8767:
+
+```bash
+uv run python -m eng_universe.extraction.inference_app \
+  --dataset-dir data/learned_extraction/raw \
+  --checkpoint data/learned_extraction/model/best.pt
+```
+
+Choose a page and click **RUN**. The playground executes the checkpoint, shows
+the predicted node for every field, compares it with the available human or Jev
+reference, and scrolls the rendered page to the selected prediction.
+
 The annotation page uses a sandboxed iframe without script permission. Hover
 to highlight, choose a field and click an element, move to its parent when a
 wrapper is too narrow, preview the chosen text, mark a field missing, or mark
