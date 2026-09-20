@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import os
 from pathlib import Path
 from typing import Any, Sequence
 
 from dotenv import load_dotenv
+from typesafe_sdk import AsyncTypeSafeClient, RetryPolicy
 
 from eng_universe.extraction.contract import FIELDS
 from eng_universe.extraction.labeler_bot import LabelerBot, save_json
@@ -26,6 +28,7 @@ def _select_records(
     splits: set[str],
     page_ids: Sequence[str],
     limit: int,
+    include_listings: bool = False,
 ) -> list[PageRecord]:
     by_id = {record.page_id: record for record in records}
     if page_ids:
@@ -38,7 +41,7 @@ def _select_records(
             split: [
                 record
                 for record in records
-                if record.is_article and record.split == split
+                if (include_listings or record.is_article) and record.split == split
             ]
             for split in ("train", "validation", "test")
             if split in splits
@@ -56,8 +59,10 @@ def _select_records(
                     added = True
             if not added:
                 break
-    if any(not record.is_article for record in selected):
-        raise ValueError("listing pages cannot be labeled as articles")
+    if not include_listings and any(not record.is_article for record in selected):
+        raise ValueError(
+            "listing pages require --include-listings; Jev should mark their fields missing"
+        )
     return selected[:limit] if limit else selected
 
 
@@ -93,8 +98,28 @@ def build_parser() -> argparse.ArgumentParser:
         default=10,
         help="Maximum pages to label. Use 0 for every selected page.",
     )
+    parser.add_argument(
+        "--include-listings",
+        action="store_true",
+        help=(
+            "Include listing-page negatives. Without this flag, only article pages "
+            "are sent to Jev."
+        ),
+    )
     parser.add_argument("--page-id", action="append", default=[])
     parser.add_argument("--model", default="jev-1.13.0")
+    parser.add_argument(
+        "--concurrency",
+        type=int,
+        default=5,
+        help="Maximum concurrent Jev requests. Default: 5; maximum: 32.",
+    )
+    parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=5,
+        help="Retries for rate limits, server failures, and connection errors.",
+    )
     parser.add_argument(
         "--audit-dir",
         type=Path,
@@ -119,10 +144,13 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+async def _run(args: argparse.Namespace) -> int:
     if args.limit < 0:
         raise SystemExit("--limit must be zero or positive")
+    if not 1 <= args.concurrency <= 32:
+        raise SystemExit("--concurrency must be between 1 and 32")
+    if args.max_retries < 0:
+        raise SystemExit("--max-retries must be zero or positive")
     load_dotenv(ROOT / "labeler-bot/.env")
     manifest = DatasetManifest.load(args.dataset_dir / "manifest.json")
     try:
@@ -131,13 +159,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             splits=set(args.split or ("train", "validation", "test")),
             page_ids=args.page_id,
             limit=args.limit,
+            include_listings=args.include_listings,
         )
     except ValueError as error:
         raise SystemExit(str(error)) from error
 
     audit_dir = args.audit_dir or args.dataset_dir / "jev_annotations"
     bot = LabelerBot(model=args.model)
-    failures = 0
+    jobs: list[tuple[int, PageRecord, dict[str, Any] | None, Path | None]] = []
     for index, record in enumerate(records, start=1):
         audit_path = audit_dir / f"{record.page_id}.json"
         cache_paths = (audit_path, args.cache_dir / f"{record.page_id}.json")
@@ -145,14 +174,35 @@ def main(argv: Sequence[str] | None = None) -> int:
         reused_path = None
         if not args.overwrite_bot:
             result, reused_path = _load_cached(cache_paths, record)
+        jobs.append((index, record, result, reused_path))
+
+    needs_api = any(result is None for _, _, result, _ in jobs)
+    if needs_api and not os.environ.get("TYPESAFE_API_KEY"):
+        raise SystemExit(
+            "TYPESAFE_API_KEY is required because at least one page has no cached result"
+        )
+
+    semaphore = asyncio.Semaphore(args.concurrency)
+    failures: list[str] = []
+
+    async def process(
+        job: tuple[int, PageRecord, dict[str, Any] | None, Path | None],
+        client: AsyncTypeSafeClient | None,
+    ) -> None:
+        index, record, result, reused_path = job
+        audit_path = audit_dir / f"{record.page_id}.json"
         try:
             if result is None:
-                if not os.environ.get("TYPESAFE_API_KEY"):
-                    raise RuntimeError(
-                        "TYPESAFE_API_KEY is required for pages without a cached result"
+                assert client is not None
+                async with semaphore:
+                    html = await asyncio.to_thread(
+                        (args.dataset_dir / record.html_path).read_text,
+                        encoding="utf-8",
                     )
-                html = (args.dataset_dir / record.html_path).read_text(encoding="utf-8")
-                result = bot.label(html, record)
+                    prepared = await asyncio.to_thread(bot.prepare, html)
+                    result = await bot.label_prepared_async(
+                        prepared, record, client=client
+                    )
                 source = "Jev API"
             else:
                 source = f"cache {reused_path}"
@@ -172,11 +222,28 @@ def main(argv: Sequence[str] | None = None) -> int:
                 f"{mean_confidence:.0%} mean confidence | {core_status} | {source}"
             )
         except Exception as error:
-            failures += 1
+            failures.append(record.page_id)
             print(f"[{index}/{len(records)}] {record.page_id}: ERROR {error}")
+
+    if needs_api:
+        retry = RetryPolicy(
+            max_retries=args.max_retries,
+            http_statuses={429, 500, 502, 503, 504},
+            respect_retry_after=True,
+            timeout=120.0,
+        )
+        async with AsyncTypeSafeClient(model=args.model, retry=retry) as client:
+            await asyncio.gather(*(process(job, client) for job in jobs))
+    else:
+        await asyncio.gather(*(process(job, None) for job in jobs))
+
     print(f"\nJev audit data: {audit_dir.resolve()}")
     print("Review and edit: http://127.0.0.1:8765/")
     return 1 if failures else 0
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    return asyncio.run(_run(build_parser().parse_args(argv)))
 
 
 if __name__ == "__main__":

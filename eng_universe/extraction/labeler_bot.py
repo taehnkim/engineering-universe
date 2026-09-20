@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Iterable, Sequence
 
 from bs4 import BeautifulSoup, Comment, NavigableString, Tag
-from typesafe_sdk import Choice, TypeSafeClient
+from typesafe_sdk import AsyncTypeSafeClient, Choice, TypeSafeClient
 
 from eng_universe.extraction.contract import (
     FIELDS,
@@ -295,6 +295,15 @@ def label_with_jev(
         )
     latency_ms = (time.perf_counter() - started) * 1000
 
+    return _annotation_from_response(response, prepared, record, latency_ms)
+
+
+def _annotation_from_response(
+    response: Any,
+    prepared: PreparedPage,
+    record: PageRecord,
+    latency_ms: float,
+) -> dict[str, Any]:
     valid_ids = set(prepared.candidate_ids)
     labels: dict[str, int | None] = {}
     metadata: dict[str, dict[str, Any]] = {}
@@ -346,6 +355,31 @@ class LabelerBot:
         self, prepared: PreparedPage, record: PageRecord
     ) -> dict[str, Any]:
         return label_with_jev(prepared, record, model=self.model)
+
+    async def label_prepared_async(
+        self,
+        prepared: PreparedPage,
+        record: PageRecord,
+        *,
+        client: AsyncTypeSafeClient | None = None,
+    ) -> dict[str, Any]:
+        """Label one prepared page with an optional shared async client."""
+
+        state = {"page_url": record.url, "prepared_html": prepared.html}
+        started = time.perf_counter()
+        if client is None:
+            async with AsyncTypeSafeClient(model=self.model) as owned_client:
+                response = await owned_client.system_one(
+                    state=state,
+                    questions=build_questions(prepared.candidate_ids),
+                )
+        else:
+            response = await client.system_one(
+                state=state,
+                questions=build_questions(prepared.candidate_ids),
+            )
+        latency_ms = (time.perf_counter() - started) * 1000
+        return _annotation_from_response(response, prepared, record, latency_ms)
 
     def seed_core_annotation(
         self,

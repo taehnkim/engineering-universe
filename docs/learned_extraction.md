@@ -121,6 +121,11 @@ uv run python scripts/bootstrap_extraction_annotations.py
 uv run python scripts/migrate_extraction_schema.py
 uv run python scripts/label_extraction_with_jev.py --split train --limit 10
 uv run python scripts/label_extraction_with_jev.py --split validation --limit 10
+# All 725 article pages, with five concurrent Jev requests:
+uv run python scripts/label_extraction_with_jev.py --limit 0 --concurrency 5
+# All 757 pages, including 32 listing-page negatives:
+uv run python scripts/label_extraction_with_jev.py \
+  --limit 0 --include-listings --concurrency 5
 uv run python -m eng_universe.extraction.annotation_app \
   --dataset-dir data/learned_extraction/raw
 uv run python scripts/prepare_extraction_dataset.py
@@ -145,6 +150,15 @@ to the core annotation. It can reuse earlier results from
 `labeler-bot/data/annotations/` without another API call. It does not replace a
 human-reviewed annotation unless `--overwrite-reviewed` is explicit. All drafts
 are excluded from preprocessing and training, even when Jev is confident.
+
+The core Jev command uses the TypeSafe SDK's asynchronous client. It runs five
+requests at a time by default, supports `--concurrency 1` through `32`, retries
+rate limits and transient server failures, and respects the server's
+`Retry-After` response. It writes each completed audit result immediately, so a
+later run resumes from the cache instead of paying for the same page again.
+`--limit 0` selects every article in the requested splits. Add
+`--include-listings` to classify the listing-page negatives too; Jev should mark
+their absent article fields as missing.
 
 The core annotation UI can filter by train, validation, or test split and by
 whether Jev supplied a first pass. A diamond marks pages with Jev audit data.

@@ -29,6 +29,20 @@ Use `--limit 0` to process every page in the selected split. Core audit data is
 stored in `data/learned_extraction/raw/jev_annotations/` and appears in the
 editable human labeler on port 8765.
 
+The core command is concurrent and resumable. It uses the TypeSafe SDK's async
+client with five requests at a time, retries rate limits and transient server
+failures, and saves every completed result immediately. Adjust the bounded
+worker count with `--concurrency`; cached pages do not make another API call.
+
+```bash
+# All 725 articles in train, validation, and test:
+uv run python scripts/label_extraction_with_jev.py --limit 0 --concurrency 5
+
+# All 757 HTML files, including listing-page negatives:
+uv run python scripts/label_extraction_with_jev.py \
+  --limit 0 --include-listings --concurrency 5
+```
+
 The run uses four train pages, three validation pages, and three test pages. It
 removes scripts, styles, navigation, footers, forms, social controls, and other
 page chrome. This is the same `chrome-v1` cleanup used by small-model training

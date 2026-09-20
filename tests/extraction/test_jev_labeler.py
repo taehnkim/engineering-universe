@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 import importlib.util
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 from eng_universe.extraction.contract import (
     Annotation,
@@ -25,6 +27,16 @@ RUN_SPEC = importlib.util.spec_from_file_location("jev_labeler_run", RUN_MODULE_
 assert RUN_SPEC and RUN_SPEC.loader
 jev_labeler_run = importlib.util.module_from_spec(RUN_SPEC)
 RUN_SPEC.loader.exec_module(jev_labeler_run)
+
+CORE_RUN_MODULE_PATH = (
+    Path(__file__).parents[2] / "scripts/label_extraction_with_jev.py"
+)
+CORE_RUN_SPEC = importlib.util.spec_from_file_location(
+    "core_jev_labeler_run", CORE_RUN_MODULE_PATH
+)
+assert CORE_RUN_SPEC and CORE_RUN_SPEC.loader
+core_jev_labeler_run = importlib.util.module_from_spec(CORE_RUN_SPEC)
+CORE_RUN_SPEC.loader.exec_module(core_jev_labeler_run)
 
 
 def record(page_id: str, split: str, *, is_article: bool = True) -> PageRecord:
@@ -111,6 +123,83 @@ def test_question_choices_include_candidates_and_missing() -> None:
 
 def test_cli_uses_pinned_jev_model() -> None:
     assert jev_labeler_run.build_parser().parse_args([]).model == "jev-1.13.0"
+
+
+def test_core_cli_defaults_to_bounded_concurrency() -> None:
+    args = core_jev_labeler_run.build_parser().parse_args([])
+
+    assert args.concurrency == 5
+    assert args.max_retries == 5
+    assert not args.include_listings
+
+
+def test_core_selection_can_include_listing_negatives() -> None:
+    records = [
+        record("train-article", "train"),
+        record("train-listing", "train", is_article=False),
+        record("test-article", "test"),
+    ]
+
+    articles = core_jev_labeler_run._select_records(
+        records,
+        splits={"train", "test"},
+        page_ids=[],
+        limit=0,
+    )
+    all_pages = core_jev_labeler_run._select_records(
+        records,
+        splits={"train", "test"},
+        page_ids=[],
+        limit=0,
+        include_listings=True,
+    )
+
+    assert [item.page_id for item in articles] == ["train-article", "test-article"]
+    assert {item.page_id for item in all_pages} == {
+        "train-article",
+        "train-listing",
+        "test-article",
+    }
+
+
+def test_labeler_bot_supports_shared_async_client() -> None:
+    prepared = jev_labeler.prepare_html(
+        "<html><body><article><h1>Title</h1><p>Body copy.</p></article></body></html>"
+    )
+
+    class FakeUsage:
+        def model_dump(self) -> dict[str, int]:
+            return {"input_tokens": 100, "output_tokens": 20}
+
+    class FakeClient:
+        calls = 0
+
+        async def system_one(self, **kwargs: object) -> SimpleNamespace:
+            self.calls += 1
+            assert "prepared_html" in kwargs["state"]  # type: ignore[operator]
+            answer = SimpleNamespace(
+                choice="missing",
+                confidence=0.9,
+                probabilities={"missing": 0.9},
+            )
+            return SimpleNamespace(
+                answers={field.value: answer for field in Field},
+                model="jev-1.13.0",
+                usage=FakeUsage(),
+            )
+
+    client = FakeClient()
+    result = asyncio.run(
+        jev_labeler.LabelerBot().label_prepared_async(
+            prepared,
+            record("page-1", "train"),
+            client=client,  # type: ignore[arg-type]
+        )
+    )
+
+    assert client.calls == 1
+    assert result["labels"] == {field.value: None for field in Field}
+    assert result["metadata"]["article"]["confidence"] == 0.9
 
 
 def test_labeler_bot_seeds_draft_and_preserves_reviewed_annotation(
