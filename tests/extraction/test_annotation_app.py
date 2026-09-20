@@ -3,7 +3,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from eng_universe.extraction.annotation_app import create_app
+from eng_universe.extraction.annotation_app import SHELL, create_app
 from eng_universe.extraction.dom import html_sha256
 from eng_universe.extraction.manifest import DatasetManifest, PageRecord
 
@@ -85,3 +85,10 @@ def test_core_labeler_exposes_jev_confidence_and_keeps_labels_editable(
     )
     assert response.status_code == 200
     assert client.get("/api/pages/page").json()["labels"]["title"] == 2
+
+
+def test_field_tabs_focus_and_highlight_the_selected_node() -> None:
+    assert "function focusSelection(scroll=false)" in SHELL
+    assert "el.scrollIntoView({behavior:'smooth',block:'center'" in SHELL
+    assert 'data-labeler-selected="true"' in SHELL
+    assert "b.onclick=()=>activateField(b.dataset.field)" in SHELL
