@@ -10,7 +10,7 @@ from typing import Iterator, Sequence
 import numpy as np
 
 from eng_universe.extraction.contract import FIELDS, Annotation, load_annotation
-from eng_universe.extraction.dom import ParsedPage, parse_html
+from eng_universe.extraction.dom import DOM_CLEANUP_VERSION, ParsedPage, parse_html
 from eng_universe.extraction.features import (
     FeatureNormalizer,
     PageFeatures,
@@ -46,7 +46,7 @@ def iter_labeled_pages(
         if not annotation_path.exists():
             continue
         html = (dataset_dir / record.html_path).read_text(encoding="utf-8")
-        page = parse_html(html)
+        page = parse_html(html, strip_chrome=True)
         annotation = load_annotation(annotation_path)
         if annotation.page_id != record.page_id:
             raise ValueError(f"annotation page mismatch for {record.page_id}")
@@ -77,11 +77,15 @@ def prepare_page(
 ) -> PreparedPage:
     features = featurize_page(item.page, vocabulary, normalizer)
     missing_index = len(item.page.candidates)
+    candidate_index = {
+        candidate.node_id: index
+        for index, candidate in enumerate(item.page.candidates)
+    }
     targets = np.asarray(
         [
             missing_index
             if item.annotation.labels[field] is None
-            else int(item.annotation.labels[field])
+            else candidate_index[int(item.annotation.labels[field])]
             for field in FIELDS
         ],
         dtype=np.int64,
@@ -116,6 +120,7 @@ def prepare_dataset(dataset_dir: Path, output_dir: Path) -> dict[str, int]:
     (output_dir / "preprocessing.json").write_text(
         json.dumps(
             {
+                "dom_cleanup": DOM_CLEANUP_VERSION,
                 "fields": [field.value for field in FIELDS],
                 "vocabulary": vocabulary.to_dict(),
                 "normalizer": normalizer.to_dict(),

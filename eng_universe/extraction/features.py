@@ -141,11 +141,13 @@ def _link_text_fraction(element: Tag, text_length: int) -> float:
     return min(1.0, link_length / text_length)
 
 
-def raw_numeric_features(candidate: Candidate, candidate_count: int) -> np.ndarray:
+def raw_numeric_features(
+    candidate: Candidate, candidate_count: int, candidate_index: int = 0
+) -> np.ndarray:
     element = candidate.element
     text = element.get_text(" ", strip=True)
     text_length = len(text)
-    position = candidate.node_id / max(1, candidate_count - 1)
+    position = candidate_index / max(1, candidate_count - 1)
     return np.asarray(
         [
             math.log1p(text_length),
@@ -167,7 +169,10 @@ def featurize_page(
     normalizer: FeatureNormalizer | None = None,
 ) -> PageFeatures:
     raw = np.stack(
-        [raw_numeric_features(candidate, len(page.candidates)) for candidate in page.candidates]
+        [
+            raw_numeric_features(candidate, len(page.candidates), index)
+            for index, candidate in enumerate(page.candidates)
+        ]
     ) if page.candidates else np.empty((0, len(NUMERIC_FEATURE_NAMES)), dtype=np.float32)
     numeric = normalizer.transform(raw) if normalizer is not None else raw
     return PageFeatures(

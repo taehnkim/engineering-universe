@@ -4,13 +4,51 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import hashlib
+import re
 from typing import Iterator
 
 from bs4 import BeautifulSoup, Tag
 
 
 PARSER = "html.parser"
+DOM_CLEANUP_VERSION = "chrome-v1"
 EXCLUDED_SUBTREES = frozenset({"head", "script", "style", "noscript", "template"})
+CHROME_DROP_TAGS = frozenset(
+    {
+        "aside",
+        "audio",
+        "button",
+        "canvas",
+        "dialog",
+        "footer",
+        "form",
+        "head",
+        "iframe",
+        "input",
+        "nav",
+        "noscript",
+        "picture",
+        "script",
+        "select",
+        "source",
+        "style",
+        "svg",
+        "template",
+        "video",
+    }
+)
+CHROME_TOKENS = re.compile(
+    r"(?:^|[-_\s])(?:breadcrumb|comment|consent|cookie|drawer|menu|modal|newsletter|"
+    r"pagination|promo|recommend|related|share|sidebar|site-nav|social|subscribe|"
+    r"tooltip)(?:$|[-_\s])",
+    re.IGNORECASE,
+)
+EXTRACTION_TOKENS = re.compile(
+    r"author|byline|date|publish|time|headline|title|subtitle|sub-title|subhead|"
+    r"standfirst|dek|excerpt|description|lead",
+    re.IGNORECASE,
+)
+_ORIGINAL_NODE_ID = "data-eu-original-node-id"
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,19 +103,64 @@ def _candidate_elements(dom: BeautifulSoup) -> Iterator[Tag]:
             yield element
 
 
-def parse_html(html: str) -> ParsedPage:
-    """Parse HTML and assign contiguous candidate IDs in document pre-order.
+def _semantic_value(element: Tag) -> str:
+    values = [element.name or "", str(element.get("id", ""))]
+    for name in ("class", "itemprop", "role", "aria-label"):
+        value = element.get(name)
+        if isinstance(value, list):
+            values.extend(str(item) for item in value)
+        elif value:
+            values.append(str(value))
+    return " ".join(values)
+
+
+def looks_like_page_chrome(element: Tag) -> bool:
+    """Return true for common page controls and non-article containers."""
+
+    role = str(element.get("role", "")).lower()
+    if role in {"contentinfo", "dialog", "navigation", "search"}:
+        return True
+    semantics = _semantic_value(element)
+    if EXTRACTION_TOKENS.search(semantics):
+        return False
+    return bool(CHROME_TOKENS.search(semantics))
+
+
+def _strip_page_chrome(dom: BeautifulSoup) -> None:
+    for element in list(dom.find_all(CHROME_DROP_TAGS)):
+        element.decompose()
+    for element in list(dom.find_all(True)):
+        if element.parent is not None and looks_like_page_chrome(element):
+            element.decompose()
+
+
+def parse_html(html: str, *, strip_chrome: bool = False) -> ParsedPage:
+    """Parse HTML and assign stable candidate IDs in document pre-order.
 
     The original HTML string is retained byte-for-byte (after its caller has
     decoded bytes to text). IDs are assigned only to selectable elements;
-    excluded subtrees never consume IDs.
+    excluded subtrees never consume IDs. Chrome cleanup removes candidates but
+    keeps each surviving element's original ID.
     """
 
     dom = BeautifulSoup(html, PARSER)
-    candidates = tuple(
+    original_candidates = tuple(
         Candidate(node_id=node_id, element=element)
         for node_id, element in enumerate(_candidate_elements(dom))
     )
+    if strip_chrome:
+        for candidate in original_candidates:
+            candidate.element[_ORIGINAL_NODE_ID] = str(candidate.node_id)
+        _strip_page_chrome(dom)
+        candidates = tuple(
+            Candidate(
+                node_id=int(element.attrs.pop(_ORIGINAL_NODE_ID)), element=element
+            )
+            for element in _candidate_elements(dom)
+            if element.has_attr(_ORIGINAL_NODE_ID)
+        )
+    else:
+        candidates = original_candidates
     return ParsedPage(
         original_html=html,
         html_hash=html_sha256(html),

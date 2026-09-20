@@ -29,36 +29,6 @@ MAX_STATE_CHARS = 145_000
 MISSING_CHOICE = "missing"
 NODE_PREFIX = "node_"
 
-DROP_TAGS = frozenset(
-    {
-        "aside",
-        "audio",
-        "button",
-        "canvas",
-        "dialog",
-        "footer",
-        "form",
-        "head",
-        "iframe",
-        "input",
-        "nav",
-        "noscript",
-        "picture",
-        "script",
-        "select",
-        "source",
-        "style",
-        "svg",
-        "template",
-        "video",
-    }
-)
-CHROME_TOKENS = re.compile(
-    r"(?:^|[-_\s])(?:breadcrumb|comment|consent|cookie|drawer|menu|modal|newsletter|"
-    r"pagination|promo|recommend|related|share|sidebar|site-nav|social|subscribe|"
-    r"tooltip)(?:$|[-_\s])",
-    re.IGNORECASE,
-)
 ARTICLE_TOKENS = re.compile(r"article|body|content|entry|main|post", re.IGNORECASE)
 AUTHOR_TOKENS = re.compile(r"author|byline", re.IGNORECASE)
 DATE_TOKENS = re.compile(r"date|publish|time", re.IGNORECASE)
@@ -127,21 +97,6 @@ def _semantic_value(tag: Tag) -> str:
         elif value:
             values.append(str(value))
     return " ".join(values)
-
-
-def _looks_like_chrome(tag: Tag) -> bool:
-    role = str(tag.get("role", "")).lower()
-    if role in {"contentinfo", "dialog", "navigation", "search"}:
-        return True
-    semantic_value = _semantic_value(tag)
-    if (
-        AUTHOR_TOKENS.search(semantic_value)
-        or DATE_TOKENS.search(semantic_value)
-        or TITLE_TOKENS.search(semantic_value)
-        or SUMMARY_TOKENS.search(semantic_value)
-    ):
-        return False
-    return bool(CHROME_TOKENS.search(semantic_value))
 
 
 def _candidate_score(tag: Tag) -> tuple[int, int]:
@@ -223,16 +178,10 @@ def prepare_html(html: str, *, max_candidates: int = MAX_CHOICES - 1) -> Prepare
     if not 4 <= max_candidates < MAX_CHOICES:
         raise ValueError(f"max_candidates must be between 4 and {MAX_CHOICES - 1}")
     page = parse_html(html)
-    copy = parse_html(html)
+    copy = parse_html(html, strip_chrome=True)
     soup = copy.dom
     for candidate in copy.candidates:
         candidate.element["data-jev-node-id"] = str(candidate.node_id)
-
-    for tag in list(soup.find_all(DROP_TAGS)):
-        tag.decompose()
-    for tag in list(soup.find_all(True)):
-        if tag.parent is not None and _looks_like_chrome(tag):
-            tag.decompose()
 
     surviving = [
         tag

@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader, Dataset
 
 from eng_universe.extraction.model import DOMNodeSelector
 from eng_universe.extraction.contract import FIELDS
+from eng_universe.extraction.dom import DOM_CLEANUP_VERSION
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,6 +183,11 @@ def train(
     fields = preprocessing.get("fields", [field.value for field in FIELDS])
     if fields != [field.value for field in FIELDS]:
         raise ValueError(f"prepared field schema does not match runtime schema: {fields}")
+    if preprocessing.get("dom_cleanup") != DOM_CLEANUP_VERSION:
+        raise ValueError(
+            "prepared DOM cleanup does not match runtime cleanup: "
+            f"{preprocessing.get('dom_cleanup')!r}"
+        )
     tag_count = len(preprocessing["vocabulary"]["tags"])
     with np.load(train_paths[0], allow_pickle=False) as first:
         feature_count = int(first["numeric"].shape[1])

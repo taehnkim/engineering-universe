@@ -69,11 +69,18 @@ for incorrect candidates:
 ## Deterministic preprocessing
 
 `eng_universe.extraction.dom.parse_html` uses Python's `html.parser` through
-Beautiful Soup. It walks elements in document pre-order and assigns contiguous
-IDs starting at zero. `head`, `script`, `style`, `noscript`, `template`, and
-all their descendants are not selectable and do not consume IDs. The original
-HTML string remains untouched; annotations and manifest rows contain its UTF-8
-SHA-256 hash, so changed HTML invalidates labels.
+Beautiful Soup. It walks elements in document pre-order and assigns stable IDs
+starting at zero. Before feature generation, it removes common page chrome:
+navigation, footers, forms, dialogs, cookie and consent UI, menus,
+recommendations, related-content blocks, share controls, and similar
+containers. Surviving elements keep their original IDs, so annotations and
+returned original-DOM content remain valid. The original HTML string remains
+untouched; annotations and manifest rows contain its UTF-8 SHA-256 hash, so
+changed HTML invalidates labels.
+
+The prepared data and checkpoint record the `chrome-v1` cleanup version.
+Inference rejects an older checkpoint instead of silently using different DOM
+preprocessing. Training and inference always apply the same cleanup.
 
 For each candidate the model receives two categorical IDs (its lowercase tag
 and its parent's lowercase tag) plus these eight numeric values:

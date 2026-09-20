@@ -28,3 +28,26 @@ def test_selected_content_returns_wrapper_and_text() -> None:
     assert result["node_id"] == 4
     assert result["html"] == '<p>Hello <a href="/">world</a></p>'
     assert result["text"] == "Hello world"
+
+
+def test_chrome_cleanup_removes_common_containers_and_preserves_node_ids() -> None:
+    html = """
+    <html><body>
+      <nav>Menu</nav><div class="cookie-banner">Accept cookies</div>
+      <main class="post-content"><h1>Title</h1><p>Article body</p></main>
+      <div class="related-posts">Another story</div><footer>Footer</footer>
+    </body></html>
+    """
+    raw = parse_html(html)
+    cleaned = parse_html(html, strip_chrome=True)
+    raw_title = next(item for item in raw.candidates if item.element.name == "h1")
+    cleaned_title = next(
+        item for item in cleaned.candidates if item.element.name == "h1"
+    )
+
+    assert cleaned_title.node_id == raw_title.node_id
+    assert "Article body" in cleaned.dom.get_text(" ", strip=True)
+    assert "Menu" not in cleaned.dom.get_text(" ", strip=True)
+    assert "Accept cookies" not in cleaned.dom.get_text(" ", strip=True)
+    assert "Another story" not in cleaned.dom.get_text(" ", strip=True)
+    assert "Footer" not in cleaned.dom.get_text(" ", strip=True)

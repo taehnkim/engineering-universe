@@ -10,7 +10,7 @@ from typing import Literal
 import torch
 
 from eng_universe.extraction.contract import FIELDS, Field
-from eng_universe.extraction.dom import parse_html
+from eng_universe.extraction.dom import DOM_CLEANUP_VERSION, parse_html
 from eng_universe.extraction.features import (
     FeatureNormalizer,
     TagVocabulary,
@@ -50,6 +50,11 @@ class DOMExtractor:
                 f"checkpoint field schema {checkpoint_fields} does not match "
                 f"runtime schema {expected_fields}"
             )
+        if preprocessing.get("dom_cleanup") != DOM_CLEANUP_VERSION:
+            raise ValueError(
+                "checkpoint DOM cleanup does not match runtime cleanup: "
+                f"{preprocessing.get('dom_cleanup')!r}"
+            )
         self.vocabulary = TagVocabulary.from_dict(preprocessing["vocabulary"])
         self.normalizer = FeatureNormalizer.from_dict(preprocessing["normalizer"])
         self.model = DOMNodeSelector(
@@ -61,7 +66,7 @@ class DOMExtractor:
         self.model.eval()
 
     def predict_ids(self, html: str) -> dict[Field, int | None]:
-        page = parse_html(html)
+        page = parse_html(html, strip_chrome=True)
         features = featurize_page(page, self.vocabulary, self.normalizer)
         if not page.candidates:
             return {field: None for field in FIELDS}
