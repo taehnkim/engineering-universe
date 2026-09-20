@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Sequence
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
@@ -24,28 +25,41 @@ class AnnotationRequest(BaseModel):
 SHELL = r"""<!doctype html>
 <html><head><meta charset="utf-8"><title>DOM extraction labeler</title>
 <style>
-body{margin:0;font:14px system-ui;background:#111827;color:#e5e7eb}header{display:flex;gap:8px;padding:10px;background:#1f2937;align-items:center;position:sticky;top:0;z-index:3}button,select{padding:7px;border-radius:5px;border:1px solid #4b5563;background:#111827;color:#e5e7eb}.active{background:#2563eb}main{display:grid;grid-template-columns:1fr 330px;height:calc(100vh - 55px)}iframe{width:100%;height:100%;border:0;background:white}aside{padding:12px;overflow:auto}.field{margin:10px 0;padding:9px;border:1px solid #374151;border-radius:6px}.value{font-family:ui-monospace;word-break:break-all}.preview{white-space:pre-wrap;max-height:160px;overflow:auto;background:#030712;padding:8px}.review{color:#fbbf24}
+body{margin:0;font:14px system-ui;background:#111827;color:#e5e7eb}header{display:flex;gap:8px;padding:10px;background:#1f2937;align-items:center;position:sticky;top:0;z-index:3}button,select{padding:7px;border-radius:5px;border:1px solid #4b5563;background:#111827;color:#e5e7eb}.active{background:#2563eb}main{display:grid;grid-template-columns:1fr 360px;height:calc(100vh - 55px)}iframe{width:100%;height:100%;border:0;background:white}aside{padding:12px;overflow:auto}.field{margin:10px 0;padding:9px;border:1px solid #374151;border-radius:6px}.field.changed{border-color:#f59e0b}.value{font-family:ui-monospace;word-break:break-all}.confidence{float:right;color:#a7f3d0}.jev{color:#aebbd1;font-size:12px;margin-top:6px}.jev-summary{padding:8px;border:1px solid #4c1d95;background:#1e1b4b;border-radius:6px;line-height:1.5}.preview{white-space:pre-wrap;max-height:160px;overflow:auto;background:#030712;padding:8px}.review{color:#fbbf24}
 </style></head><body>
-<header><select id="pages"></select><button id="parent">Select parent</button><button id="save">Save</button><span id="status"></span></header>
-<main><iframe id="page" sandbox="allow-same-origin"></iframe><aside><h2>Selections</h2><p>Choose a field, then click the tightest correct wrapper. Hover highlights candidates.</p><div id="fields"></div><label><input id="review" type="checkbox"> Page needs review</label><h3>Preview</h3><div id="preview" class="preview"></div></aside></main>
+<header><select id="split"><option value="all">All splits</option><option value="train">Train</option><option value="validation">Validation</option><option value="test">Test</option></select><select id="source"><option value="all">All labels</option><option value="jev">Jev first pass</option><option value="human">No Jev pass</option></select><select id="pages"></select><button id="parent">Select parent</button><button id="save">Save</button><span id="status"></span></header>
+<main><iframe id="page" sandbox="allow-same-origin"></iframe><aside><h2>Selections</h2><div id="jev"></div><p>Choose a field, then click the tightest correct wrapper. Hover highlights candidates.</p><div id="fields"></div><label><input id="review" type="checkbox"> Page needs review</label><h3>Preview</h3><div id="preview" class="preview"></div></aside></main>
 <script>
-const names=['article','title','authors','date','summary','relative_date']; let active='article', current=null, payload=null, labels={};
+const names=['article','title','authors','date','summary','relative_date']; let active='article', current=null, payload=null, labels={},allPages=[];
 const $=id=>document.getElementById(id); const esc=s=>(s??'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function draw(){ $('fields').innerHTML=names.map(n=>`<div class="field"><button data-field="${n}" class="${active===n?'active':''}">${n}</button> <button data-missing="${n}">missing</button><div class="value">${labels[n]===null?'null':labels[n]??'unlabeled'}</div></div>`).join(''); document.querySelectorAll('[data-field]').forEach(b=>b.onclick=()=>{active=b.dataset.field;draw()}); document.querySelectorAll('[data-missing]').forEach(b=>b.onclick=()=>{labels[b.dataset.missing]=null;draw();preview()})}
+function draw(){const bot=payload?.jev;$('fields').innerHTML=names.map(n=>{const suggested=bot?.labels?.[n],confidence=bot?.metadata?.[n]?.confidence,changed=bot&&labels[n]!==suggested;return `<div class="field ${changed?'changed':''}"><button data-field="${n}" class="${active===n?'active':''}">${n}</button> <button data-missing="${n}">missing</button>${bot?`<button data-use-jev="${n}">use Jev</button><span class="confidence">${(confidence*100).toFixed(1)}%</span>`:''}<div class="value">current: ${labels[n]===null?'null':labels[n]??'unlabeled'}</div>${bot?`<div class="jev">Jev: ${suggested===null?'missing':'node '+suggested}${changed?' · edited':''}</div>`:''}</div>`}).join('');document.querySelectorAll('[data-field]').forEach(b=>b.onclick=()=>{active=b.dataset.field;draw();preview()});document.querySelectorAll('[data-missing]').forEach(b=>b.onclick=()=>{labels[b.dataset.missing]=null;draw();preview()});document.querySelectorAll('[data-use-jev]').forEach(b=>b.onclick=()=>{labels[b.dataset.useJev]=payload.jev.labels[b.dataset.useJev];draw();preview()})}
 function preview(){const d=$('page').contentDocument, id=labels[active], el=id==null?null:d.querySelector(`[data-eu-node-id="${id}"]`); $('preview').textContent=el?el.innerText.slice(0,4000):(id===null?'Missing':'No selection')}
 function wire(){const d=$('page').contentDocument; d.querySelectorAll('[data-eu-node-id]').forEach(el=>{el.addEventListener('mouseenter',e=>{e.stopPropagation();el.style.outline='3px solid #f59e0b'});el.addEventListener('mouseleave',e=>{e.stopPropagation();el.style.outline=''});el.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();current=el;labels[active]=Number(el.dataset.euNodeId);draw();preview()})})}
-async function load(id){payload=await fetch(`/api/pages/${id}`).then(r=>r.json());labels={...payload.labels};$('review').checked=payload.needs_review;$('page').srcdoc=payload.document_html;$('page').onload=wire;draw();preview();$('status').textContent=`${payload.review_status} · ${payload.url}`}
-async function start(){const pages=await fetch('/api/pages').then(r=>r.json());const mark={reviewed:'✓ ',draft:'◐ ',unlabeled:'○ '};$('pages').innerHTML=pages.map(p=>`<option value="${esc(p.page_id)}">${mark[p.review_status]}${esc(p.page_id)} [${p.split}]</option>`).join('');$('pages').onchange=()=>load($('pages').value);if(pages.length)load(pages[0].page_id)}
+async function load(id){payload=await fetch(`/api/pages/${id}`).then(r=>r.json());labels={...payload.labels};$('review').checked=payload.needs_review;$('page').srcdoc=payload.document_html;$('page').onload=wire;$('jev').innerHTML=payload.jev?`<div class="jev-summary"><strong>Jev first pass</strong><br>${esc(payload.jev.model)} · ${payload.jev.latency_ms.toFixed(1)} ms</div>`:'';draw();preview();$('status').textContent=`${payload.review_status} · ${payload.url}`}
+function filterPages(){const split=$('split').value,source=$('source').value,pages=allPages.filter(p=>(split==='all'||p.split===split)&&(source==='all'||(source==='jev')===p.jev_labeled));const previous=$('pages').value,mark={reviewed:'✓ ',draft:'◐ ',unlabeled:'○ '};$('pages').innerHTML=pages.map(p=>`<option value="${esc(p.page_id)}">${p.jev_labeled?'◆ ':''}${mark[p.review_status]}${esc(p.page_id)} [${p.split}]</option>`).join('');if(pages.length){$('pages').value=pages.some(p=>p.page_id===previous)?previous:pages[0].page_id;load($('pages').value)}else{$('status').textContent='No matching pages.'}}
+async function start(){allPages=await fetch('/api/pages').then(r=>r.json());$('pages').onchange=()=>load($('pages').value);$('split').onchange=filterPages;$('source').onchange=filterPages;filterPages()}
 $('parent').onclick=()=>{if(!current)return;const p=current.parentElement?.closest('[data-eu-node-id]');if(p){current=p;labels[active]=Number(p.dataset.euNodeId);draw();preview()}};
 $('save').onclick=async()=>{const body={html_hash:payload.html_hash,labels,needs_review:$('review').checked};const r=await fetch(`/api/pages/${payload.page_id}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});$('status').textContent=r.ok?'Saved':await r.text()};start();
 </script></body></html>"""
 
 
-def create_app(dataset_dir: Path) -> FastAPI:
+def create_app(dataset_dir: Path, jev_dir: Path | None = None) -> FastAPI:
     app = FastAPI(title="DOM extraction labeler")
     manifest = DatasetManifest.load(dataset_dir / "manifest.json")
     records = {record.page_id: record for record in manifest.pages}
     annotations_dir = dataset_dir / "annotations"
+    jev_dir = jev_dir or dataset_dir / "jev_annotations"
+
+    def jev_result(page_id: str, html_hash: str) -> dict[str, Any] | None:
+        path = jev_dir / f"{page_id}.json"
+        if not path.exists():
+            return None
+        value = json.loads(path.read_text(encoding="utf-8"))
+        if value.get("page_id") != page_id or value.get("html_hash") != html_hash:
+            return None
+        if set(value.get("labels", {})) != {field.value for field in FIELDS}:
+            return None
+        return value
 
     @app.get("/", response_class=HTMLResponse)
     async def shell() -> str:
@@ -62,6 +76,7 @@ def create_app(dataset_dir: Path) -> FastAPI:
                 "split": record.split,
                 "website": record.website,
                 "review_status": annotation.review_status if annotation else "unlabeled",
+                "jev_labeled": jev_result(record.page_id, record.html_hash) is not None,
             })
         return pages
 
@@ -73,6 +88,7 @@ def create_app(dataset_dir: Path) -> FastAPI:
         page = parse_html((dataset_dir / record.html_path).read_text(encoding="utf-8"))
         annotation_path = annotations_dir / f"{page_id}.json"
         annotation = load_annotation(annotation_path) if annotation_path.exists() else None
+        jev = jev_result(page_id, page.html_hash)
         return {
             "page_id": page_id,
             "url": record.url,
@@ -84,6 +100,7 @@ def create_app(dataset_dir: Path) -> FastAPI:
             },
             "needs_review": annotation.needs_review if annotation else False,
             "review_status": annotation.review_status if annotation else "unlabeled",
+            "jev": jev,
         }
 
     @app.post("/api/pages/{page_id}")
@@ -117,6 +134,11 @@ def create_app(dataset_dir: Path) -> FastAPI:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset-dir", type=Path, default=Path("data/learned_extraction/raw"))
+    parser.add_argument(
+        "--jev-dir",
+        type=Path,
+        help="Jev audit directory. Default: <dataset-dir>/jev_annotations.",
+    )
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     return parser
@@ -126,7 +148,9 @@ def main(argv: Sequence[str] | None = None) -> None:
     import uvicorn
 
     args = build_parser().parse_args(argv)
-    uvicorn.run(create_app(args.dataset_dir), host=args.host, port=args.port)
+    uvicorn.run(
+        create_app(args.dataset_dir, args.jev_dir), host=args.host, port=args.port
+    )
 
 
 if __name__ == "__main__":

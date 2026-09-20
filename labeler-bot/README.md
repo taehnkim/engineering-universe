@@ -18,6 +18,17 @@ Then run:
 uv run python labeler-bot/run.py
 ```
 
+For the core training dataset, use the split-aware tool instead:
+
+```bash
+uv run python scripts/label_extraction_with_jev.py --split train --limit 10
+uv run python scripts/label_extraction_with_jev.py --split validation --limit 10
+```
+
+Use `--limit 0` to process every page in the selected split. Core audit data is
+stored in `data/learned_extraction/raw/jev_annotations/` and appears in the
+editable human labeler on port 8765.
+
 The run uses four train pages, three validation pages, and three test pages. It
 removes scripts, styles, navigation, footers, forms, social controls, and other
 page chrome. This is the same `chrome-v1` cleanup used by small-model training
