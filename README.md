@@ -79,4 +79,5 @@ See `docs/` for detailed specs:
 - `docs/seeding.md` — how company blog roots become crawlable posts
 - `docs/ingest.md` — ingestion architecture (catalog, contracts, stage queue)
 - `docs/spec.md` — product scope and module contracts
-
+- `modeling/dom_extractor/README.md` — learned DOM-node extraction dataset,
+  labeler, training, evaluation, and model playgrounds

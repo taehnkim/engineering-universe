@@ -1,11 +1,11 @@
 # Python-generated files
 __pycache__/
 *.py[oc]
+.DS_Store
 build/
 dist/
 wheels/
 *.egg-info
-data/
 
 # Virtual environments
 .venv
@@ -13,3 +13,6 @@ data/
 # env vars
 secrets.env
 *.env
+
+# Local crawl data and generated extraction artifacts
+data/

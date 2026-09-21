@@ -8,7 +8,10 @@
   - `index/` - indexing pipeline (Redis search index, worker, entity extraction)
   - `search/` - search operations (search execution, embeddings, ColBERT/Pylate)
   - `monitoring/` - observability (Prometheus metrics, metrics server)
+  - `extraction/` - production DOM cleanup, model inference, and postprocessing
   - `config.py` - shared configuration
+- **Model development**: `modeling/dom_extractor/` - DOM extractor data,
+  labeling, training, evaluation, and local playgrounds
 - **Scripts**: `scripts/` - utility scripts for crawling, indexing, seeding
 - **API**: `api/` - FastAPI search endpoint
 - **CLI entry point**: `main.py`

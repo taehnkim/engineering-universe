@@ -23,7 +23,10 @@ class IndexRecord:
     source: str
     company: str
     authors: list[str]
+    summary: str | None
     published_at: str | None
+    relative_date: str | None
+    scraped_at: str
     url: str
     lang: str | None
     embedding: bytes | None
@@ -69,7 +72,10 @@ async def index_document(
         source=source,
         company=doc.company,
         authors=doc.authors,
+        summary=doc.summary,
         published_at=doc.published_at,
+        relative_date=doc.relative_date,
+        scraped_at=doc.scraped_at,
         url=doc.canonical_url or doc.url,
         lang=doc.language,
         embedding=embedding_bytes,
@@ -82,7 +88,10 @@ async def index_document(
         "source": record.source,
         "company": record.company,
         "authors": ",".join(record.authors),
+        "summary": record.summary or "",
         "published_at": record.published_at or "",
+        "relative_date": record.relative_date or "",
+        "scraped_at": record.scraped_at,
         "url": record.url,
         "lang": record.lang or "",
     }
@@ -138,7 +147,10 @@ async def create_search_index(redis_client: redis.Redis, index_name: str) -> Non
             ("source", "TAG"),
             ("company", "TAG"),
             ("authors", "TAG"),
+            ("summary", "TEXT"),
             ("published_at", "TEXT"),
+            ("relative_date", "TEXT"),
+            ("scraped_at", "TEXT"),
             ("url", "TEXT"),
             ("lang", "TAG"),
         ):

@@ -4,6 +4,7 @@ import time
 import uuid
 import xml.etree.ElementTree as ElementTree
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from urllib.parse import urldefrag, urljoin, urlparse
 
 import aiohttp
@@ -50,6 +51,7 @@ class CrawlResult:
     url: str
     status: int
     html: str
+    scraped_at: str
 
 
 UNWANTED_TAGS = ("nav", "footer", "aside", "script", "style", "noscript")
@@ -153,7 +155,12 @@ async def fetch_html(
     try:
         async with session.get(url, timeout=Settings.request_timeout_s) as response:
             html = await response.text()
-            return CrawlResult(url=url, status=response.status, html=html), None
+            return CrawlResult(
+                url=url,
+                status=response.status,
+                html=html,
+                scraped_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            ), None
     except (aiohttp.ClientError, asyncio.TimeoutError) as exc:
         return None, exc
 
@@ -257,6 +264,7 @@ async def upload_r2(
             "clean_key": clean_key,
             "url_hash": url_hash(item.url),
             "fetched_at": int(time.time()),
+            "scraped_at": result.scraped_at,
             "status": result.status,
         },
     )

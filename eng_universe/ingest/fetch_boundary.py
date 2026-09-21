@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from urllib.parse import urlsplit
 
 import aiohttp
@@ -106,6 +107,7 @@ def make_fetch_handler(
             "url": decision.url,
             "status_code": status_code,
             "byte_size": len(body),
+            "scraped_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         }
 
     return handle
