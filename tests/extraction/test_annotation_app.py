@@ -136,6 +136,15 @@ def test_field_tabs_focus_and_highlight_the_selected_node() -> None:
     assert "card.onclick=()=>activateField(card.dataset.fieldCard)" in SHELL
 
 
+def test_keyboard_cycles_through_save_review_and_fields() -> None:
+    assert "const keyboardOrder=['save','review',...names]" in SHELL
+    assert 'data-keyboard-target="save"' in SHELL
+    assert 'data-keyboard-target="review"' in SHELL
+    assert 'data-keyboard-target="${n}"' in SHELL
+    assert "if(e.key==='Tab')" in SHELL
+    assert "keyboardTarget.click()" in SHELL
+
+
 def test_remove_page_archives_its_data_and_removes_it_from_manifest(
     tmp_path: Path,
 ) -> None:
@@ -213,8 +222,8 @@ def test_header_puts_the_url_on_an_ellipsized_second_row() -> None:
 
 
 def test_compact_field_cards_and_review_card_have_requested_controls() -> None:
-    save_button = '<button id="save" class="save-review">SAVE</button>'
-    review_card = '<label id="review-card" class="field review-card">'
+    save_button = '<button id="save" class="save-review"'
+    review_card = '<label id="review-card" class="field review-card"'
     assert save_button in SHELL
     assert review_card in SHELL
     assert SHELL.index(save_button) < SHELL.index(review_card)
