@@ -1,4 +1,4 @@
-from eng_universe.extraction.evaluation import _empty_counts, _finish
+from modeling.dom_extractor.evaluation import _empty_counts, _finish
 
 
 def test_empty_evaluation_has_no_accuracy() -> None:

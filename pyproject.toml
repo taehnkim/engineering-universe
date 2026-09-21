@@ -23,7 +23,6 @@ dependencies = [
     "redis>=5.0.0",
     "torch>=2.5.0",
     "uvicorn>=0.30.0",
-    "typesafe-sdk>=0.7.0",
 ]
 
 [project.scripts]
@@ -35,6 +34,10 @@ include = ["eng_universe*"]
 
 [dependency-groups]
 dev = [
+    { include-group = "modeling" },
     "fakeredis[lua]>=2.38.0",
     "pytest>=9.1.1",
+]
+modeling = [
+    "typesafe-sdk>=0.7.0",
 ]

@@ -7,8 +7,8 @@ from fastapi.testclient import TestClient
 
 from eng_universe.extraction.contract import FIELDS, Field
 from eng_universe.extraction.dom import html_sha256, parse_html
-from eng_universe.extraction.inference_app import SHELL, create_app
-from eng_universe.extraction.manifest import DatasetManifest, PageRecord
+from modeling.dom_extractor.apps.playground import SHELL, create_app
+from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
 
 class FakeExtractor:

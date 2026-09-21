@@ -1,12 +1,12 @@
 from eng_universe.extraction.contract import FIELDS, Annotation, Field
-from eng_universe.extraction.dataset import LabeledPage, prepare_page
+from modeling.dom_extractor.dataset import LabeledPage, prepare_page
 from eng_universe.extraction.dom import parse_html
 from eng_universe.extraction.features import (
     FeatureNormalizer,
     TagVocabulary,
     featurize_page,
 )
-from eng_universe.extraction.manifest import PageRecord
+from modeling.dom_extractor.manifest import PageRecord
 
 
 def test_prepared_targets_map_stable_node_ids_to_clean_candidate_indices() -> None:

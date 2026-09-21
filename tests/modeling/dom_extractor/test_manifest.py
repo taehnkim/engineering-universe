@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from eng_universe.extraction.manifest import (
+from modeling.dom_extractor.manifest import (
     DatasetManifest,
     PageRecord,
     canonical_url,

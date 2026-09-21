@@ -25,8 +25,8 @@ from eng_universe.extraction.contract import (
     save_annotation,
 )
 from eng_universe.extraction.dom import annotation_html, parse_html
-from eng_universe.extraction.labeler_bot import LabelerBot, save_json
-from eng_universe.extraction.manifest import DatasetManifest
+from modeling.dom_extractor.labeler_bot import LabelerBot, save_json
+from modeling.dom_extractor.manifest import DatasetManifest
 
 
 class AnnotationRequest(BaseModel):
@@ -173,8 +173,7 @@ def create_app(
         except ValueError as exc:
             raise HTTPException(404, "unknown extraction field") from exc
         if jev_bot is None:
-            root = Path(__file__).resolve().parents[2]
-            load_dotenv(root / "labeler-bot/.env")
+            load_dotenv(Path(__file__).resolve().parents[1] / ".env")
             if not os.environ.get("TYPESAFE_API_KEY"):
                 raise HTTPException(503, "TYPESAFE_API_KEY is not configured")
 

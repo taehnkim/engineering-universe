@@ -2,9 +2,9 @@ import json
 from pathlib import Path
 
 from eng_universe.extraction.contract import Annotation, Field, load_annotation
-from eng_universe.extraction.dataset import iter_labeled_pages
+from modeling.dom_extractor.dataset import iter_labeled_pages
 from eng_universe.extraction.dom import html_sha256
-from eng_universe.extraction.manifest import DatasetManifest, PageRecord
+from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
 
 def _write_page(dataset_dir: Path, review_status: str, *, add_jev: bool = False) -> None:

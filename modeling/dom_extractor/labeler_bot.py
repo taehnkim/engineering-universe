@@ -21,7 +21,7 @@ from eng_universe.extraction.contract import (
     save_annotation,
 )
 from eng_universe.extraction.dom import ParsedPage, parse_html
-from eng_universe.extraction.manifest import DatasetManifest, PageRecord
+from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
 MAX_PAGES = 10
 MAX_CHOICES = 129

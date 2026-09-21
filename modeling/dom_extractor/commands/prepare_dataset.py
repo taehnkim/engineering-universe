@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
-from eng_universe.extraction.dataset import prepare_dataset
+from modeling.dom_extractor.dataset import prepare_dataset
 
 
 def main() -> None:

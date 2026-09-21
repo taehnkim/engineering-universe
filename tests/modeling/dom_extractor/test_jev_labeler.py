@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-import importlib.util
 from pathlib import Path
-import sys
 from types import SimpleNamespace
 
 from eng_universe.extraction.contract import (
@@ -12,31 +10,9 @@ from eng_universe.extraction.contract import (
     load_annotation,
     save_annotation,
 )
-from eng_universe.extraction.manifest import PageRecord
-
-
-MODULE_PATH = Path(__file__).parents[2] / "labeler-bot/jev_labeler.py"
-SPEC = importlib.util.spec_from_file_location("jev_labeler", MODULE_PATH)
-assert SPEC and SPEC.loader
-jev_labeler = importlib.util.module_from_spec(SPEC)
-sys.modules[SPEC.name] = jev_labeler
-SPEC.loader.exec_module(jev_labeler)
-
-RUN_MODULE_PATH = Path(__file__).parents[2] / "labeler-bot/run.py"
-RUN_SPEC = importlib.util.spec_from_file_location("jev_labeler_run", RUN_MODULE_PATH)
-assert RUN_SPEC and RUN_SPEC.loader
-jev_labeler_run = importlib.util.module_from_spec(RUN_SPEC)
-RUN_SPEC.loader.exec_module(jev_labeler_run)
-
-CORE_RUN_MODULE_PATH = (
-    Path(__file__).parents[2] / "scripts/label_extraction_with_jev.py"
-)
-CORE_RUN_SPEC = importlib.util.spec_from_file_location(
-    "core_jev_labeler_run", CORE_RUN_MODULE_PATH
-)
-assert CORE_RUN_SPEC and CORE_RUN_SPEC.loader
-core_jev_labeler_run = importlib.util.module_from_spec(CORE_RUN_SPEC)
-CORE_RUN_SPEC.loader.exec_module(core_jev_labeler_run)
+from modeling.dom_extractor.manifest import PageRecord
+from modeling.dom_extractor import labeler_bot as jev_labeler
+from modeling.dom_extractor.commands import label_with_jev as core_jev_labeler_run
 
 
 def record(page_id: str, split: str, *, is_article: bool = True) -> PageRecord:
@@ -140,7 +116,7 @@ def test_question_choices_include_candidates_and_missing() -> None:
 
 
 def test_cli_uses_pinned_jev_model() -> None:
-    assert jev_labeler_run.build_parser().parse_args([]).model == "jev-1.13.0"
+    assert jev_labeler.LabelerBot().model == "jev-1.13.0"
 
 
 def test_core_cli_defaults_to_bounded_concurrency() -> None:

@@ -15,10 +15,10 @@ from bs4 import BeautifulSoup
 
 from eng_universe.extraction import DOMExtractor
 from eng_universe.extraction.contract import FIELDS as EXTRACTION_FIELDS
-from eng_universe.extraction.manifest import DatasetManifest, PageRecord
+from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_DATASET_DIR = PROJECT_ROOT / "data" / "learned_extraction" / "raw"
 DEFAULT_CHECKPOINT = PROJECT_ROOT / "data" / "learned_extraction" / "model" / "best.pt"
 FIELDS = tuple(field.value for field in EXTRACTION_FIELDS)

@@ -4,9 +4,9 @@ from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
 
-from eng_universe.extraction.annotation_app import SHELL, create_app
+from modeling.dom_extractor.apps.labeler import SHELL, create_app
 from eng_universe.extraction.dom import html_sha256
-from eng_universe.extraction.manifest import DatasetManifest, PageRecord
+from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
 
 def test_core_labeler_exposes_jev_confidence_and_keeps_labels_editable(

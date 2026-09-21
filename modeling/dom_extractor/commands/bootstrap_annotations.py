@@ -20,9 +20,9 @@ from eng_universe.extraction.contract import (
     load_annotation,
     save_annotation,
 )
-from eng_universe.extraction.dom import Candidate, ParsedPage, parse_html
+from eng_universe.extraction.dom import ParsedPage, parse_html
 from eng_universe.extraction.features import DATE_LIKE_RE
-from eng_universe.extraction.manifest import DatasetManifest
+from modeling.dom_extractor.manifest import DatasetManifest
 from eng_universe.extraction.postprocess import extract_relative_publication_date
 
 

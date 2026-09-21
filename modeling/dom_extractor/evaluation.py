@@ -14,13 +14,12 @@ import sys
 import time
 from typing import Sequence
 
-from bs4 import Tag
 import bs4
 import numpy as np
 import torch
 
 from eng_universe.extraction.contract import FIELDS, Field
-from eng_universe.extraction.dataset import iter_labeled_pages
+from modeling.dom_extractor.dataset import iter_labeled_pages
 from eng_universe.extraction.dom import ParsedPage
 from eng_universe.extraction.inference import DOMExtractor
 

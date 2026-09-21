@@ -13,13 +13,13 @@ from dotenv import load_dotenv
 from typesafe_sdk import AsyncTypeSafeClient, RetryPolicy
 
 from eng_universe.extraction.contract import FIELDS
-from eng_universe.extraction.labeler_bot import LabelerBot, save_json
-from eng_universe.extraction.manifest import DatasetManifest, PageRecord
+from modeling.dom_extractor.labeler_bot import LabelerBot, save_json
+from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
 
-ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_DATASET_DIR = ROOT / "data/learned_extraction/raw"
-DEFAULT_CACHE_DIR = ROOT / "labeler-bot/data/annotations"
+MODELING_ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+DEFAULT_DATASET_DIR = REPOSITORY_ROOT / "data/learned_extraction/raw"
 
 
 def _select_records(
@@ -126,12 +126,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="Jev audit output. Default: <dataset-dir>/jev_annotations.",
     )
     parser.add_argument(
-        "--cache-dir",
-        type=Path,
-        default=DEFAULT_CACHE_DIR,
-        help="Optional previous Jev results to reuse without an API call.",
-    )
-    parser.add_argument(
         "--overwrite-bot",
         action="store_true",
         help="Call Jev again even when a matching audit result exists.",
@@ -151,7 +145,7 @@ async def _run(args: argparse.Namespace) -> int:
         raise SystemExit("--concurrency must be between 1 and 32")
     if args.max_retries < 0:
         raise SystemExit("--max-retries must be zero or positive")
-    load_dotenv(ROOT / "labeler-bot/.env")
+    load_dotenv(MODELING_ROOT / ".env")
     manifest = DatasetManifest.load(args.dataset_dir / "manifest.json")
     try:
         records = _select_records(
@@ -169,11 +163,10 @@ async def _run(args: argparse.Namespace) -> int:
     jobs: list[tuple[int, PageRecord, dict[str, Any] | None, Path | None]] = []
     for index, record in enumerate(records, start=1):
         audit_path = audit_dir / f"{record.page_id}.json"
-        cache_paths = (audit_path, args.cache_dir / f"{record.page_id}.json")
         result = None
         reused_path = None
         if not args.overwrite_bot:
-            result, reused_path = _load_cached(cache_paths, record)
+            result, reused_path = _load_cached((audit_path,), record)
         jobs.append((index, record, result, reused_path))
 
     needs_api = any(result is None for _, _, result, _ in jobs)

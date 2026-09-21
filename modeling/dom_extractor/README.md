@@ -6,6 +6,32 @@ the learned `missing` option. Ordinary code returns the selected element's
 original-DOM HTML and plain text. The model sees structural features and tag
 embeddings, **not the article's words**.
 
+## Repository layout
+
+This directory contains repository-only tooling used to build and inspect the
+DOM extractor model:
+
+- `dataset.py`, `training.py`, and `evaluation.py` prepare data, train a
+  checkpoint, and measure it.
+- `labeler_bot.py` and `apps/labeler.py` create and review annotations.
+- `apps/playground.py` provides the local inference playground.
+- `commands/` contains the sampling, migration, preparation, labeling, and
+  smoke-test entry points.
+
+Production extraction remains in `eng_universe/extraction/`. That package owns
+the shared DOM cleanup, feature generation, model architecture, inference, and
+postprocessing used by the application. Training and inference therefore use
+one cleanup implementation rather than copies.
+
+Install the repository's modeling-only dependencies with:
+
+```bash
+uv sync --group modeling
+```
+
+Put `TYPESAFE_API_KEY` in `modeling/dom_extractor/.env` for Jev labeling. The
+repository ignores this file.
+
 ## Labeling guide
 
 All six fields must be either one candidate node ID or `null`:
@@ -121,23 +147,23 @@ The root `.gitignore` excludes local data, prepared NumPy matrices, checkpoints,
 and evaluation output.
 
 ```bash
-uv run python scripts/sample_extraction_html.py
-uv run python scripts/bootstrap_extraction_annotations.py
-uv run python scripts/migrate_extraction_schema.py
-uv run python scripts/label_extraction_with_jev.py --split train --limit 10
-uv run python scripts/label_extraction_with_jev.py --split validation --limit 10
+uv run --group modeling python -m modeling.dom_extractor.commands.sample_html
+uv run --group modeling python -m modeling.dom_extractor.commands.bootstrap_annotations
+uv run --group modeling python -m modeling.dom_extractor.commands.migrate_schema
+uv run --group modeling python -m modeling.dom_extractor.commands.label_with_jev --split train --limit 10
+uv run --group modeling python -m modeling.dom_extractor.commands.label_with_jev --split validation --limit 10
 # All 725 article pages, with five concurrent Jev requests:
-uv run python scripts/label_extraction_with_jev.py --limit 0 --concurrency 5
+uv run --group modeling python -m modeling.dom_extractor.commands.label_with_jev --limit 0 --concurrency 5
 # All 757 pages, including 32 listing-page negatives:
-uv run python scripts/label_extraction_with_jev.py \
+uv run --group modeling python -m modeling.dom_extractor.commands.label_with_jev \
   --limit 0 --include-listings --concurrency 5
-uv run python -m eng_universe.extraction.annotation_app \
+uv run --group modeling python -m modeling.dom_extractor.apps.labeler \
   --dataset-dir data/learned_extraction/raw
-uv run python scripts/prepare_extraction_dataset.py
-uv run python -m eng_universe.extraction.training \
+uv run --group modeling python -m modeling.dom_extractor.commands.prepare_dataset
+uv run --group modeling python -m modeling.dom_extractor.training \
   --prepared-dir data/learned_extraction/prepared \
   --output-dir data/learned_extraction/model
-uv run python -m eng_universe.extraction.evaluation \
+uv run --group modeling python -m modeling.dom_extractor.evaluation \
   --dataset-dir data/learned_extraction/raw \
   --checkpoint data/learned_extraction/model/best.pt \
   --output-dir data/learned_extraction/evaluation
@@ -148,13 +174,13 @@ pseudo-label experiment with reviewed labels plus Jev-backed drafts, keep its
 artifacts separate:
 
 ```bash
-uv run python scripts/prepare_extraction_dataset.py \
+uv run --group modeling python -m modeling.dom_extractor.commands.prepare_dataset \
   --output-dir data/learned_extraction/prepared_jev \
   --include-jev-drafts
-uv run python -m eng_universe.extraction.training \
+uv run --group modeling python -m modeling.dom_extractor.training \
   --prepared-dir data/learned_extraction/prepared_jev \
   --output-dir data/learned_extraction/model_jev
-uv run python -m eng_universe.extraction.evaluation \
+uv run --group modeling python -m modeling.dom_extractor.evaluation \
   --dataset-dir data/learned_extraction/raw \
   --checkpoint data/learned_extraction/model_jev/best.pt \
   --output-dir data/learned_extraction/evaluation_jev \
@@ -167,7 +193,7 @@ on held-out websites. They are not human-verified extraction accuracy.
 Start the read-only inference playground on port 8767:
 
 ```bash
-uv run python -m eng_universe.extraction.inference_app \
+uv run --group modeling python -m modeling.dom_extractor.apps.playground \
   --dataset-dir data/learned_extraction/raw \
   --checkpoint data/learned_extraction/model/best.pt
 ```
@@ -184,10 +210,10 @@ the page for review.
 The bootstrap command creates conservative fallback drafts. `LabelerBot` then
 uses Jev to replace each selected fallback draft before human review. It keeps
 the full Jev result in `raw/jev_annotations/` and copies the selected node IDs
-to the core annotation. It can reuse earlier results from
-`labeler-bot/data/annotations/` without another API call. It does not replace a
-human-reviewed annotation unless `--overwrite-reviewed` is explicit. All drafts
-are excluded from preprocessing and training, even when Jev is confident.
+to the core annotation. It reuses matching results from that audit directory
+without another API call. It does not replace a human-reviewed annotation
+unless `--overwrite-reviewed` is explicit. All drafts are excluded from
+preprocessing and training, even when Jev is confident.
 
 The core Jev command uses the TypeSafe SDK's asynchronous client. It runs five
 requests at a time by default, supports `--concurrency 1` through `32`, retries

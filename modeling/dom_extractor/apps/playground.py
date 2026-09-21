@@ -13,7 +13,7 @@ from fastapi.responses import HTMLResponse
 from eng_universe.extraction.contract import FIELDS, load_annotation
 from eng_universe.extraction.dom import annotation_html, parse_html
 from eng_universe.extraction.inference import DOMExtractor
-from eng_universe.extraction.manifest import DatasetManifest, PageRecord
+from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
 
 SHELL = r"""<!doctype html>

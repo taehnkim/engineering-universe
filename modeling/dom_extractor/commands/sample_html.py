@@ -24,7 +24,7 @@ from xml.etree import ElementTree
 import re
 
 from eng_universe.extraction.dom import html_sha256
-from eng_universe.extraction.manifest import (
+from modeling.dom_extractor.manifest import (
     DatasetManifest,
     PageRecord,
     canonical_url,

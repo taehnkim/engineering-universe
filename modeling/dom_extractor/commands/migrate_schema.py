@@ -9,8 +9,8 @@ from pathlib import Path
 
 from eng_universe.extraction.contract import Annotation, Field, load_annotation, save_annotation
 from eng_universe.extraction.dom import parse_html
-from eng_universe.extraction.manifest import DatasetManifest
-from bootstrap_extraction_annotations import draft_annotation
+from modeling.dom_extractor.manifest import DatasetManifest
+from modeling.dom_extractor.commands.bootstrap_annotations import draft_annotation
 
 
 def _file_timestamp(path: Path) -> str:

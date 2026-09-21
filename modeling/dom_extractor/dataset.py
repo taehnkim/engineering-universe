@@ -17,7 +17,7 @@ from eng_universe.extraction.features import (
     TagVocabulary,
     featurize_page,
 )
-from eng_universe.extraction.manifest import DatasetManifest, PageRecord, Split
+from modeling.dom_extractor.manifest import DatasetManifest, PageRecord, Split
 
 
 @dataclass(frozen=True, slots=True)
