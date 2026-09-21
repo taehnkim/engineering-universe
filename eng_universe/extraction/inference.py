@@ -89,10 +89,14 @@ class DOMExtractor:
 
     def extract(self, html: str, field: FieldName = "article") -> dict[str, str | int] | None:
         selected_id = self.predict_ids(html)[Field(field)]
-        return None if selected_id is None else parse_html(html).selected_content(selected_id)
+        return (
+            None
+            if selected_id is None
+            else parse_html(html, strip_chrome=True).selected_content(selected_id)
+        )
 
     def extract_all(self, html: str) -> dict[str, dict[str, str | int] | None]:
-        page = parse_html(html)
+        page = parse_html(html, strip_chrome=True)
         return {
             field.value: (
                 None if node_id is None else page.selected_content(node_id)

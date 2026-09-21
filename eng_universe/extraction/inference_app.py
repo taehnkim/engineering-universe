@@ -100,7 +100,7 @@ def create_app(
         if record is None:
             raise HTTPException(404, "unknown page")
         html = (dataset_dir / record.html_path).read_text(encoding="utf-8")
-        page = parse_html(html)
+        page = parse_html(html, strip_chrome=True)
         started = time.perf_counter()
         predicted = model.predict_ids(html)
         latency_ms = (time.perf_counter() - started) * 1_000

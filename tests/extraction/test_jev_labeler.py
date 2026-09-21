@@ -220,6 +220,48 @@ def test_labeler_bot_supports_shared_async_client() -> None:
     assert result["metadata"]["article"]["confidence"] == 0.9
 
 
+def test_labeler_bot_can_rerun_one_field() -> None:
+    prepared = jev_labeler.prepare_html(
+        "<html><body><article><h1>Title</h1><p>Body copy.</p></article></body></html>"
+    )
+
+    class FakeUsage:
+        def model_dump(self) -> dict[str, int]:
+            return {"input_tokens": 50, "output_tokens": 5}
+
+    class FakeClient:
+        questions: set[str] = set()
+
+        async def system_one(self, **kwargs: object) -> SimpleNamespace:
+            self.questions = set(kwargs["questions"])  # type: ignore[arg-type]
+            answer = SimpleNamespace(
+                choice="missing",
+                confidence=0.82,
+                probabilities={"missing": 0.82},
+            )
+            return SimpleNamespace(
+                answers={"authors": answer},
+                model="jev-1.13.0",
+                usage=FakeUsage(),
+            )
+
+    client = FakeClient()
+    result = asyncio.run(
+        jev_labeler.LabelerBot().label_field_prepared_async(
+            prepared,
+            record("page-1", "train"),
+            Field.AUTHORS,
+            client=client,  # type: ignore[arg-type]
+        )
+    )
+
+    assert client.questions == {"authors"}
+    assert result["field"] == "authors"
+    assert result["node_id"] is None
+    assert result["metadata"]["confidence"] == 0.82
+    assert result["metadata"]["latency_ms"] >= 0
+
+
 def test_labeler_bot_seeds_draft_and_preserves_reviewed_annotation(
     tmp_path: Path,
 ) -> None:

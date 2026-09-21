@@ -73,12 +73,17 @@ Beautiful Soup. It walks elements in document pre-order and assigns stable IDs
 starting at zero. Before feature generation, it removes common page chrome:
 navigation, footers, forms, dialogs, cookie and consent UI, menus,
 recommendations, related-content blocks, share controls, and similar
-containers. Surviving elements keep their original IDs, so annotations and
-returned original-DOM content remain valid. The original HTML string remains
-untouched; annotations and manifest rows contain its UTF-8 SHA-256 hash, so
-changed HTML invalidates labels.
+containers. Cleanup v2 also removes media (`img`, `svg`, `video`, `audio`,
+`canvas`, `object`, `embed`, `source`, and `track`), hidden nodes, modal ARIA
+roles, overlays, popups, and empty layout leaves. Semantic names are normalized
+before matching, so `SiteFooter`, `site_footer`, and `site-footer` are treated
+the same. Surviving elements keep their original IDs, so existing annotations
+remain stable when their selected nodes survive. The original HTML string
+remains untouched; annotations and manifest rows contain its UTF-8 SHA-256
+hash, so changed HTML invalidates labels.
 
-The prepared data and checkpoint record the `chrome-v1` cleanup version.
+The labeler renders this same cleaned DOM instead of a separate raw view. The
+prepared data and checkpoint record the `chrome-v2` cleanup version.
 Inference rejects an older checkpoint instead of silently using different DOM
 preprocessing. Training and inference always apply the same cleanup.
 
@@ -196,8 +201,10 @@ their absent article fields as missing.
 The core annotation UI can filter by train, validation, or test split and by
 whether Jev supplied a first pass. A diamond marks pages with Jev audit data.
 Each field shows Jev's confidence and original node choice. A person can select
-another node, choose missing, move to a parent, or restore the Jev choice before
-saving the reviewed annotation.
+another node, choose missing, or move to a parent. **Rerun Jev** makes a new
+single-field API request, updates that card with the new node, confidence, and
+field latency, and refreshes the Jev audit file. The returned choice remains an
+unsaved human edit until **Save** is clicked.
 
 The collector records `scraped_at` when it fetches each page. After extraction,
 ordinary code keeps an absolute `date` unchanged. If only `relative_date` is

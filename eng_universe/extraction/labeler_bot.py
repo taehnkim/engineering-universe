@@ -281,7 +281,9 @@ def _node_id(choice: str, valid_ids: set[int]) -> int | None:
     return node_id
 
 
-def build_questions(candidate_ids: Iterable[int]) -> dict[str, Choice]:
+def build_questions(
+    candidate_ids: Iterable[int], fields: Iterable[Field] = FIELDS
+) -> dict[str, Choice]:
     criteria = {_choice_key(node_id): None for node_id in candidate_ids}
     criteria[MISSING_CHOICE] = "The page does not contain this field."
     instructions = {
@@ -312,7 +314,17 @@ def build_questions(candidate_ids: Iterable[int]) -> dict[str, Choice]:
     }
     return {
         field.value: Choice(instructions=instructions[field], criteria=criteria)
-        for field in FIELDS
+        for field in fields
+    }
+
+
+def _answer_metadata(answer: Any) -> tuple[str, dict[str, Any]]:
+    probabilities = dict(answer.probabilities)
+    return answer.choice, {
+        "choice": answer.choice,
+        "confidence": answer.confidence,
+        "selected_probability": probabilities[answer.choice],
+        "probabilities": probabilities,
     }
 
 
@@ -352,13 +364,7 @@ def _annotation_from_response(
         answer = response.answers[field.value]
         node_id = _node_id(answer.choice, valid_ids)  # type: ignore[union-attr]
         labels[field.value] = node_id
-        probabilities = dict(answer.probabilities)  # type: ignore[union-attr]
-        metadata[field.value] = {
-            "choice": answer.choice,  # type: ignore[union-attr]
-            "confidence": answer.confidence,  # type: ignore[union-attr]
-            "selected_probability": probabilities[answer.choice],  # type: ignore[union-attr]
-            "probabilities": probabilities,
-        }
+        _, metadata[field.value] = _answer_metadata(answer)
 
     return {
         "page_id": record.page_id,
@@ -421,6 +427,42 @@ class LabelerBot:
             )
         latency_ms = (time.perf_counter() - started) * 1000
         return _annotation_from_response(response, prepared, record, latency_ms)
+
+    async def label_field_prepared_async(
+        self,
+        prepared: PreparedPage,
+        record: PageRecord,
+        field: Field,
+        *,
+        client: AsyncTypeSafeClient | None = None,
+    ) -> dict[str, Any]:
+        """Run a fresh Jev request for one extraction field."""
+
+        state = {"page_url": record.url, "prepared_html": prepared.html}
+        questions = build_questions(prepared.candidate_ids, (field,))
+        started = time.perf_counter()
+        if client is None:
+            async with AsyncTypeSafeClient(model=self.model) as owned_client:
+                response = await owned_client.system_one(
+                    state=state,
+                    questions=questions,
+                )
+        else:
+            response = await client.system_one(state=state, questions=questions)
+        latency_ms = (time.perf_counter() - started) * 1000
+        answer = response.answers[field.value]
+        node_id = _node_id(answer.choice, set(prepared.candidate_ids))
+        _, metadata = _answer_metadata(answer)
+        metadata["latency_ms"] = latency_ms
+        metadata["labeled_at"] = datetime.now(timezone.utc).isoformat()
+        return {
+            "field": field.value,
+            "node_id": node_id,
+            "metadata": metadata,
+            "model": response.model,
+            "latency_ms": latency_ms,
+            "usage": response.usage.model_dump(),
+        }
 
     def seed_core_annotation(
         self,

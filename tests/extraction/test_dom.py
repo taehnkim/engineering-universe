@@ -1,4 +1,4 @@
-from eng_universe.extraction.dom import html_sha256, parse_html
+from eng_universe.extraction.dom import annotation_html, html_sha256, parse_html
 
 
 HTML = """<!doctype html><html><head><title>Hidden</title><style>x{}</style></head>
@@ -51,3 +51,51 @@ def test_chrome_cleanup_removes_common_containers_and_preserves_node_ids() -> No
     assert "Accept cookies" not in cleaned.dom.get_text(" ", strip=True)
     assert "Another story" not in cleaned.dom.get_text(" ", strip=True)
     assert "Footer" not in cleaned.dom.get_text(" ", strip=True)
+
+
+def test_chrome_v2_removes_media_semantic_chrome_and_hidden_nodes() -> None:
+    html = """
+    <html><body>
+      <main><h1>Title</h1><p>Article body</p>
+        <img alt="hero"><object>object</object><embed><track>
+      </main>
+      <div class="SiteFooter">Camel footer</div>
+      <div id="site_footer">Snake footer</div>
+      <div class="site-footer">Kebab footer</div>
+      <div class="popup-overlay">Popup</div>
+      <div role="alertdialog">Alert dialog</div>
+      <div aria-modal="true">Modal</div>
+      <div hidden>Hidden attribute</div>
+      <div aria-hidden="true">Aria hidden</div>
+      <div style="display: none !important">Style hidden</div>
+      <div><span></span></div>
+    </body></html>
+    """
+
+    cleaned = parse_html(html, strip_chrome=True)
+    text = cleaned.dom.get_text(" ", strip=True)
+
+    assert text == "Title Article body"
+    assert not cleaned.dom.find_all(["img", "object", "embed", "track"])
+    assert all(
+        element.get_text(strip=True) or element.find(True)
+        for element in cleaned.dom.find_all(["div", "span"])
+    )
+
+
+def test_annotation_html_uses_cleaned_dom_with_original_node_ids() -> None:
+    html = """
+    <html><body><nav>Menu</nav><main><h1>Title</h1><img alt="hero"></main></body></html>
+    """
+    raw = parse_html(html)
+    raw_title_id = next(
+        candidate.node_id
+        for candidate in raw.candidates
+        if candidate.element.name == "h1"
+    )
+
+    rendered = annotation_html(raw)
+
+    assert "Menu" not in rendered
+    assert "<img" not in rendered
+    assert f'data-eu-node-id="{raw_title_id}"' in rendered

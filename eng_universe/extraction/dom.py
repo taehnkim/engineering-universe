@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup, Tag
 
 
 PARSER = "html.parser"
-DOM_CLEANUP_VERSION = "chrome-v1"
+DOM_CLEANUP_VERSION = "chrome-v2"
 EXCLUDED_SUBTREES = frozenset({"head", "script", "style", "noscript", "template"})
 CHROME_DROP_TAGS = frozenset(
     {
@@ -20,13 +20,16 @@ CHROME_DROP_TAGS = frozenset(
         "button",
         "canvas",
         "dialog",
+        "embed",
         "footer",
         "form",
         "head",
         "iframe",
+        "img",
         "input",
         "nav",
         "noscript",
+        "object",
         "picture",
         "script",
         "select",
@@ -34,13 +37,14 @@ CHROME_DROP_TAGS = frozenset(
         "style",
         "svg",
         "template",
+        "track",
         "video",
     }
 )
 CHROME_TOKENS = re.compile(
-    r"(?:^|[-_\s])(?:breadcrumb|comment|consent|cookie|drawer|menu|modal|newsletter|"
-    r"pagination|promo|recommend|related|share|sidebar|site-nav|social|subscribe|"
-    r"tooltip)(?:$|[-_\s])",
+    r"\b(?:backdrop|breadcrumb|comments?|consent|cookie|drawer|footer|lightbox|menu|"
+    r"modal|newsletter|overlay|pagination|popup|promo|recommend(?:ation|ations|ed)?|"
+    r"related|share|sidebar|social|subscribe|toast)\b",
     re.IGNORECASE,
 )
 EXTRACTION_TOKENS = re.compile(
@@ -49,6 +53,11 @@ EXTRACTION_TOKENS = re.compile(
     re.IGNORECASE,
 )
 _ORIGINAL_NODE_ID = "data-eu-original-node-id"
+_HIDDEN_STYLE = re.compile(
+    r"(?:^|;)\s*(?:display\s*:\s*none|visibility\s*:\s*hidden)\s*(?:!important)?\s*(?:;|$)",
+    re.IGNORECASE,
+)
+_EMPTY_PRUNABLE_TAGS = frozenset({"div", "figure", "p", "section", "span"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,6 +112,14 @@ def _candidate_elements(dom: BeautifulSoup) -> Iterator[Tag]:
             yield element
 
 
+def _normalize_semantic_name(value: str) -> str:
+    """Normalize CamelCase, snake_case, and kebab-case names into words."""
+
+    value = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1 \2", value)
+    value = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", value)
+    return re.sub(r"[^a-zA-Z0-9]+", " ", value).strip().lower()
+
+
 def _semantic_value(element: Tag) -> str:
     values = [element.name or "", str(element.get("id", ""))]
     for name in ("class", "itemprop", "role", "aria-label"):
@@ -111,14 +128,28 @@ def _semantic_value(element: Tag) -> str:
             values.extend(str(item) for item in value)
         elif value:
             values.append(str(value))
-    return " ".join(values)
+    return " ".join(_normalize_semantic_name(value) for value in values)
+
+
+def _is_hidden(element: Tag) -> bool:
+    if element.has_attr("hidden"):
+        return True
+    if str(element.get("aria-hidden", "")).strip().lower() == "true":
+        return True
+    if str(element.get("aria-modal", "")).strip().lower() == "true":
+        return True
+    return bool(_HIDDEN_STYLE.search(str(element.get("style", ""))))
 
 
 def looks_like_page_chrome(element: Tag) -> bool:
     """Return true for common page controls and non-article containers."""
 
+    if element.name in {"html", "body"}:
+        return False
     role = str(element.get("role", "")).lower()
-    if role in {"contentinfo", "dialog", "navigation", "search"}:
+    if role in {"alertdialog", "contentinfo", "dialog", "navigation", "search"}:
+        return True
+    if _is_hidden(element):
         return True
     semantics = _semantic_value(element)
     if EXTRACTION_TOKENS.search(semantics):
@@ -131,6 +162,15 @@ def _strip_page_chrome(dom: BeautifulSoup) -> None:
         element.decompose()
     for element in list(dom.find_all(True)):
         if element.parent is not None and looks_like_page_chrome(element):
+            element.decompose()
+    for element in reversed(list(dom.find_all(True))):
+        if (
+            element.parent is not None
+            and element.name in _EMPTY_PRUNABLE_TAGS
+            and not element.find(True)
+            and not element.get_text(strip=True)
+            and not EXTRACTION_TOKENS.search(_semantic_value(element))
+        ):
             element.decompose()
 
 
@@ -174,9 +214,9 @@ def parse_html(html: str, *, strip_chrome: bool = False) -> ParsedPage:
 
 
 def annotation_html(page: ParsedPage) -> str:
-    """Return a disposable DOM copy with candidate IDs attached for the UI."""
+    """Return the cleaned DOM with stable candidate IDs attached for the UI."""
 
-    copy = parse_html(page.original_html)
+    copy = parse_html(page.original_html, strip_chrome=True)
     for candidate in copy.candidates:
         candidate.element["data-eu-node-id"] = str(candidate.node_id)
     for script in copy.dom.find_all("script"):
