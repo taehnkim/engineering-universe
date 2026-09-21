@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Iterable
+from datetime import UTC, datetime
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
@@ -37,10 +37,9 @@ def _remove_unwanted_tags(soup: BeautifulSoup) -> None:
 
 
 def _select_main(soup: BeautifulSoup) -> BeautifulSoup:
-    main = soup.find("main")
-    if main:
-        return main
-    return soup
+    # Prefer <main> (stricter page container). Then article, then body.
+    # Taking the first <article> before <main> can grab related-post teasers.
+    return soup.find("main") or soup.find("article") or soup.body or soup
 
 
 def _extract_meta_content(soup: BeautifulSoup, names: Iterable[str]) -> str | None:
@@ -121,7 +120,7 @@ def parse_html(
 ) -> ParsedDocument:
     soup = BeautifulSoup(html, "html.parser")
     normalized_scraped_at = normalize_scraped_at(
-        scraped_at or datetime.now(timezone.utc)
+        scraped_at or datetime.now(UTC)
     )
     _remove_unwanted_tags(soup)
     main = _select_main(soup)

@@ -24,8 +24,8 @@ When `R2_UPLOAD=true`, crawler raw HTML and indexer clean text/index payloads ar
 stored in R2 using:
 
 - `raw/{doc_id}.html`
-- `clean/{doc_id}.txt`
-- `index/{doc_id}.json`
+- `clean/{doc_id}.txt` — cleaned body text
+- `index/{doc_id}.json` — metadata + artifact keys (no body; use `clean_key`)
 
 ## RediSearch Index
 
