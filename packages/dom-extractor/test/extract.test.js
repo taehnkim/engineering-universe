@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import {
@@ -49,5 +50,18 @@ test("relative publication dates exclude reading times and resolve from scrape t
   assert.equal(
     resolveRelativeDate("2 days ago", "2026-09-21T12:00:00Z"),
     "2026-09-19T12:00:00.000Z",
+  );
+});
+
+test("the documented sample output stays current", async () => {
+  const sampleUrl = new URL("../examples/", import.meta.url);
+  const html = await readFile(new URL("sample.html", sampleUrl), "utf8");
+  const expected = JSON.parse(
+    await readFile(new URL("sample-output.json", sampleUrl), "utf8"),
+  );
+
+  assert.deepEqual(
+    await extract(html, { scrapedAt: "2026-09-22T12:00:00Z" }),
+    expected,
   );
 });

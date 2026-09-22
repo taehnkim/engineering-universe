@@ -71,6 +71,18 @@ const article = await extractField(html, "article");
 console.log(article?.text);
 ```
 
+## Run the included sample
+
+The package includes a small HTML input and its captured output:
+
+```bash
+node examples/run-sample.mjs
+```
+
+See `examples/sample.html` for the input and `examples/sample-output.json` for
+the expected result. This sample uses a fixed `scrapedAt` value, so its output
+is repeatable.
+
 ## Update the bundled model
 
 Train the Python model first. Then export the checkpoint from this directory:
