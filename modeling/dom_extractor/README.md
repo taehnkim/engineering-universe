@@ -215,6 +215,9 @@ test, and reports exact-node accuracy by field, site, and page. **RUN SITE**
 evaluates only the selected website. Click a site row to show its indented page
 results in place. Every site-table column is sortable. Expanded page titles open
 that input in the playground, and each **[url]** link opens the source article.
+Use the **Show URLs** filter to restrict the site table and its expanded URLs to
+pages where the human label contains an author, date, or summary node. Site
+accuracies and page counts are recalculated for the filtered subset.
 Because this view includes training and validation pages, treat it as a fit and
 data quality report rather than an unbiased generalization score.
 
