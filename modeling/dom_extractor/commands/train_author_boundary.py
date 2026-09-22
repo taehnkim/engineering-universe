@@ -7,6 +7,7 @@ import hashlib
 import json
 import random
 from collections import Counter
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -29,6 +30,7 @@ from eng_universe.extraction.inference import DOMExtractor
 from modeling.dom_extractor.dataset import iter_labeled_pages
 
 MARGINS = (0.0, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0)
+AuthorOverrides = Mapping[str, tuple[int | None, int | None]]
 
 
 @dataclass(frozen=True)
@@ -70,8 +72,34 @@ def _baseline_author(
     return chosen, author_scores, features.numeric
 
 
-def collect_samples(dataset_dir: Path, extractor: DOMExtractor) -> list[Sample]:
+def load_author_overrides(path: Path) -> dict[str, tuple[int | None, int | None]]:
+    """Read proposed labels without changing the reviewed annotations."""
+
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    changes: dict[str, tuple[int | None, int | None]] = {}
+    for entry in payload["changes"]:
+        page_id = str(entry["page_id"])
+        if page_id in changes:
+            raise ValueError(f"duplicate author override: {page_id}")
+        old, new = entry["old"], entry["new"]
+        if any(
+            value is not None
+            and (isinstance(value, bool) or not isinstance(value, int) or value < 0)
+            for value in (old, new)
+        ):
+            raise ValueError(f"invalid author override node for {page_id}")
+        changes[page_id] = (old, new)
+    return changes
+
+
+def collect_samples(
+    dataset_dir: Path,
+    extractor: DOMExtractor,
+    author_overrides: AuthorOverrides | None = None,
+) -> list[Sample]:
     samples: list[Sample] = []
+    author_overrides = author_overrides or {}
+    used_overrides: set[str] = set()
     for index, item in enumerate(iter_labeled_pages(dataset_dir), start=1):
         baseline, author_scores, numeric = _baseline_author(extractor, item.page)
         candidates = (
@@ -79,17 +107,30 @@ def collect_samples(dataset_dir: Path, extractor: DOMExtractor) -> list[Sample]:
             if baseline is not None
             else None
         )
+        expected = item.annotation.labels[Field.AUTHORS]
+        override = author_overrides.get(item.record.page_id)
+        if override is not None:
+            old, expected = override
+            if item.annotation.labels[Field.AUTHORS] != old:
+                raise ValueError(f"stale author override for {item.record.page_id}")
+            if expected is not None and expected not in item.page.node_by_id:
+                raise ValueError(
+                    f"missing author override node for {item.record.page_id}"
+                )
+            used_overrides.add(item.record.page_id)
         samples.append(
             Sample(
                 item.record.page_id,
                 item.record.split,
-                item.annotation.labels[Field.AUTHORS],
+                expected,
                 baseline,
                 candidates,
             )
         )
         if index % 100 == 0:
             print(f"prepared {index} pages", flush=True)
+    if unused := author_overrides.keys() - used_overrides:
+        raise ValueError(f"unused author overrides: {sorted(unused)}")
     return samples
 
 
@@ -216,13 +257,21 @@ def evaluate(
 
 
 def run(
-    dataset_dir: Path, base_checkpoint: Path, output_dir: Path
+    dataset_dir: Path,
+    base_checkpoint: Path,
+    output_dir: Path,
+    author_overrides_path: Path | None = None,
 ) -> dict[str, object]:
     torch.manual_seed(17)
     np.random.seed(17)
     rng = random.Random(17)
     extractor = DOMExtractor(base_checkpoint)
-    samples = collect_samples(dataset_dir, extractor)
+    author_overrides = (
+        load_author_overrides(author_overrides_path)
+        if author_overrides_path is not None
+        else {}
+    )
+    samples = collect_samples(dataset_dir, extractor, author_overrides)
     by_split = {
         split: [sample for sample in samples if sample.split == split]
         for split in ("train", "validation", "test")
@@ -273,6 +322,10 @@ def run(
     report = {
         "version": BOUNDARY_VERSION,
         "base_checkpoint": str(base_checkpoint),
+        "author_overrides": str(author_overrides_path)
+        if author_overrides_path
+        else None,
+        "author_override_count": len(author_overrides),
         "best_epoch": best_epoch,
         "best_validation_loss": best_validation_loss,
         "train_covered_pages": len(train_samples),
@@ -307,8 +360,18 @@ def main() -> None:
     parser.add_argument("--dataset-dir", type=Path, required=True)
     parser.add_argument("--base-checkpoint", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--author-overrides",
+        type=Path,
+        help="Proposed author label overrides; original annotations remain unchanged.",
+    )
     args = parser.parse_args()
-    report = run(args.dataset_dir, args.base_checkpoint, args.output_dir)
+    report = run(
+        args.dataset_dir,
+        args.base_checkpoint,
+        args.output_dir,
+        args.author_overrides,
+    )
     print(
         json.dumps(
             {key: value for key, value in report.items() if key != "history"}, indent=2
