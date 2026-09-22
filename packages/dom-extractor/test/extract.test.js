@@ -1,0 +1,53 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import {
+  extract,
+  extractField,
+  extractRelativePublicationDate,
+  fields,
+  resolveRelativeDate,
+} from "../src/index.js";
+
+const HTML = `<!doctype html><html><body>
+  <nav>Site navigation</nav>
+  <main>
+    <header>
+      <h1>A small DOM extraction test</h1>
+      <p class="byline">By Ada Lovelace</p>
+      <time datetime="2026-09-19">September 19, 2026</time>
+    </header>
+    <article><p>This is the article body.</p><p>It has two paragraphs.</p></article>
+  </main>
+  <footer>Footer links</footer>
+</body></html>`;
+
+test("extract returns every model field and diagnostics", async () => {
+  const result = await extract(HTML, { scrapedAt: "2026-09-21T12:00:00Z" });
+
+  assert.deepEqual(Object.keys(result.predictions), fields);
+  assert.equal(result.article?.text, "This is the article body. It has two paragraphs.");
+  assert.equal(result.title?.text, "A small DOM extraction test");
+  assert.equal(result.predictions.article, 8);
+  assert.equal(result.predictions.title, 5);
+  assert.equal(result.diagnostics.cleanupVersion, "chrome-v2");
+  assert.ok(result.diagnostics.candidateCount > 0);
+  for (const field of fields) {
+    assert.ok(result[field] === null || typeof result[field].text === "string");
+  }
+});
+
+test("extractField validates and returns a selection or missing", async () => {
+  const title = await extractField(HTML, "title");
+  assert.ok(title === null || typeof title.html === "string");
+  await assert.rejects(() => extractField(HTML, "not-a-field"), /unknown field/);
+});
+
+test("relative publication dates exclude reading times and resolve from scrape time", () => {
+  assert.equal(extractRelativePublicationDate("5 min read"), null);
+  assert.equal(extractRelativePublicationDate("Published 2 days ago"), "2 days ago");
+  assert.equal(
+    resolveRelativeDate("2 days ago", "2026-09-21T12:00:00Z"),
+    "2026-09-19T12:00:00.000Z",
+  );
+});

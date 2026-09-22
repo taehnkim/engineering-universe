@@ -81,3 +81,5 @@ See `docs/` for detailed specs:
 - `docs/spec.md` — product scope and module contracts
 - `modeling/dom_extractor/README.md` — learned DOM-node extraction dataset,
   labeler, training, evaluation, and model playgrounds
+- `packages/dom-extractor/README.md` — standalone Node.js/npm DOM extraction
+  package and usage

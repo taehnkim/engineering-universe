@@ -1,0 +1,36 @@
+{
+  "name": "@eng-universe/dom-extractor",
+  "version": "0.1.0",
+  "description": "Extract article content and metadata from raw HTML with the Engineering Universe DOM model",
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    }
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "export:model": "uv run --project ../.. --group modeling python scripts/export_checkpoint.py",
+    "test": "node --test"
+  },
+  "keywords": [
+    "html",
+    "dom",
+    "article",
+    "extraction",
+    "machine-learning"
+  ],
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "linkedom": "0.18.12"
+  }
+}
