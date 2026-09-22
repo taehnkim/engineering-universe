@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
 from eng_universe.extraction.contract import FIELDS, Field, load_annotation
@@ -24,16 +24,17 @@ from eng_universe.extraction.inference import DOMExtractor
 from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
 DEFAULT_EVALUATION_WORKERS = 10
+MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 
 SHELL = r"""<!doctype html>
 <html><head><meta charset="utf-8"><title>DOM inference playground</title>
 <style>
-body{margin:0;font:14px system-ui;background:#111827;color:#e5e7eb}header{display:flex;gap:8px;padding:10px;background:#1f2937;align-items:center;position:sticky;top:0;z-index:3}button,select{padding:7px;border-radius:5px;border:1px solid #4b5563;background:#111827;color:#e5e7eb}button:disabled{opacity:.55}.run{background:#16a34a;border-color:#22c55e;font-weight:700}.source-link{color:#f8fafc;font-weight:650;text-decoration:underline;text-underline-offset:2px}main{display:grid;grid-template-columns:1fr 390px;height:calc(100vh - 55px)}iframe{width:100%;height:100%;border:0;background:white}aside{padding:12px;overflow:auto}.inference-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.inference-heading h2{margin:8px 0}.latency{color:#a7f3d0;font:12px ui-monospace}.model{padding:9px;border:1px solid #166534;background:#052e16;border-radius:6px;line-height:1.5}.field{margin:8px 0;padding:9px;border:1px solid #374151;border-radius:6px;cursor:pointer}.field:hover{border-color:#64748b}.field:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}.field.active{border-color:#3b82f6;background:#172554}.field.exact{border-color:#166534}.field.different{border-color:#b45309}.field.active.exact{border-color:#3b82f6}.field.active.different{border-color:#3b82f6}.field-header{display:flex;align-items:center;justify-content:space-between;gap:8px}.field-name{font-weight:700}.value{font-family:ui-monospace;word-break:break-all;margin-top:6px}.reference{color:#aebbd1;font-size:12px;margin-top:4px}.badge{border-radius:999px;padding:2px 7px;font-size:11px}.exact .badge{background:#14532d;color:#bbf7d0}.different .badge{background:#78350f;color:#fde68a}.preview{white-space:pre-wrap;max-height:300px;overflow:auto;background:#030712;padding:8px}.muted{color:#94a3b8}.error{color:#fca5a5}
+body{margin:0;font:14px system-ui;background:#111827;color:#e5e7eb}header{display:flex;gap:8px;padding:10px;background:#1f2937;align-items:center;position:sticky;top:0;z-index:3}[hidden]{display:none!important}.control-group{display:contents}button,select,input[type=file]{padding:7px;border-radius:5px;border:1px solid #4b5563;background:#111827;color:#e5e7eb}input[type=file]{max-width:340px}button:disabled{opacity:.55}.run{background:#16a34a;border-color:#22c55e;font-weight:700}.source-link{color:#f8fafc;font-weight:650;text-decoration:underline;text-underline-offset:2px}main{display:grid;grid-template-columns:1fr 390px;height:calc(100vh - 55px)}iframe{width:100%;height:100%;border:0;background:white}aside{padding:12px;overflow:auto}.inference-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.inference-heading h2{margin:8px 0}.latency{color:#a7f3d0;font:12px ui-monospace}.model{padding:9px;border:1px solid #166534;background:#052e16;border-radius:6px;line-height:1.5}.field{margin:8px 0;padding:9px;border:1px solid #374151;border-radius:6px;cursor:pointer}.field:hover{border-color:#64748b}.field:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}.field.active{border-color:#3b82f6;background:#172554}.field.exact{border-color:#166534}.field.different{border-color:#b45309}.field.active.exact{border-color:#3b82f6}.field.active.different{border-color:#3b82f6}.field-header{display:flex;align-items:center;justify-content:space-between;gap:8px}.field-name{font-weight:700}.value{font-family:ui-monospace;word-break:break-all;margin-top:6px}.reference{color:#aebbd1;font-size:12px;margin-top:4px}.badge{border-radius:999px;padding:2px 7px;font-size:11px}.exact .badge{background:#14532d;color:#bbf7d0}.different .badge{background:#78350f;color:#fde68a}.preview{white-space:pre-wrap;max-height:300px;overflow:auto;background:#030712;padding:8px}.muted{color:#94a3b8}.error{color:#fca5a5}
 </style></head><body>
-<header><a class="source-link" href="/evals">← Evals</a><select id="split"><option value="all">All splits</option><option value="train">Train</option><option value="validation">Validation</option><option value="test">Test</option></select><select id="pages"></select><button id="run" class="run">RUN</button><a id="source" class="source-link" target="_blank" rel="noopener">Open source</a><span id="status"></span></header>
+<header><a class="source-link" href="/evals">← Evals</a><span id="page-controls" class="control-group"><select id="split"><option value="all">All splits</option><option value="train">Train</option><option value="validation">Validation</option><option value="test">Test</option></select><select id="pages"></select></span><span id="upload-controls" class="control-group" hidden><input id="html-file" type="file" accept=".html,.htm,text/html"></span><button id="run" class="run">RUN</button><a id="source" class="source-link" target="_blank" rel="noopener">Open source</a><span id="status"></span></header>
 <main><iframe id="page" sandbox="allow-same-origin"></iframe><aside><div class="inference-heading"><h2>Inference</h2><span id="latency" class="latency"></span></div><div id="model" class="model"></div><div id="fields"></div><h3>Predicted content</h3><div id="preview" class="preview">Choose a page and click RUN.</div></aside></main>
 <script>
-const names=['article','title','authors','date','summary','relative_date'];const requestedPage=new URLSearchParams(location.search).get('page');let active='article',payload=null,result=null,allPages=[];
+const names=['article','title','authors','date','summary','relative_date'];const requestedPage=new URLSearchParams(location.search).get('page'),uploadMode=location.pathname.endsWith('/upload'),maxUploadBytes=20*1024*1024;let active='article',payload=null,result=null,allPages=[];
 const $=id=>document.getElementById(id);const esc=s=>(s??'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function selectedElement(){const d=$('page').contentDocument,id=result?.predictions?.[active];return !d||id==null?null:d.querySelector(`[data-eu-node-id="${id}"]`)}
 function focusPrediction(scroll=false){const d=$('page').contentDocument;if(!d)return;d.querySelectorAll('[data-playground-prediction]').forEach(el=>delete el.dataset.playgroundPrediction);const el=selectedElement();if(!el)return;el.dataset.playgroundPrediction='true';if(scroll)el.scrollIntoView({behavior:'instant',block:'center',inline:'nearest'})}
@@ -42,18 +43,19 @@ function activateField(name){active=name;draw();focusPrediction(true);preview()}
 function draw(){if(!result){$('fields').innerHTML='<p class="muted">No inference result yet.</p>';return}const reference=result.reference_labels,hasReference=result.reference_source!==null;$('fields').innerHTML=names.map(n=>{const predicted=result.predictions[n],expected=reference?.[n],exact=hasReference&&predicted===expected,status=hasReference?(exact?'exact':'different'):'';return `<div class="field ${status} ${active===n?'active':''}" data-field="${n}" role="button" tabindex="0" aria-pressed="${active===n}"><div class="field-header"><span class="field-name">${n}</span>${hasReference?`<span class="badge">${exact?'exact':'different'}</span>`:''}</div><div class="value">predicted: ${predicted===null?'missing':'node '+predicted}</div>${hasReference?`<div class="reference">${esc(result.reference_source)}: ${expected===null?'missing':'node '+expected}</div>`:''}</div>`}).join('');document.querySelectorAll('[data-field]').forEach(card=>{card.onclick=()=>activateField(card.dataset.field);card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activateField(card.dataset.field)}}})}
 function wire(){const d=$('page').contentDocument,style=d.createElement('style');style.textContent='[data-playground-prediction="true"]{outline:4px solid #2563eb!important;outline-offset:3px!important;background-color:rgba(37,99,235,.08)!important}';d.head.appendChild(style);focusPrediction(true);preview()}
 async function load(id){$('run').disabled=true;result=null;active='article';$('latency').textContent='';payload=await fetch(`/api/pages/${id}`).then(r=>r.json());$('source').href=payload.url;$('status').textContent=`${payload.split} · ${payload.website}`;const frame=$('page');frame.onload=wire;frame.srcdoc=payload.document_html;$('model').innerHTML=`<strong>${esc(payload.checkpoint)}</strong><br><span class="muted">${esc(payload.reference_source||'No reference label')}</span>`;draw();preview();$('run').disabled=false}
-async function run(){const button=$('run');button.disabled=true;button.textContent='RUNNING…';$('latency').textContent='Running…';$('status').textContent='Running checkpoint…';try{const response=await fetch(`/api/pages/${payload.page_id}/run`,{method:'POST'});if(!response.ok)throw new Error(await response.text());result=await response.json();active='article';draw();focusPrediction(true);preview();$('latency').textContent=`${result.latency_ms.toFixed(1)} ms`;$('status').textContent=result.reference_source?`${result.matches}/${result.reference_count} exact`:''}catch(error){$('latency').textContent='';$('status').innerHTML=`<span class="error">${esc(error.message)}</span>`}finally{button.disabled=false;button.textContent='RUN'}}
+async function loadUpload(){const file=$('html-file').files[0];result=null;active='article';$('latency').textContent='';$('page').srcdoc='';if(!file){payload=null;$('run').disabled=true;$('status').textContent='Choose a raw HTML file.';draw();preview();return}if(file.size>maxUploadBytes){payload=null;$('run').disabled=true;$('status').innerHTML='<span class="error">HTML file exceeds the 20 MB limit.</span>';draw();preview();return}payload={filename:file.name,raw_html:await file.text()};$('status').textContent=`${file.name} · ready`;$('run').disabled=false;draw();preview()}
+async function run(){const button=$('run');button.disabled=true;button.textContent='RUNNING…';$('latency').textContent='Running…';$('status').textContent='Running checkpoint…';try{const response=uploadMode?await fetch('/api/playground/upload/run',{method:'POST',headers:{'Content-Type':'text/html; charset=utf-8'},body:payload.raw_html}):await fetch(`/api/pages/${payload.page_id}/run`,{method:'POST'});if(!response.ok)throw new Error(await response.text());result=await response.json();active='article';draw();$('latency').textContent=`${result.latency_ms.toFixed(1)} ms`;if(uploadMode){const frame=$('page');frame.onload=wire;frame.srcdoc=result.document_html;$('status').textContent=`${payload.filename} · prediction complete`}else{focusPrediction(true);preview();$('status').textContent=result.reference_source?`${result.matches}/${result.reference_count} exact`:''}}catch(error){$('latency').textContent='';$('status').innerHTML=`<span class="error">${esc(error.message)}</span>`}finally{button.disabled=false;button.textContent='RUN'}}
 function filterPages(){const split=$('split').value,pages=allPages.filter(page=>split==='all'||page.split===split),previous=$('pages').value||requestedPage;$('pages').innerHTML=pages.map(page=>`<option value="${esc(page.page_id)}">${esc(page.page_id)} [${page.split}]</option>`).join('');if(pages.length){$('pages').value=pages.some(page=>page.page_id===previous)?previous:pages[0].page_id;load($('pages').value)}}
-async function start(){allPages=await fetch('/api/pages').then(r=>r.json());$('pages').onchange=()=>load($('pages').value);$('split').onchange=filterPages;$('run').onclick=run;filterPages()}start();
+async function start(){$('run').onclick=run;if(uploadMode){$('page-controls').hidden=true;$('upload-controls').hidden=false;$('source').hidden=true;$('run').disabled=true;$('preview').textContent='Choose an HTML file and click RUN.';const options=await fetch('/api/evals/options').then(response=>response.json());$('model').innerHTML=`<strong>${esc(options.checkpoint)}</strong><br><span class="muted">Uploaded HTML · no reference label</span>`;$('html-file').onchange=loadUpload;$('status').textContent='Choose a raw HTML file.';draw();return}allPages=await fetch('/api/pages').then(r=>r.json());$('pages').onchange=()=>load($('pages').value);$('split').onchange=filterPages;filterPages()}start();
 </script></body></html>"""
 
 
 EVALS_SHELL = r"""<!doctype html>
 <html><head><meta charset="utf-8"><title>DOM extractor evaluations</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font:14px system-ui;background:#0f172a;color:#e5e7eb}header{position:sticky;top:0;z-index:2;padding:16px 20px;background:#1e293b;border-bottom:1px solid #334155}h1{margin:0 0 5px;font-size:22px}.subtitle{color:#94a3b8}.controls{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}button,select{padding:8px 10px;border-radius:6px;border:1px solid #475569;background:#111827;color:#e5e7eb}button{cursor:pointer;font-weight:650}button:hover{border-color:#94a3b8}button:disabled{opacity:.55;cursor:wait}.run-all{background:#166534;border-color:#22c55e}.status{color:#a7f3d0;margin-left:4px}.progress{display:none;align-items:center;gap:10px;margin-top:11px}.progress.visible{display:flex}.progress-track{width:min(520px,70vw);height:10px;background:#0f172a;border:1px solid #475569;border-radius:999px;overflow:hidden}.progress-bar{width:0;height:100%;background:#22c55e;transition:width .15s linear}.progress-text{color:#cbd5e1;font-variant-numeric:tabular-nums;white-space:nowrap}main{padding:18px 20px 40px;max-width:1500px;margin:auto}.notice{padding:10px 12px;border:1px solid #854d0e;background:#422006;color:#fde68a;border-radius:7px;margin-bottom:14px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.card{padding:13px;border:1px solid #334155;border-radius:8px}.card h3{margin:0 0 9px;font-size:19px}.card.kpi-green,.metric-cell.kpi-green{background:#052e16;border-color:#16a34a}.card.kpi-orange,.metric-cell.kpi-orange{background:#713f12;border-color:#fbbf24}.card.kpi-red,.metric-cell.kpi-red{background:#450a0a;border-color:#dc2626}.accuracy{font-size:27px;font-weight:750}section{margin-top:22px}table{width:100%;border-collapse:collapse;background:#111827;border:1px solid #334155}th,td{text-align:left;padding:8px 9px;border-bottom:1px solid #263244}th{position:sticky;top:145px;background:#1e293b;color:#cbd5e1;font-size:12px}.sort-button{display:flex;align-items:center;gap:5px;width:100%;padding:0;border:0;background:none;border-radius:0;color:inherit;font:inherit;text-align:inherit}.sort-button:hover{color:#fff}.number .sort-button{justify-content:flex-end}.sort-indicator{width:12px;color:#94a3b8}tbody tr:hover{background:#172554}.site-row{cursor:pointer;font-weight:650}.site-row:focus-visible{outline:2px solid #fbbf24;outline-offset:-2px}.disclosure{display:inline-block;width:18px;color:#93c5fd}.site-page{background:#0b1220;color:#cbd5e1}.site-page:hover{background:#111d35}.site-page-title{position:relative;padding-left:35px;max-width:680px}.site-page-title::before{content:'↳';position:absolute;margin-left:-21px;color:#64748b}.eval-title{font-weight:650}.result-mark{font-size:16px;font-weight:800}.result-mark.pass{color:#4ade80}.result-mark.fail{color:#f87171}.number{text-align:right;font-variant-numeric:tabular-nums}.links{white-space:nowrap}a{color:#93c5fd}.title{max-width:620px}.muted{color:#94a3b8}.empty{padding:30px;text-align:center;color:#94a3b8}
+*{box-sizing:border-box}body{margin:0;font:14px system-ui;background:#0f172a;color:#e5e7eb}header{position:sticky;top:0;z-index:2;padding:16px 20px;background:#1e293b;border-bottom:1px solid #334155}h1{margin:0 0 5px;font-size:22px}.subtitle{color:#94a3b8}.controls{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}button,select,.playground-button{padding:8px 10px;border-radius:6px;border:1px solid #475569;background:#111827;color:#e5e7eb}button{cursor:pointer;font-weight:650}button:hover{border-color:#94a3b8}button:disabled{opacity:.55;cursor:wait}.run-all{background:#166534;border-color:#22c55e}.playground-button{background:#1d4ed8;border-color:#3b82f6;font-weight:650;text-decoration:none}.status{color:#a7f3d0;margin-left:4px}.progress{display:none;align-items:center;gap:10px;margin-top:11px}.progress.visible{display:flex}.progress-track{width:min(520px,70vw);height:10px;background:#0f172a;border:1px solid #475569;border-radius:999px;overflow:hidden}.progress-bar{width:0;height:100%;background:#22c55e;transition:width .15s linear}.progress-text{color:#cbd5e1;font-variant-numeric:tabular-nums;white-space:nowrap}main{padding:18px 20px 40px;max-width:1500px;margin:auto}.notice{padding:10px 12px;border:1px solid #854d0e;background:#422006;color:#fde68a;border-radius:7px;margin-bottom:14px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.card{padding:13px;border:1px solid #334155;border-radius:8px}.card h3{margin:0 0 9px;font-size:19px}.card.kpi-green,.metric-cell.kpi-green{background:#052e16;border-color:#16a34a}.card.kpi-orange,.metric-cell.kpi-orange{background:#713f12;border-color:#fbbf24}.card.kpi-red,.metric-cell.kpi-red{background:#450a0a;border-color:#dc2626}.accuracy{font-size:27px;font-weight:750}section{margin-top:22px}table{width:100%;border-collapse:collapse;background:#111827;border:1px solid #334155}th,td{text-align:left;padding:8px 9px;border-bottom:1px solid #263244}th{position:sticky;top:145px;background:#1e293b;color:#cbd5e1;font-size:12px}.sort-button{display:flex;align-items:center;gap:5px;width:100%;padding:0;border:0;background:none;border-radius:0;color:inherit;font:inherit;text-align:inherit}.sort-button:hover{color:#fff}.number .sort-button{justify-content:flex-end}.sort-indicator{width:12px;color:#94a3b8}tbody tr:hover{background:#172554}.site-row{cursor:pointer;font-weight:650}.site-row:focus-visible{outline:2px solid #fbbf24;outline-offset:-2px}.disclosure{display:inline-block;width:18px;color:#93c5fd}.site-page{background:#0b1220;color:#cbd5e1}.site-page:hover{background:#111d35}.site-page-title{position:relative;padding-left:35px;max-width:680px}.site-page-title::before{content:'↳';position:absolute;margin-left:-21px;color:#64748b}.eval-title{font-weight:650}.result-mark{font-size:16px;font-weight:800}.result-mark.pass{color:#4ade80}.result-mark.fail{color:#f87171}.number{text-align:right;font-variant-numeric:tabular-nums}.links{white-space:nowrap}a{color:#93c5fd}.title{max-width:620px}.muted{color:#94a3b8}.empty{padding:30px;text-align:center;color:#94a3b8}
 </style></head><body>
-<header><h1>DOM extractor evaluations</h1><div class="subtitle">Checkpoint: <span id="checkpoint"></span> · <span id="workers"></span> parallel workers</div><div class="controls"><button id="run-all" class="run-all">RUN ALL</button><select id="site"></select><button id="run-site">RUN SITE</button><span id="status" class="status"></span></div><div id="progress" class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"><div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div><span id="progress-text" class="progress-text"></span></div></header>
+<header><h1>DOM extractor evaluations</h1><div class="subtitle">Checkpoint: <span id="checkpoint"></span> · <span id="workers"></span> parallel workers</div><div class="controls"><button id="run-all" class="run-all">RUN ALL</button><select id="site"></select><button id="run-site">RUN SITE</button><a class="playground-button" href="/playground/upload">PLAYGROUND</a><span id="status" class="status"></span></div><div id="progress" class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"><div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div><span id="progress-text" class="progress-text"></span></div></header>
 <main><div class="notice">Whole-corpus accuracy includes train and validation pages. Use it to inspect fit and labeling consistency; use the test split for unbiased generalization accuracy.</div><div id="cards" class="cards"></div><section><h2>Accuracy by site</h2><div id="sites" class="empty">Waiting for evaluation…</div></section><section><h2>Pages</h2><div id="pages" class="empty">Waiting for evaluation…</div></section></main>
 <script>
 const names=['article','title','authors','date','summary','relative_date'];let evalOptions=null,currentResult=null,siteSort={key:'website',direction:'asc'};const expandedSites=new Set();const $=id=>document.getElementById(id);const esc=s=>(s??'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const pct=n=>n==null?'—':(n*100).toFixed(1)+'%';
@@ -279,6 +281,34 @@ def _evaluate_records(
     }
 
 
+def _infer_html(html: str, model: DOMExtractor | Any) -> dict[str, object]:
+    page = parse_html(html, strip_chrome=True)
+    started = time.perf_counter()
+    predict_page = getattr(model, "predict_page", None)
+    predicted = (
+        predict_page(page) if callable(predict_page) else model.predict_ids(html)
+    )
+    latency_ms = (time.perf_counter() - started) * 1_000
+    predictions = {field.value: predicted[field] for field in FIELDS}
+    results = {
+        field.value: (
+            None
+            if predicted[field] is None
+            else {
+                **page.selected_content(int(predicted[field])),
+                "tag": page.candidate(int(predicted[field])).name,
+            }
+        )
+        for field in FIELDS
+    }
+    return {
+        "latency_ms": latency_ms,
+        "predictions": predictions,
+        "results": results,
+        "document_html": annotation_html(page),
+    }
+
+
 def create_app(
     dataset_dir: Path,
     checkpoint: Path,
@@ -353,6 +383,10 @@ def create_app(
 
     @app.get("/playground", response_class=HTMLResponse)
     async def playground_shell() -> str:
+        return SHELL
+
+    @app.get("/playground/upload", response_class=HTMLResponse)
+    async def upload_playground_shell() -> str:
         return SHELL
 
     @app.get("/evals", response_class=HTMLResponse)
@@ -448,28 +482,39 @@ def create_app(
             "reference_source": source,
         }
 
+    @app.post("/api/playground/upload/run")
+    async def run_uploaded_html(request: Request) -> dict[str, object]:
+        content_length = request.headers.get("content-length")
+        if (
+            content_length is not None
+            and content_length.isdigit()
+            and int(content_length) > MAX_UPLOAD_BYTES
+        ):
+            raise HTTPException(413, "HTML file exceeds the 20 MB limit")
+        body = await request.body()
+        if len(body) > MAX_UPLOAD_BYTES:
+            raise HTTPException(413, "HTML file exceeds the 20 MB limit")
+        html = body.decode("utf-8", errors="replace")
+        if not html.strip():
+            raise HTTPException(400, "HTML file is empty")
+        inference = await asyncio.to_thread(_infer_html, html, model)
+        return {
+            **inference,
+            "page_id": None,
+            "reference_source": None,
+            "reference_labels": None,
+            "matches": None,
+            "reference_count": None,
+        }
+
     @app.post("/api/pages/{page_id}/run")
     async def run_inference(page_id: str) -> dict[str, object]:
         record = records.get(page_id)
         if record is None:
             raise HTTPException(404, "unknown page")
         html = (dataset_dir / record.html_path).read_text(encoding="utf-8")
-        page = parse_html(html, strip_chrome=True)
-        started = time.perf_counter()
-        predicted = model.predict_ids(html)
-        latency_ms = (time.perf_counter() - started) * 1_000
-        predictions = {field.value: predicted[field] for field in FIELDS}
-        results = {
-            field.value: (
-                None
-                if predicted[field] is None
-                else {
-                    **page.selected_content(int(predicted[field])),
-                    "tag": page.candidate(int(predicted[field])).name,
-                }
-            )
-            for field in FIELDS
-        }
+        inference = await asyncio.to_thread(_infer_html, html, model)
+        predictions = inference["predictions"]
         annotation_path = dataset_dir / "annotations" / f"{record.page_id}.json"
         source = _reference_source(record, dataset_dir)
         reference_labels = None
@@ -487,10 +532,8 @@ def create_app(
             else None
         )
         return {
+            **inference,
             "page_id": record.page_id,
-            "latency_ms": latency_ms,
-            "predictions": predictions,
-            "results": results,
             "reference_source": source,
             "reference_labels": reference_labels,
             "matches": matches,

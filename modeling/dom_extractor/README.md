@@ -211,6 +211,12 @@ that input in the playground, and each **[url]** link opens the source article.
 Because this view includes training and validation pages, treat it as a fit and
 data quality report rather than an unbiased generalization score.
 
+Click **PLAYGROUND** on `/evals` to test an HTML file that is not in the corpus.
+Choose a raw `.html` or `.htm` file up to 20 MB, then click **RUN**. The server
+applies the same DOM cleanup used by training and inference, runs the selected
+checkpoint, and displays the cleaned page with the predicted nodes highlighted.
+Uploaded files are processed in memory and are not added to the dataset.
+
 The dashboard uses ten parallel worker processes by default. While a run is
 active, it shows a live `classified / total` count and progress bar. It stores
 the latest result in browser local storage, keyed by the checkpoint and reviewed

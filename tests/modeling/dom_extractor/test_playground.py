@@ -96,12 +96,23 @@ def test_playground_runs_inference_and_returns_visualizable_nodes(
 
     detail = client.get("/api/pages/page").json()
     result = client.post("/api/pages/page/run").json()
+    upload_result = client.post(
+        "/api/playground/upload/run",
+        content=html.encode(),
+        headers={"content-type": "text/html"},
+    ).json()
 
     assert detail["reference_source"] == "Jev draft"
     assert f'data-eu-node-id="{title_id}"' in detail["document_html"]
     assert result["predictions"]["article"] == article_id
     assert result["results"]["title"]["text"] == "Title"
     assert result["matches"] == len(FIELDS)
+    assert upload_result["predictions"]["article"] == article_id
+    assert upload_result["results"]["title"]["text"] == "Title"
+    assert upload_result["reference_source"] is None
+    assert f'data-eu-node-id="{title_id}"' in upload_result["document_html"]
+    assert client.get("/playground/upload").status_code == 200
+    assert client.post("/api/playground/upload/run", content=b"").status_code == 400
 
 
 def test_playground_ui_has_run_and_prediction_focus_controls() -> None:
@@ -118,6 +129,10 @@ def test_playground_ui_has_run_and_prediction_focus_controls() -> None:
     assert "card.onclick=()=>activateField(card.dataset.field)" in SHELL
     assert 'href="/evals">← Evals</a>' in SHELL
     assert "new URLSearchParams(location.search).get('page')" in SHELL
+    assert "uploadMode=location.pathname.endsWith('/upload')" in SHELL
+    assert 'id="html-file" type="file"' in SHELL
+    assert "fetch('/api/playground/upload/run'" in SHELL
+    assert "frame.srcdoc=result.document_html" in SHELL
 
 
 def test_whole_corpus_evaluation_dashboard_uses_human_reviews(
@@ -224,6 +239,7 @@ def test_whole_corpus_evaluation_dashboard_uses_human_reviews(
 def test_evaluation_dashboard_has_requested_controls_and_links() -> None:
     assert 'id="run-all" class="run-all">RUN ALL</button>' in EVALS_SHELL
     assert 'id="run-site">RUN SITE</button>' in EVALS_SHELL
+    assert 'href="/playground/upload">PLAYGROUND</a>' in EVALS_SHELL
     assert "baseline" not in EVALS_SHELL.lower()
     assert "Accuracy by site" in EVALS_SHELL
     assert 'href="${esc(page.url)}"' in EVALS_SHELL
