@@ -200,7 +200,15 @@ uv run --group modeling python -m modeling.dom_extractor.apps.playground \
 
 Choose a page and click **RUN**. The playground executes the checkpoint, shows
 the predicted node for every field, compares it with the available human or Jev
-reference, and scrolls the rendered page to the selected prediction.
+reference, and jumps the rendered page to the selected prediction.
+
+Open `/evals` on the same server for the whole-corpus dashboard. It runs the
+checkpoint against every human-reviewed page across train, validation, and
+test, compares exact-node accuracy with the heuristic baseline, and reports
+results by field, site, and page. **RUN SITE** evaluates only the selected
+website. Page-level **[eval]** links open that input in the playground. Because
+this view includes training and validation pages, treat it as a fit and data
+quality report rather than an unbiased generalization score.
 
 The annotation page uses a sandboxed iframe without script permission. Hover
 to highlight, choose a field and click an element, move to its parent when a
