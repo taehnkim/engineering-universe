@@ -9,7 +9,7 @@ import threading
 import time
 from collections import defaultdict
 from collections.abc import Callable, Sequence
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -134,27 +134,6 @@ def _metric(counts: dict[str, int]) -> dict[str, int | float | None]:
 
 
 ProgressCallback = Callable[[int, int, str], None]
-_PROCESS_MODEL: DOMExtractor | None = None
-
-
-def _initialize_evaluation_process(checkpoint: Path) -> None:
-    global _PROCESS_MODEL
-
-    import torch
-
-    torch.set_num_threads(1)
-    _PROCESS_MODEL = DOMExtractor(checkpoint)
-
-
-def _evaluate_record_in_process(
-    record: PageRecord,
-    dataset_dir: Path,
-) -> dict[str, object]:
-    if _PROCESS_MODEL is None:
-        raise RuntimeError("evaluation worker model is not initialized")
-    return _evaluate_record(record, dataset_dir, _PROCESS_MODEL)
-
-
 def _evaluate_record(
     record: PageRecord,
     dataset_dir: Path,
@@ -208,7 +187,6 @@ def _evaluate_records(
     *,
     max_workers: int = DEFAULT_EVALUATION_WORKERS,
     progress: ProgressCallback | None = None,
-    use_processes: bool = False,
 ) -> dict[str, object]:
     started = time.perf_counter()
     field_counts = {field: {"correct": 0, "examples": 0} for field in FIELDS}
@@ -220,19 +198,14 @@ def _evaluate_records(
     total = len(records)
     if total:
         worker_count = min(max_workers, total)
-        executor_type = ProcessPoolExecutor if use_processes else ThreadPoolExecutor
-        executor_kwargs = (
-            {"initializer": _initialize_evaluation_process, "initargs": (checkpoint,)}
-            if use_processes
-            else {}
-        )
-        with executor_type(max_workers=worker_count, **executor_kwargs) as executor:
+        # The model is immutable during inference. Share the already-loaded
+        # checkpoint instead of spawning a PyTorch process per worker.
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
             pending = {
-                (
-                    executor.submit(_evaluate_record_in_process, record, dataset_dir)
-                    if use_processes
-                    else executor.submit(_evaluate_record, record, dataset_dir, model)
-                ): (index, record)
+                executor.submit(_evaluate_record, record, dataset_dir, model): (
+                    index,
+                    record,
+                )
                 for index, record in enumerate(records)
             }
             for completed, future in enumerate(as_completed(pending), start=1):
@@ -365,7 +338,6 @@ def create_app(
                     model,
                     max_workers=evaluation_workers,
                     progress=report_progress,
-                    use_processes=isinstance(model, DOMExtractor),
                 )
                 update_job(
                     job_id,
@@ -421,7 +393,6 @@ def create_app(
                 checkpoint,
                 model,
                 max_workers=evaluation_workers,
-                use_processes=isinstance(model, DOMExtractor),
             )
 
     @app.post("/api/evals/jobs", status_code=202)
