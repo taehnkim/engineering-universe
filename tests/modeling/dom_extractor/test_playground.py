@@ -235,9 +235,15 @@ def test_evaluation_dashboard_has_requested_controls_and_links() -> None:
     assert "if(!restoreCached())run()" in EVALS_SHELL
     assert 'class="site-row" data-site="${esc(site.website)}"' in EVALS_SHELL
     assert 'aria-expanded="${open}"' in EVALS_SHELL
-    assert 'class="site-page-title"' in EVALS_SHELL
+    assert 'class="site-page-title" colspan="2"' in EVALS_SHELL
     assert "row.onclick=toggle" in EVALS_SHELL
     assert "site.fields[name].accuracy" in EVALS_SHELL
     assert "value>=.8?'green':value>=.5?'orange':'red'" in EVALS_SHELL
     assert 'class="card kpi-${scoreClass(item.accuracy)}"' in EVALS_SHELL
+    assert "sortHeader('Pages','pages',true)" in EVALS_SHELL
+    assert "names.map(name=>sortHeader(name,name,true))" in EVALS_SHELL
+    assert 'data-sort="${key}"' in EVALS_SHELL
+    assert 'class="eval-title"' in EVALS_SHELL
+    assert "Pages / split" not in EVALS_SHELL
+    assert "metric-cell kpi-${scoreClass(accuracy)}" in EVALS_SHELL
     assert "run()}start()" in EVALS_SHELL
