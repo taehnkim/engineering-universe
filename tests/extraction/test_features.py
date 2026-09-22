@@ -2,14 +2,16 @@ import numpy as np
 
 from eng_universe.extraction.dom import parse_html
 from eng_universe.extraction.features import (
-    MAX_SEMANTIC_TOKENS,
+    MAX_ATTRIBUTE_TOKENS,
+    MAX_TEXT_SHAPE_TOKENS,
     NUMERIC_FEATURE_NAMES,
     FeatureNormalizer,
     SemanticVocabulary,
     TagVocabulary,
+    attribute_semantic_tokens,
     featurize_page,
     raw_numeric_features,
-    semantic_tokens,
+    text_shape_tokens,
 )
 
 
@@ -45,9 +47,13 @@ def test_structural_features_and_unknown_tag() -> None:
     normalized = featurize_page(page, vocabulary, semantic_vocabulary, normalizer)
     assert np.isfinite(normalized.numeric).all()
     assert np.allclose(normalized.numeric[:, :5].mean(axis=0), 0, atol=1e-5)
-    assert normalized.semantic_token_ids.shape == (
+    assert normalized.attribute_token_ids.shape == (
         len(page.candidates),
-        MAX_SEMANTIC_TOKENS,
+        MAX_ATTRIBUTE_TOKENS,
+    )
+    assert normalized.text_shape_token_ids.shape == (
+        len(page.candidates),
+        MAX_TEXT_SHAPE_TOKENS,
     )
 
 
@@ -83,8 +89,35 @@ def test_author_and_date_semantic_signals() -> None:
     assert date_values[index["contains_updated_marker"]] == 0
     assert date_values[index["tag_is_time"]] == 1
     assert date_values[index["itemprop_date_published"]] == 1
-    assert "class:written" in semantic_tokens(author.element)
-    assert "rel:author" in semantic_tokens(author.element.find("a"))
+    assert "role:byline" in attribute_semantic_tokens(author.element)
+    assert "role:contributor" in attribute_semantic_tokens(author.element)
+    assert "relation:author" in attribute_semantic_tokens(author.element.find("a"))
+    assert "phrase:written_by" in text_shape_tokens(author.element)
+    assert "shape:multiple_names" in text_shape_tokens(author.element)
+    assert "shape:and_last_name" in text_shape_tokens(author.element)
+
+
+def test_css_tokens_cannot_crowd_out_byline_text_shapes() -> None:
+    page = parse_html(
+        "<p class='wp-block-paragraph flex items-center mt-4 text-lg dark:hover'>"
+        "<strong>By</strong>: <a>Patrick Lam</a>, <a>Namrata Lamba</a>, "
+        "and <a>Jamie Stober</a></p>"
+    )
+    element = page.candidates[0].element
+
+    assert attribute_semantic_tokens(element) == ()
+    shapes = set(text_shape_tokens(element))
+    assert {
+        "phrase:by_prefix",
+        "phrase:by_colon",
+        "shape:multiple_names",
+        "shape:comma_list",
+        "shape:and_last_name",
+        "shape:multiple_links",
+    } <= shapes
+
+    heading = parse_html("<h1>The GitHub Engineering Team</h1>").candidates[0]
+    assert "shape:single_name" not in text_shape_tokens(heading.element)
 
 
 def test_author_shapes_support_handles_teams_and_non_latin_names() -> None:

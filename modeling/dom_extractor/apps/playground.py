@@ -197,7 +197,7 @@ def _evaluate_records(
     checkpoint: Path,
     model: DOMExtractor | Any,
     *,
-    max_workers: int = 4,
+    max_workers: int = 10,
     progress: ProgressCallback | None = None,
 ) -> dict[str, object]:
     started = time.perf_counter()
@@ -276,7 +276,7 @@ def create_app(
     checkpoint: Path,
     *,
     extractor: DOMExtractor | Any | None = None,
-    evaluation_workers: int = 4,
+    evaluation_workers: int = 10,
 ) -> FastAPI:
     if evaluation_workers < 1:
         raise ValueError("evaluation_workers must be at least 1")
@@ -507,8 +507,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--eval-workers",
         type=int,
-        default=4,
-        help="Parallel workers for whole-corpus evaluation. Default: 4.",
+        default=10,
+        help="Parallel workers for whole-corpus evaluation. Default: 10.",
     )
     return parser
 

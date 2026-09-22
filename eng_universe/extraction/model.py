@@ -14,10 +14,10 @@ class DOMNodeSelector(nn.Module):
     def __init__(
         self,
         tag_count: int,
-        numeric_feature_count: int = 40,
+        numeric_feature_count: int = 49,
         semantic_token_count: int = 2,
         embedding_dim: int = 6,
-        semantic_embedding_dim: int = 3,
+        semantic_embedding_dim: int = 4,
         hidden_dim: int = 36,
         field_count: int = len(FIELDS),
     ) -> None:
@@ -28,7 +28,9 @@ class DOMNodeSelector(nn.Module):
         )
         self.network = nn.Sequential(
             nn.Linear(
-                (embedding_dim * 5) + semantic_embedding_dim + numeric_feature_count,
+                (embedding_dim * 5)
+                + (semantic_embedding_dim * 2)
+                + numeric_feature_count,
                 hidden_dim,
             ),
             nn.ReLU(),
@@ -45,15 +47,16 @@ class DOMNodeSelector(nn.Module):
         grandparent_tag_ids: torch.Tensor,
         previous_tag_ids: torch.Tensor,
         next_tag_ids: torch.Tensor,
-        semantic_token_ids: torch.Tensor,
+        attribute_token_ids: torch.Tensor,
+        text_shape_token_ids: torch.Tensor,
         numeric: torch.Tensor,
         candidate_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
-        semantic_mask = semantic_token_ids.ne(0).unsqueeze(-1)
-        semantic_sum = (
-            self.semantic_embedding(semantic_token_ids) * semantic_mask
-        ).sum(dim=-2)
-        semantic_average = semantic_sum / semantic_mask.sum(dim=-2).clamp_min(1)
+        def semantic_average(token_ids: torch.Tensor) -> torch.Tensor:
+            mask = token_ids.ne(0).unsqueeze(-1)
+            total = (self.semantic_embedding(token_ids) * mask).sum(dim=-2)
+            return total / mask.sum(dim=-2).clamp_min(1)
+
         features = torch.cat(
             (
                 self.tag_embedding(tag_ids),
@@ -61,7 +64,8 @@ class DOMNodeSelector(nn.Module):
                 self.tag_embedding(grandparent_tag_ids),
                 self.tag_embedding(previous_tag_ids),
                 self.tag_embedding(next_tag_ids),
-                semantic_average,
+                semantic_average(attribute_token_ids),
+                semantic_average(text_shape_token_ids),
                 numeric,
             ),
             dim=-1,

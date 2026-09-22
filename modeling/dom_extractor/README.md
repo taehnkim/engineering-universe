@@ -113,24 +113,30 @@ prepared data and checkpoint record the `chrome-v2` cleanup version.
 Inference rejects an older checkpoint instead of silently using different DOM
 preprocessing. Training and inference always apply the same cleanup.
 
-Feature schema `semantic-v2` gives each candidate five shared tag embeddings:
-its own tag, parent, grandparent, previous sibling, and next sibling. It also
-averages at most 12 tokens from a 64-entry vocabulary fit on training pages.
-Tokens come from `class`, `id`, `itemprop`, `rel`, `aria-label`, and the first
-few words of short candidate text. CamelCase and punctuation-separated names
-are split, so values such as `writtenBy`, `site_author`, and `date-published`
-remain useful without storing arbitrary article text.
+Feature schema `semantic-v3` gives each candidate five shared tag embeddings:
+its own tag, parent, grandparent, previous sibling, and next sibling. It has two
+independent semantic channels, so verbose attributes cannot displace useful
+text evidence. The attribute channel accepts at most eight normalized
+extraction roles from `class`, `id`, `itemprop`, `rel`, and `aria-label`. It
+discards generic CSS utilities. The text channel accepts at most 12 phrases and
+shapes such as `by:`, `written by`, a comma-delimited name list, a final
+`and Name`, link count, date shape, and reading-time shape. Both channels use a
+bounded 64-entry vocabulary and separate pooled representations. They do not
+store arbitrary article prose or individual names.
 
-Forty numeric features cover size, depth, position, paragraph/link/span counts,
-direct versus descendant text, leaf/wrapper shape, capitalization, byline and
-profile markers, absolute and relative date patterns, publication/update and
-reading-time markers, schema attributes, semantic ancestors, and distance/order
-relative to deterministic title and date anchors. These anchor features supply
-the useful part of a two-pass model without running the neural network twice.
+Forty-nine numeric features cover size, depth, position,
+paragraph/link/span counts, direct versus descendant text, leaf/wrapper shape,
+capitalization, byline and profile markers, absolute and relative date
+patterns, publication/update and reading-time markers, schema attributes, and
+semantic ancestors. Relative-location features describe both directions from
+the title and the start and end of the article subtree. This supports bylines
+at the end of an article instead of assuming that every author is near its
+title. Acknowledgement and contributor markers add evidence for those less
+common attribution layouts.
 Continuous columns are standardized from training websites only. Node IDs are
 used only for bookkeeping and targets.
 
-Prepared data and checkpoints record `semantic-v2`. Training and inference
+Prepared data and checkpoints record `semantic-v3`. Training and inference
 reject older artifacts instead of silently applying a different feature
 schema. Rebuild prepared data and retrain after changing the schema.
 
@@ -142,7 +148,7 @@ configured sitemaps when a listing is short, renders every selected page in
 Chrome, and rejects duplicate canonical URLs. Its default target is 30 articles
 per source plus listing-page negatives.
 
-The current human-reviewed corpus contains 660 pages: 430 train, 200 validation,
+The current human-reviewed corpus contains 659 pages: 429 train, 200 validation,
 and 30 test. Whole websites belong to one split only.
 The root `.gitignore` excludes local data, prepared NumPy matrices, checkpoints,
 and evaluation output.
@@ -218,7 +224,7 @@ applies the same DOM cleanup used by training and inference, runs the selected
 checkpoint, and displays the cleaned page with the predicted nodes highlighted.
 Uploaded files are processed in memory and are not added to the dataset.
 
-The dashboard uses ten parallel worker processes by default. While a run is
+The dashboard uses ten parallel worker threads by default. While a run is
 active, it shows a live `classified / total` count and progress bar. It stores
 the latest result in browser local storage, keyed by the checkpoint and reviewed
 labels. Returning from a page evaluation restores that result without another

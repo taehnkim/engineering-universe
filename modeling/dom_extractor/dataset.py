@@ -135,7 +135,8 @@ def save_prepared_page(path: Path, item: PreparedPage) -> None:
         grandparent_tag_ids=item.features.grandparent_tag_ids,
         previous_tag_ids=item.features.previous_tag_ids,
         next_tag_ids=item.features.next_tag_ids,
-        semantic_token_ids=item.features.semantic_token_ids,
+        attribute_token_ids=item.features.attribute_token_ids,
+        text_shape_token_ids=item.features.text_shape_token_ids,
         numeric=item.features.numeric,
         targets=item.targets,
     )

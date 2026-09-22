@@ -73,7 +73,7 @@ class DOMExtractor:
             int(checkpoint["numeric_feature_count"]),
             int(checkpoint["semantic_token_count"]),
             embedding_dim=int(model_config.get("embedding_dim", 6)),
-            semantic_embedding_dim=int(model_config.get("semantic_embedding_dim", 3)),
+            semantic_embedding_dim=int(model_config.get("semantic_embedding_dim", 4)),
             hidden_dim=int(model_config.get("hidden_dim", 36)),
             field_count=len(FIELDS),
         )
@@ -99,7 +99,8 @@ class DOMExtractor:
                 torch.from_numpy(features.grandparent_tag_ids).unsqueeze(0),
                 torch.from_numpy(features.previous_tag_ids).unsqueeze(0),
                 torch.from_numpy(features.next_tag_ids).unsqueeze(0),
-                torch.from_numpy(features.semantic_token_ids).unsqueeze(0),
+                torch.from_numpy(features.attribute_token_ids).unsqueeze(0),
+                torch.from_numpy(features.text_shape_token_ids).unsqueeze(0),
                 torch.from_numpy(features.numeric).unsqueeze(0),
                 torch.ones((1, len(page.candidates)), dtype=torch.bool),
             )

@@ -38,7 +38,8 @@ class MatrixPage:
     grandparent_tag_ids: torch.Tensor
     previous_tag_ids: torch.Tensor
     next_tag_ids: torch.Tensor
-    semantic_token_ids: torch.Tensor
+    attribute_token_ids: torch.Tensor
+    text_shape_token_ids: torch.Tensor
     numeric: torch.Tensor
     targets: torch.Tensor
 
@@ -64,8 +65,11 @@ class MatrixDataset(Dataset[MatrixPage]):
                     value["previous_tag_ids"].copy()
                 ).long(),
                 next_tag_ids=torch.from_numpy(value["next_tag_ids"].copy()).long(),
-                semantic_token_ids=torch.from_numpy(
-                    value["semantic_token_ids"].copy()
+                attribute_token_ids=torch.from_numpy(
+                    value["attribute_token_ids"].copy()
+                ).long(),
+                text_shape_token_ids=torch.from_numpy(
+                    value["text_shape_token_ids"].copy()
                 ).long(),
                 numeric=torch.from_numpy(value["numeric"].copy()).float(),
                 targets=torch.from_numpy(value["targets"].copy()).long(),
@@ -81,7 +85,8 @@ class Batch:
     grandparent_tag_ids: torch.Tensor
     previous_tag_ids: torch.Tensor
     next_tag_ids: torch.Tensor
-    semantic_token_ids: torch.Tensor
+    attribute_token_ids: torch.Tensor
+    text_shape_token_ids: torch.Tensor
     numeric: torch.Tensor
     mask: torch.Tensor
     targets: torch.Tensor
@@ -95,7 +100,8 @@ class Batch:
             self.grandparent_tag_ids.to(device),
             self.previous_tag_ids.to(device),
             self.next_tag_ids.to(device),
-            self.semantic_token_ids.to(device),
+            self.attribute_token_ids.to(device),
+            self.text_shape_token_ids.to(device),
             self.numeric.to(device),
             self.mask.to(device),
             self.targets.to(device),
@@ -110,9 +116,13 @@ def collate_pages(items: list[MatrixPage]) -> Batch:
     grandparent_tag_ids = torch.zeros_like(tag_ids)
     previous_tag_ids = torch.zeros_like(tag_ids)
     next_tag_ids = torch.zeros_like(tag_ids)
-    max_semantic_tokens = items[0].semantic_token_ids.shape[1]
-    semantic_token_ids = torch.zeros(
-        (len(items), max_candidates, max_semantic_tokens), dtype=torch.long
+    max_attribute_tokens = items[0].attribute_token_ids.shape[1]
+    attribute_token_ids = torch.zeros(
+        (len(items), max_candidates, max_attribute_tokens), dtype=torch.long
+    )
+    max_text_shape_tokens = items[0].text_shape_token_ids.shape[1]
+    text_shape_token_ids = torch.zeros(
+        (len(items), max_candidates, max_text_shape_tokens), dtype=torch.long
     )
     numeric = torch.zeros(
         (len(items), max_candidates, feature_count), dtype=torch.float32
@@ -126,7 +136,8 @@ def collate_pages(items: list[MatrixPage]) -> Batch:
         grandparent_tag_ids[index, :count] = item.grandparent_tag_ids
         previous_tag_ids[index, :count] = item.previous_tag_ids
         next_tag_ids[index, :count] = item.next_tag_ids
-        semantic_token_ids[index, :count] = item.semantic_token_ids
+        attribute_token_ids[index, :count] = item.attribute_token_ids
+        text_shape_token_ids[index, :count] = item.text_shape_token_ids
         numeric[index, :count] = item.numeric
         mask[index, :count] = True
         targets[index] = torch.where(
@@ -142,7 +153,8 @@ def collate_pages(items: list[MatrixPage]) -> Batch:
         grandparent_tag_ids,
         previous_tag_ids,
         next_tag_ids,
-        semantic_token_ids,
+        attribute_token_ids,
+        text_shape_token_ids,
         numeric,
         mask,
         targets,
@@ -184,7 +196,8 @@ def _run_epoch(
                 batch.grandparent_tag_ids,
                 batch.previous_tag_ids,
                 batch.next_tag_ids,
-                batch.semantic_token_ids,
+                batch.attribute_token_ids,
+                batch.text_shape_token_ids,
                 batch.numeric,
                 batch.mask,
             )
@@ -311,7 +324,7 @@ def train(
                     "numeric_feature_count": feature_count,
                     "model_config": {
                         "embedding_dim": 6,
-                        "semantic_embedding_dim": 3,
+                        "semantic_embedding_dim": 4,
                         "hidden_dim": 36,
                     },
                     "fields": fields,

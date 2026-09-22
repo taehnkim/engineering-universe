@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import re
+from bisect import bisect_left
 from collections import Counter
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import asdict, dataclass
@@ -13,56 +14,97 @@ from bs4 import Tag
 
 from eng_universe.extraction.dom import Candidate, ParsedPage
 
-FEATURE_VERSION = "semantic-v2"
+FEATURE_VERSION = "semantic-v3"
 MAX_SEMANTIC_VOCABULARY = 64
-MAX_SEMANTIC_TOKENS = 12
+MAX_ATTRIBUTE_TOKENS = 8
+MAX_TEXT_SHAPE_TOKENS = 12
 SEMANTIC_PRIORITY_TOKENS = (
-    "class:author",
-    "class:authors",
-    "class:byline",
-    "class:written",
-    "class:contributor",
-    "class:profile",
-    "class:person",
-    "class:people",
-    "class:team",
-    "class:date",
-    "class:published",
-    "class:updated",
-    "class:modified",
-    "class:headline",
-    "class:title",
-    "class:summary",
-    "class:subtitle",
-    "class:post",
-    "class:body",
-    "class:content",
-    "class:entry",
-    "id:author",
-    "id:authors",
-    "id:byline",
-    "id:date",
-    "id:published",
-    "id:updated",
-    "id:title",
-    "id:content",
-    "id:article",
-    "itemprop:author",
-    "itemprop:name",
-    "itemprop:headline",
-    "itemprop:date",
-    "itemprop:published",
-    "itemprop:modified",
-    "rel:author",
-    "aria-label:author",
-    "aria-label:published",
-    "aria-label:updated",
-    "text:by",
-    "text:written",
-    "text:author",
-    "text:published",
-    "text:updated",
+    "role:author",
+    "role:byline",
+    "role:contributor",
+    "role:profile",
+    "role:person",
+    "role:team",
+    "role:date",
+    "role:published",
+    "role:updated",
+    "role:modified",
+    "role:headline",
+    "role:title",
+    "role:summary",
+    "role:subtitle",
+    "role:acknowledgements",
+    "role:content",
+    "schema:author",
+    "schema:name",
+    "schema:headline",
+    "schema:date_published",
+    "schema:date_modified",
+    "relation:author",
+    "accessible:author",
+    "accessible:published",
+    "accessible:updated",
+    "phrase:by_prefix",
+    "phrase:by_colon",
+    "phrase:written_by",
+    "phrase:article_written_by",
+    "phrase:author_label",
+    "phrase:acknowledgements",
+    "phrase:contributors",
+    "phrase:thanks_to",
+    "phrase:published",
+    "phrase:updated",
+    "shape:single_name",
+    "shape:multiple_names",
+    "shape:comma_list",
+    "shape:and_last_name",
+    "shape:handle",
+    "shape:organization",
+    "shape:name_and_role",
+    "shape:one_link",
+    "shape:multiple_links",
+    "shape:short_text",
+    "shape:medium_text",
+    "shape:long_text",
+    "shape:very_long_text",
+    "shape:absolute_date",
+    "shape:relative_date",
+    "shape:reading_time",
+    "shape:date_plus_reading_time",
 )
+
+ROLE_WORDS = {
+    "author": "author",
+    "authors": "author",
+    "byline": "byline",
+    "contributor": "contributor",
+    "contributors": "contributor",
+    "profile": "profile",
+    "person": "person",
+    "people": "person",
+    "team": "team",
+    "date": "date",
+    "published": "published",
+    "publish": "published",
+    "updated": "updated",
+    "update": "updated",
+    "modified": "modified",
+    "headline": "headline",
+    "title": "title",
+    "summary": "summary",
+    "subtitle": "subtitle",
+    "subhead": "subtitle",
+    "standfirst": "summary",
+    "dek": "summary",
+    "excerpt": "summary",
+    "description": "summary",
+    "lead": "summary",
+    "acknowledgement": "acknowledgements",
+    "acknowledgements": "acknowledgements",
+    "acknowledgment": "acknowledgements",
+    "acknowledgments": "acknowledgements",
+    "content": "content",
+}
 
 DATE_LIKE_RE = re.compile(
     r"(?:\b(?:19|20)\d{2}[-/.](?:0?[1-9]|1[0-2])[-/.](?:0?[1-9]|[12]\d|3[01])\b)"
@@ -85,7 +127,28 @@ READING_TIME_ONLY_RE = re.compile(
     rf"^\s*(?:{READING_TIME_RE.pattern})\s*$", re.IGNORECASE
 )
 BY_PREFIX_RE = re.compile(r"^\s*(?:by\b|written\s+by\b|author\s*:?)", re.IGNORECASE)
+BY_COLON_RE = re.compile(r"^\s*by\s*:", re.IGNORECASE)
 WRITTEN_BY_RE = re.compile(r"^\s*written\s+by\b", re.IGNORECASE)
+WRITTEN_BY_ANY_RE = re.compile(r"\bwritten\s+by\b", re.IGNORECASE)
+ARTICLE_WRITTEN_BY_RE = re.compile(
+    r"^\s*(?:this\s+)?article\s+(?:was\s+)?written\s+by\b", re.IGNORECASE
+)
+AUTHOR_LABEL_RE = re.compile(r"^\s*authors?\s*:", re.IGNORECASE)
+ACKNOWLEDGEMENTS_RE = re.compile(r"\backnowledg(?:e)?ments?\b", re.IGNORECASE)
+CONTRIBUTOR_RE = re.compile(r"\bcontributors?|contributions?\b", re.IGNORECASE)
+THANKS_TO_RE = re.compile(r"\b(?:special\s+)?thanks\s+to\b", re.IGNORECASE)
+AND_LAST_NAME_RE = re.compile(
+    r"(?:\band\b|&)\s+[\w.'’\-]+(?:\s+[\w.'’\-]+){0,4}[.!]?\s*$",
+    re.IGNORECASE | re.UNICODE,
+)
+ORGANIZATION_AUTHOR_RE = re.compile(
+    r"\b(?:engineering|research|developer|platform|security|infrastructure|applied\s+ai)\s+team\b|\bteam\b",
+    re.IGNORECASE,
+)
+AUTHOR_ROLE_RE = re.compile(
+    r"\b(?:engineer|researcher|scientist|member|staff|director|lead|manager|editor)\b",
+    re.IGNORECASE,
+)
 PUBLISHED_MARKER_RE = re.compile(r"\b(?:publish(?:ed)?|posted)\b", re.IGNORECASE)
 UPDATED_MARKER_RE = re.compile(r"\b(?:updated?|modified)\b", re.IGNORECASE)
 MULTIPLE_NAME_RE = re.compile(r"(?:\s(?:and|und|et|y)\s|[,;&/·•])", re.IGNORECASE)
@@ -141,6 +204,15 @@ NUMERIC_FEATURE_NAMES = (
     "before_date",
     "same_parent_as_date",
     "log_tree_distance_from_date",
+    "after_title",
+    "near_title",
+    "distance_from_article_start",
+    "distance_from_article_end",
+    "before_article",
+    "after_article",
+    "near_document_end",
+    "contains_acknowledgements_marker",
+    "contains_contributor_marker",
 )
 CONTINUOUS_FEATURE_INDICES = (
     0,
@@ -158,6 +230,8 @@ CONTINUOUS_FEATURE_INDICES = (
     35,
     36,
     39,
+    42,
+    43,
 )
 
 
@@ -198,7 +272,7 @@ class TagVocabulary:
 
 @dataclass(frozen=True, slots=True)
 class SemanticVocabulary:
-    """Bounded vocabulary for semantic attributes and short text prefixes."""
+    """Bounded vocabulary for explicit role, phrase, and text-shape tokens."""
 
     tokens: tuple[str, ...]
 
@@ -214,9 +288,10 @@ class SemanticVocabulary:
         counts: Counter[str] = Counter()
         for page in pages:
             for candidate in page.candidates:
-                counts.update(semantic_tokens(candidate.element))
+                counts.update(attribute_semantic_tokens(candidate.element))
+                counts.update(text_shape_tokens(candidate.element))
         available = max(0, max_size - 2)
-        priority = [token for token in SEMANTIC_PRIORITY_TOKENS if counts[token]]
+        priority = list(SEMANTIC_PRIORITY_TOKENS[:available])
         frequent = sorted(
             (token for token in counts if token not in priority),
             key=lambda token: (-counts[token], token),
@@ -228,14 +303,18 @@ class SemanticVocabulary:
     def lookup(self) -> dict[str, int]:
         return {token: index for index, token in enumerate(self.tokens)}
 
-    def encode(self, values: Sequence[str]) -> np.ndarray:
+    def encode(self, values: Sequence[str], max_tokens: int) -> np.ndarray:
         lookup = self.lookup
-        encoded = [lookup.get(value, 1) for value in values[:MAX_SEMANTIC_TOKENS]]
-        encoded.extend([0] * (MAX_SEMANTIC_TOKENS - len(encoded)))
+        encoded = [lookup.get(value, 1) for value in values[:max_tokens]]
+        encoded.extend([0] * (max_tokens - len(encoded)))
         return np.asarray(encoded, dtype=np.int64)
 
     def to_dict(self) -> dict[str, object]:
-        return {"tokens": list(self.tokens), "max_tokens": MAX_SEMANTIC_TOKENS}
+        return {
+            "tokens": list(self.tokens),
+            "max_attribute_tokens": MAX_ATTRIBUTE_TOKENS,
+            "max_text_shape_tokens": MAX_TEXT_SHAPE_TOKENS,
+        }
 
     @classmethod
     def from_dict(cls, value: dict[str, object]) -> SemanticVocabulary:
@@ -286,7 +365,8 @@ class PageFeatures:
     grandparent_tag_ids: np.ndarray
     previous_tag_ids: np.ndarray
     next_tag_ids: np.ndarray
-    semantic_token_ids: np.ndarray
+    attribute_token_ids: np.ndarray
+    text_shape_token_ids: np.ndarray
     numeric: np.ndarray
 
 
@@ -341,16 +421,146 @@ def _attribute_values(element: Tag) -> Iterator[tuple[str, str]]:
                 yield name, str(item)
 
 
-def semantic_tokens(element: Tag, text: str | None = None) -> tuple[str, ...]:
+def _deduplicate(values: Iterable[str]) -> tuple[str, ...]:
+    return tuple(dict.fromkeys(values))
+
+
+def attribute_semantic_tokens(element: Tag) -> tuple[str, ...]:
+    """Return only extraction-role attributes; discard generic CSS utilities."""
+
     tokens: list[str] = []
     for name, value in _attribute_values(element):
-        tokens.extend(f"{name}:{token}" for token in _normalize_token_source(value))
+        words = _normalize_token_source(value)
+        word_set = set(words)
+        if {"written", "by"} <= word_set:
+            tokens.append("role:byline")
+        tokens.extend(
+            f"role:{role}" for word in words if (role := ROLE_WORDS.get(word))
+        )
+        if name == "itemprop":
+            if "author" in word_set:
+                tokens.append("schema:author")
+            if "name" in word_set:
+                tokens.append("schema:name")
+            if "headline" in word_set:
+                tokens.append("schema:headline")
+            if {"date", "published"} <= word_set:
+                tokens.append("schema:date_published")
+            if {"date", "modified"} <= word_set:
+                tokens.append("schema:date_modified")
+        elif name == "rel" and "author" in word_set:
+            tokens.append("relation:author")
+        elif name == "aria-label":
+            for marker in ("author", "published", "updated"):
+                if marker in word_set:
+                    tokens.append(f"accessible:{marker}")
+    return _deduplicate(tokens)
+
+
+def _person_name_shape(text: str, words: Sequence[str]) -> bool:
+    capitalized = sum(
+        bool(word) and word[0].isalpha() and word[0].isupper() for word in words
+    )
+    return bool(
+        re.fullmatch(r"@[\w.-]+", text.strip(), re.UNICODE)
+        or (
+            1 <= len(words) <= 8
+            and capitalized / max(1, len(words)) >= 0.5
+            and not DATE_LIKE_RE.search(text)
+        )
+    )
+
+
+def text_shape_tokens(
+    element: Tag,
+    text: str | None = None,
+    *,
+    link_count: int | None = None,
+) -> tuple[str, ...]:
+    """Describe phrases and shapes without learning individual names or prose."""
+
     candidate_text = element.get_text(" ", strip=True) if text is None else text
-    if len(candidate_text) <= 400:
-        words = _normalize_token_source(candidate_text)
-        if len(words) <= 40:
-            tokens.extend(f"text:{token}" for token in words[:8])
-    return tuple(tokens)
+    words = candidate_text.split()
+    tokens: list[str] = []
+    if 0 < len(words) <= 20:
+        tokens.append("shape:short_text")
+    elif len(words) <= 40:
+        tokens.append("shape:medium_text")
+    elif len(words) <= 100:
+        tokens.append("shape:long_text")
+    else:
+        tokens.append("shape:very_long_text")
+    resolved_link_count = (
+        len(element.find_all("a")) if link_count is None else link_count
+    )
+    if resolved_link_count == 1:
+        tokens.append("shape:one_link")
+    elif resolved_link_count > 1:
+        tokens.append("shape:multiple_links")
+    # Broad wrappers inherit every phrase in their descendants. Their length
+    # and link shape are useful; repeated regex scans and inherited bylines are
+    # not. This also keeps page-level candidates cheap.
+    if len(candidate_text) > 500 or len(words) > 80:
+        return _deduplicate(tokens)
+    if BY_PREFIX_RE.search(candidate_text):
+        tokens.append("phrase:by_prefix")
+    if BY_COLON_RE.search(candidate_text):
+        tokens.append("phrase:by_colon")
+    if WRITTEN_BY_ANY_RE.search(candidate_text):
+        tokens.append("phrase:written_by")
+    if ARTICLE_WRITTEN_BY_RE.search(candidate_text):
+        tokens.append("phrase:article_written_by")
+    if AUTHOR_LABEL_RE.search(candidate_text):
+        tokens.append("phrase:author_label")
+    if ACKNOWLEDGEMENTS_RE.search(candidate_text):
+        tokens.append("phrase:acknowledgements")
+    if CONTRIBUTOR_RE.search(candidate_text):
+        tokens.append("phrase:contributors")
+    if THANKS_TO_RE.search(candidate_text):
+        tokens.append("phrase:thanks_to")
+    if PUBLISHED_MARKER_RE.search(candidate_text):
+        tokens.append("phrase:published")
+    if UPDATED_MARKER_RE.search(candidate_text):
+        tokens.append("phrase:updated")
+    if element.name.lower() not in {
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "title",
+    } and _person_name_shape(candidate_text, words):
+        tokens.append("shape:single_name")
+    if MULTIPLE_NAME_RE.search(candidate_text):
+        tokens.append("shape:multiple_names")
+    if "," in candidate_text:
+        tokens.append("shape:comma_list")
+    if AND_LAST_NAME_RE.search(candidate_text):
+        tokens.append("shape:and_last_name")
+    if re.fullmatch(r"\s*@[\w.-]+\s*", candidate_text, re.UNICODE):
+        tokens.append("shape:handle")
+    if ORGANIZATION_AUTHOR_RE.search(candidate_text):
+        tokens.append("shape:organization")
+    if AUTHOR_ROLE_RE.search(candidate_text):
+        tokens.append("shape:name_and_role")
+    has_date = bool(DATE_LIKE_RE.search(candidate_text))
+    has_reading_time = bool(READING_TIME_RE.search(candidate_text))
+    if has_date:
+        tokens.append("shape:absolute_date")
+    if RELATIVE_DATE_RE.search(candidate_text):
+        tokens.append("shape:relative_date")
+    if has_reading_time:
+        tokens.append("shape:reading_time")
+    if has_date and has_reading_time:
+        tokens.append("shape:date_plus_reading_time")
+    return _deduplicate(tokens)
+
+
+def semantic_tokens(element: Tag, text: str | None = None) -> tuple[str, ...]:
+    """Compatibility view of both independent semantic channels."""
+
+    return attribute_semantic_tokens(element) + text_shape_tokens(element, text)
 
 
 def _semantic_attribute_text(
@@ -412,6 +622,33 @@ def _title_anchor_index(page: ParsedPage) -> int | None:
     return None
 
 
+def _article_anchor_range(
+    page: ParsedPage, descendants: Sequence[Sequence[Tag]] | None = None
+) -> tuple[int | None, int | None]:
+    """Return the first article/main candidate and the end of its subtree."""
+
+    for preferred_tag in ("article", "main"):
+        for start, candidate in enumerate(page.candidates):
+            if candidate.element.name.lower() != preferred_tag:
+                continue
+            values = (
+                candidate.element.find_all(True)
+                if descendants is None
+                else descendants[start]
+            )
+            descendant_ids = {id(element) for element in values}
+            end = max(
+                (
+                    index
+                    for index, item in enumerate(page.candidates)
+                    if id(item.element) in descendant_ids
+                ),
+                default=start,
+            )
+            return start, end
+    return None, None
+
+
 def _date_anchor_indices(page: ParsedPage, texts: Sequence[str]) -> tuple[int, ...]:
     values: list[int] = []
     for index, candidate in enumerate(page.candidates):
@@ -434,11 +671,11 @@ def _date_anchor_indices(page: ParsedPage, texts: Sequence[str]) -> tuple[int, .
 
 
 def _nearest_anchor(index: int, anchors: Sequence[int]) -> int | None:
-    return (
-        min(anchors, key=lambda anchor: (abs(anchor - index), anchor))
-        if anchors
-        else None
-    )
+    if not anchors:
+        return None
+    insertion = bisect_left(anchors, index)
+    choices = anchors[max(0, insertion - 1) : min(len(anchors), insertion + 1)]
+    return min(choices, key=lambda anchor: (abs(anchor - index), anchor))
 
 
 def _tag_id_for_sibling(
@@ -465,29 +702,26 @@ def raw_numeric_features(
     title_anchor_index: int | None = None,
     date_anchor: Candidate | None = None,
     date_anchor_index: int | None = None,
+    article_start_index: int | None = None,
+    article_end_index: int | None = None,
+    descendants: Sequence[Tag] | None = None,
     text: str | None = None,
 ) -> np.ndarray:
     element = candidate.element
     candidate_text = element.get_text(" ", strip=True) if text is None else text
     text_length = len(candidate_text)
     words = candidate_text.split()
+    is_local_text = text_length <= 500 and len(words) <= 80
     position = candidate_index / max(1, candidate_count - 1)
-    descendants = element.find_all(True)
-    direct_children = [item for item in descendants if item.parent is element]
-    links = [item for item in descendants if item.name.lower() == "a"]
+    descendant_elements = element.find_all(True) if descendants is None else descendants
+    direct_children = [item for item in descendant_elements if item.parent is element]
+    links = [item for item in descendant_elements if item.name.lower() == "a"]
     semantics = _semantic_attribute_text(element, direct_children)
     own_itemprop = str(element.get("itemprop", "")).lower()
     capitalized = sum(
         bool(word) and word[0].isalpha() and word[0].isupper() for word in words
     )
-    person_name_shape = bool(
-        re.fullmatch(r"@[\w.-]+", candidate_text.strip(), re.UNICODE)
-        or (
-            1 <= len(words) <= 8
-            and capitalized / max(1, len(words)) >= 0.5
-            and not DATE_LIKE_RE.search(candidate_text)
-        )
-    )
+    person_name_shape = _person_name_shape(candidate_text, words)
     title_distance = (
         abs(candidate_index - title_anchor_index) / max(1, candidate_count - 1)
         if title_anchor_index is not None
@@ -498,39 +732,51 @@ def raw_numeric_features(
         if date_anchor_index is not None
         else 1.0
     )
+    article_start_distance = (
+        abs(candidate_index - article_start_index) / max(1, candidate_count - 1)
+        if article_start_index is not None
+        else 1.0
+    )
+    article_end_distance = (
+        abs(candidate_index - article_end_index) / max(1, candidate_count - 1)
+        if article_end_index is not None
+        else 1.0
+    )
     return np.asarray(
         [
             math.log1p(text_length),
-            math.log1p(_paragraph_count(element, descendants)),
+            math.log1p(_paragraph_count(element, descendant_elements)),
             _link_text_fraction(element, text_length, links),
             math.log1p(_depth(element)),
             position,
             float(element.has_attr("datetime")),
-            float(bool(DATE_LIKE_RE.search(candidate_text))),
-            float(bool(RELATIVE_DATE_RE.search(candidate_text))),
+            float(is_local_text and bool(DATE_LIKE_RE.search(candidate_text))),
+            float(is_local_text and bool(RELATIVE_DATE_RE.search(candidate_text))),
             math.log1p(len(words)),
             capitalized / max(1, len(words)),
             math.log1p(len(links)),
-            float(bool(BY_PREFIX_RE.search(candidate_text))),
-            float(bool(WRITTEN_BY_RE.search(candidate_text))),
+            float(is_local_text and bool(BY_PREFIX_RE.search(candidate_text))),
+            float(is_local_text and bool(WRITTEN_BY_RE.search(candidate_text))),
             float(bool(AUTHOR_ATTRIBUTE_RE.search(semantics))),
             float(bool(BYLINE_ATTRIBUTE_RE.search(semantics))),
             float(
                 any(PROFILE_LINK_RE.search(str(link.get("href", ""))) for link in links)
             ),
             float(person_name_shape),
-            float(bool(MULTIPLE_NAME_RE.search(candidate_text))),
+            float(is_local_text and bool(MULTIPLE_NAME_RE.search(candidate_text))),
             float(0 < len(words) <= 20),
             float(_inside(element, "header")),
-            float(bool(PUBLISHED_MARKER_RE.search(candidate_text))),
-            float(bool(UPDATED_MARKER_RE.search(candidate_text))),
-            float(bool(READING_TIME_RE.search(candidate_text))),
+            float(is_local_text and bool(PUBLISHED_MARKER_RE.search(candidate_text))),
+            float(is_local_text and bool(UPDATED_MARKER_RE.search(candidate_text))),
+            float(is_local_text and bool(READING_TIME_RE.search(candidate_text))),
             float(element.name.lower() == "time"),
             float(own_itemprop == "datepublished"),
             float(own_itemprop == "datemodified"),
             math.log1p(len(direct_children)),
-            math.log1p(sum(item.name.lower() == "span" for item in descendants)),
-            float(not descendants),
+            math.log1p(
+                sum(item.name.lower() == "span" for item in descendant_elements)
+            ),
+            float(not descendant_elements),
             _direct_text_length(element) / max(1, text_length),
             float(_inside(element, "article")),
             float(_inside(element, "main")),
@@ -555,6 +801,26 @@ def raw_numeric_features(
             math.log1p(_tree_distance(element, date_anchor.element))
             if date_anchor is not None
             else 0.0,
+            float(
+                title_anchor_index is not None and candidate_index > title_anchor_index
+            ),
+            float(
+                title_anchor_index is not None
+                and abs(candidate_index - title_anchor_index)
+                <= max(8, int(candidate_count * 0.03))
+            ),
+            article_start_distance,
+            article_end_distance,
+            float(
+                article_start_index is not None
+                and candidate_index < article_start_index
+            ),
+            float(
+                article_end_index is not None and candidate_index > article_end_index
+            ),
+            float(position >= 0.9),
+            float(is_local_text and bool(ACKNOWLEDGEMENTS_RE.search(candidate_text))),
+            float(is_local_text and bool(CONTRIBUTOR_RE.search(candidate_text))),
         ],
         dtype=np.float32,
     )
@@ -572,17 +838,20 @@ def featurize_page(
     def encode_tag(name: str | None) -> int:
         return tag_lookup.get(name.lower(), 1) if name else 1
 
-    def encode_semantics(values: Sequence[str]) -> np.ndarray:
-        encoded = [
-            semantic_lookup.get(value, 1) for value in values[:MAX_SEMANTIC_TOKENS]
-        ]
-        encoded.extend([0] * (MAX_SEMANTIC_TOKENS - len(encoded)))
+    def encode_semantics(values: Sequence[str], max_tokens: int) -> np.ndarray:
+        encoded = [semantic_lookup.get(value, 1) for value in values[:max_tokens]]
+        encoded.extend([0] * (max_tokens - len(encoded)))
         return np.asarray(encoded, dtype=np.int64)
 
     texts = [
         candidate.element.get_text(" ", strip=True) for candidate in page.candidates
     ]
+    descendants = [candidate.element.find_all(True) for candidate in page.candidates]
+    link_counts = [
+        sum(element.name.lower() == "a" for element in values) for values in descendants
+    ]
     title_index = _title_anchor_index(page)
+    article_start_index, article_end_index = _article_anchor_range(page, descendants)
     date_indices = _date_anchor_indices(page, texts)
     rows: list[np.ndarray] = []
     for index, candidate in enumerate(page.candidates):
@@ -600,6 +869,9 @@ def featurize_page(
                     page.candidates[nearest_date] if nearest_date is not None else None
                 ),
                 date_anchor_index=nearest_date,
+                article_start_index=article_start_index,
+                article_end_index=article_end_index,
+                descendants=descendants[index],
                 text=texts[index],
             )
         )
@@ -654,15 +926,35 @@ def featurize_page(
             ],
             dtype=np.int64,
         ),
-        semantic_token_ids=(
+        attribute_token_ids=(
             np.stack(
                 [
-                    encode_semantics(semantic_tokens(candidate.element, texts[index]))
+                    encode_semantics(
+                        attribute_semantic_tokens(candidate.element),
+                        MAX_ATTRIBUTE_TOKENS,
+                    )
                     for index, candidate in enumerate(page.candidates)
                 ]
             )
             if page.candidates
-            else np.empty((0, MAX_SEMANTIC_TOKENS), dtype=np.int64)
+            else np.empty((0, MAX_ATTRIBUTE_TOKENS), dtype=np.int64)
+        ),
+        text_shape_token_ids=(
+            np.stack(
+                [
+                    encode_semantics(
+                        text_shape_tokens(
+                            candidate.element,
+                            texts[index],
+                            link_count=link_counts[index],
+                        ),
+                        MAX_TEXT_SHAPE_TOKENS,
+                    )
+                    for index, candidate in enumerate(page.candidates)
+                ]
+            )
+            if page.candidates
+            else np.empty((0, MAX_TEXT_SHAPE_TOKENS), dtype=np.int64)
         ),
         numeric=numeric.astype(np.float32),
     )
