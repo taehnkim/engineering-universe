@@ -206,9 +206,10 @@ Open `/evals` on the same server for the whole-corpus dashboard. It runs the
 checkpoint against every human-reviewed page across train, validation, and
 test, compares exact-node accuracy with the heuristic baseline, and reports
 results by field, site, and page. **RUN SITE** evaluates only the selected
-website. Page-level **[eval]** links open that input in the playground. Because
-this view includes training and validation pages, treat it as a fit and data
-quality report rather than an unbiased generalization score.
+website. Click a site row to show its indented page results in place. Page-level
+**[eval]** links open that input in the playground. Because this view includes
+training and validation pages, treat it as a fit and data quality report rather
+than an unbiased generalization score.
 
 The dashboard uses four parallel worker processes by default. While a run is
 active, it shows a live `classified / total` count and progress bar. It stores

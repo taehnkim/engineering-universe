@@ -230,4 +230,8 @@ def test_evaluation_dashboard_has_requested_controls_and_links() -> None:
     assert "fetch('/api/evals/jobs'" in EVALS_SHELL
     assert "localStorage.setItem(cacheKey(website)" in EVALS_SHELL
     assert "if(!restoreCached())run()" in EVALS_SHELL
+    assert 'class="site-row" data-site="${esc(site.website)}"' in EVALS_SHELL
+    assert 'aria-expanded="${open}"' in EVALS_SHELL
+    assert 'class="site-page-title"' in EVALS_SHELL
+    assert "row.onclick=toggle" in EVALS_SHELL
     assert "run()}start()" in EVALS_SHELL
