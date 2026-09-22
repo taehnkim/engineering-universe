@@ -188,7 +188,7 @@ def test_whole_corpus_evaluation_dashboard_uses_human_reviews(
     assert client.get("/evals").status_code == 200
     assert client.get("/playground?page=page").status_code == 200
     assert options["page_count"] == 1
-    assert options["evaluation_workers"] == 4
+    assert options["evaluation_workers"] == 10
     assert options["cache_token"]
     assert options["sites"] == [{"website": "engineering.example.com", "pages": 1}]
     assert result["page_count"] == 1

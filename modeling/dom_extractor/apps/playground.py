@@ -23,6 +23,8 @@ from eng_universe.extraction.dom import annotation_html, parse_html
 from eng_universe.extraction.inference import DOMExtractor
 from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
+DEFAULT_EVALUATION_WORKERS = 10
+
 SHELL = r"""<!doctype html>
 <html><head><meta charset="utf-8"><title>DOM inference playground</title>
 <style>
@@ -201,7 +203,7 @@ def _evaluate_records(
     checkpoint: Path,
     model: DOMExtractor | Any,
     *,
-    max_workers: int = 4,
+    max_workers: int = DEFAULT_EVALUATION_WORKERS,
     progress: ProgressCallback | None = None,
     use_processes: bool = False,
 ) -> dict[str, object]:
@@ -281,7 +283,7 @@ def create_app(
     checkpoint: Path,
     *,
     extractor: DOMExtractor | Any | None = None,
-    evaluation_workers: int = 4,
+    evaluation_workers: int = DEFAULT_EVALUATION_WORKERS,
 ) -> FastAPI:
     if evaluation_workers < 1:
         raise ValueError("evaluation_workers must be at least 1")
@@ -514,8 +516,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--eval-workers",
         type=int,
-        default=4,
-        help="Parallel workers for whole-corpus evaluation. Default: 4.",
+        default=DEFAULT_EVALUATION_WORKERS,
+        help=(
+            "Parallel workers for whole-corpus evaluation. "
+            f"Default: {DEFAULT_EVALUATION_WORKERS}."
+        ),
     )
     return parser
 

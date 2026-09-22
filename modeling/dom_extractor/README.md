@@ -210,7 +210,7 @@ results in place. Page-level **[eval]** links open that input in the playground.
 Because this view includes training and validation pages, treat it as a fit and
 data quality report rather than an unbiased generalization score.
 
-The dashboard uses four parallel worker processes by default. While a run is
+The dashboard uses ten parallel worker processes by default. While a run is
 active, it shows a live `classified / total` count and progress bar. It stores
 the latest result in browser local storage, keyed by the checkpoint and reviewed
 labels. Returning from a page evaluation restores that result without another
