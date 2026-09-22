@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import threading
 import time
 from collections import defaultdict
 from collections.abc import Callable, Sequence
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -54,13 +55,16 @@ EVALS_SHELL = r"""<!doctype html>
 <header><h1>DOM extractor evaluations</h1><div class="subtitle">Checkpoint: <span id="checkpoint"></span> · <span id="workers"></span> parallel workers</div><div class="controls"><button id="run-all" class="run-all">RUN ALL</button><select id="site"></select><button id="run-site">RUN SITE</button><span id="status" class="status"></span></div><div id="progress" class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"><div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div><span id="progress-text" class="progress-text"></span></div></header>
 <main><div class="notice">Whole-corpus accuracy includes train and validation pages. Use it to inspect fit and labeling consistency; use the test split for unbiased generalization accuracy.</div><div id="cards" class="cards"></div><section><h2>Accuracy by site</h2><div id="sites" class="empty">Waiting for evaluation…</div></section><section><h2>Pages</h2><div id="pages" class="empty">Waiting for evaluation…</div></section></main>
 <script>
-const names=['article','title','authors','date','summary','relative_date'];const $=id=>document.getElementById(id);const esc=s=>(s??'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const pct=n=>n==null?'—':(n*100).toFixed(1)+'%';
+const names=['article','title','authors','date','summary','relative_date'];let evalOptions=null;const $=id=>document.getElementById(id);const esc=s=>(s??'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const pct=n=>n==null?'—':(n*100).toFixed(1)+'%';
 function delta(model,baseline){const value=model-baseline,style=value>=0?'positive':'negative';return `<span class="delta ${style}">${value>=0?'+':''}${(value*100).toFixed(1)} pp</span>`}
 function draw(result){$('checkpoint').textContent=result.checkpoint;$('cards').innerHTML=names.map(name=>{const item=result.fields[name];return `<article class="card"><h3>${name}</h3><div class="accuracy">${pct(item.accuracy)}</div><div class="baseline">baseline ${pct(item.baseline_accuracy)} · ${delta(item.accuracy,item.baseline_accuracy)}</div><div class="muted">${item.correct}/${item.examples} exact</div></article>`}).join('');$('sites').className='';$('sites').innerHTML=`<table><thead><tr><th>Site</th><th class="number">Pages</th><th class="number">Model</th><th class="number">Baseline</th><th class="number">Delta</th></tr></thead><tbody>${result.sites.map(site=>`<tr><td>${esc(site.website)}</td><td class="number">${site.pages}</td><td class="number">${pct(site.accuracy)}</td><td class="number">${pct(site.baseline_accuracy)}</td><td class="number">${delta(site.accuracy,site.baseline_accuracy)}</td></tr>`).join('')}</tbody></table>`;$('pages').className='';$('pages').innerHTML=`<table><thead><tr><th>Title</th><th>Site</th><th>Split</th><th class="number">Model</th><th class="number">Baseline</th><th>Links</th></tr></thead><tbody>${result.pages.map(page=>`<tr><td class="title">${esc(page.title)}</td><td>${esc(page.website)}</td><td>${esc(page.split)}</td><td class="number">${page.matches}/${page.field_count}</td><td class="number">${page.baseline_matches}/${page.field_count}</td><td class="links"><a href="${esc(page.url)}" target="_blank" rel="noopener">[url]</a> <a href="/playground?page=${encodeURIComponent(page.page_id)}">[eval]</a></td></tr>`).join('')}</tbody></table>`}
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 function showProgress(completed,total,state){const root=$('progress'),safeTotal=Math.max(total,1),percent=Math.min(100,completed/safeTotal*100);root.classList.add('visible');root.setAttribute('aria-valuemax',total);root.setAttribute('aria-valuenow',completed);$('progress-bar').style.width=`${percent}%`;$('progress-text').textContent=state==='queued'?`Queued · 0/${total} pages classified`:`${completed}/${total} pages classified`}
-async function run(website=null){const buttons=[$('run-all'),$('run-site')];buttons.forEach(button=>button.disabled=true);$('status').textContent=website?`Running ${website}…`:'Running entire corpus…';showProgress(0,website?Number($('site').selectedOptions[0]?.dataset.pages||0):window.corpusPages,'queued');try{const query=website?`?website=${encodeURIComponent(website)}`:'';const started=await fetch('/api/evals/jobs'+query,{method:'POST'});if(!started.ok)throw new Error(await started.text());const created=await started.json();let job=created;while(job.status==='queued'||job.status==='running'){showProgress(job.completed,job.total,job.status);await wait(250);const response=await fetch(`/api/evals/jobs/${job.job_id}`);if(!response.ok)throw new Error(await response.text());job=await response.json()}showProgress(job.completed,job.total,job.status);if(job.status==='failed')throw new Error(job.error||'Evaluation failed');draw(job.result);$('status').textContent=`${job.result.page_count} pages · ${job.result.latency_ms.toFixed(1)} ms`}catch(error){$('status').textContent=`Error: ${error.message}`}finally{buttons.forEach(button=>button.disabled=false)}}
-async function start(){const options=await fetch('/api/evals/options').then(response=>response.json());window.corpusPages=options.page_count;$('checkpoint').textContent=options.checkpoint;$('workers').textContent=options.evaluation_workers;$('site').innerHTML=options.sites.map(site=>`<option value="${esc(site.website)}" data-pages="${site.pages}">${esc(site.website)} (${site.pages})</option>`).join('');$('run-all').onclick=()=>run();$('run-site').onclick=()=>run($('site').value);run()}start();
+function cacheKey(website){return `dom-extractor-evals:v1:${evalOptions.cache_token}:${website||'all'}`}
+function saveCached(website,result){try{localStorage.setItem(cacheKey(website),JSON.stringify(result))}catch(error){console.warn('Could not cache evaluation result',error)}}
+function restoreCached(website=null){try{const value=localStorage.getItem(cacheKey(website));if(!value)return false;const result=JSON.parse(value);draw(result);showProgress(result.page_count,result.page_count,'complete');const when=new Date(result.evaluated_at).toLocaleString();$('status').textContent=`Cached ${result.page_count} pages · ${when}`;return true}catch(error){console.warn('Could not restore evaluation result',error);return false}}
+async function run(website=null){const buttons=[$('run-all'),$('run-site')];buttons.forEach(button=>button.disabled=true);$('status').textContent=website?`Running ${website}…`:'Running entire corpus…';showProgress(0,website?Number($('site').selectedOptions[0]?.dataset.pages||0):evalOptions.page_count,'queued');try{const query=website?`?website=${encodeURIComponent(website)}`:'';const started=await fetch('/api/evals/jobs'+query,{method:'POST'});if(!started.ok)throw new Error(await started.text());const created=await started.json();let job=created;while(job.status==='queued'||job.status==='running'){showProgress(job.completed,job.total,job.status);await wait(250);const response=await fetch(`/api/evals/jobs/${job.job_id}`);if(!response.ok)throw new Error(await response.text());job=await response.json()}showProgress(job.completed,job.total,job.status);if(job.status==='failed')throw new Error(job.error||'Evaluation failed');draw(job.result);saveCached(website,job.result);$('status').textContent=`${job.result.page_count} pages · ${job.result.latency_ms.toFixed(1)} ms`}catch(error){$('status').textContent=`Error: ${error.message}`}finally{buttons.forEach(button=>button.disabled=false)}}
+async function start(){evalOptions=await fetch('/api/evals/options').then(response=>response.json());$('checkpoint').textContent=evalOptions.checkpoint;$('workers').textContent=evalOptions.evaluation_workers;$('site').innerHTML=evalOptions.sites.map(site=>`<option value="${esc(site.website)}" data-pages="${site.pages}">${esc(site.website)} (${site.pages})</option>`).join('');$('run-all').onclick=()=>run();$('run-site').onclick=()=>run($('site').value);if(!restoreCached())run()}start();
 </script></body></html>"""
 
 
@@ -72,7 +76,11 @@ def _reference_source(record: PageRecord, dataset_dir: Path) -> str | None:
     if annotation.review_status == "reviewed" and not annotation.needs_review:
         return "human reference"
     jev_path = dataset_dir / "jev_annotations" / f"{record.page_id}.json"
-    return "Jev draft" if annotation.review_status == "draft" and jev_path.exists() else None
+    return (
+        "Jev draft"
+        if annotation.review_status == "draft" and jev_path.exists()
+        else None
+    )
 
 
 def _reviewed_records(
@@ -89,6 +97,29 @@ def _reviewed_records(
     return reviewed
 
 
+def _evaluation_cache_token(
+    records: Sequence[PageRecord],
+    dataset_dir: Path,
+    checkpoint: Path,
+) -> str:
+    checkpoint_stat = checkpoint.stat() if checkpoint.exists() else None
+    annotation_mtimes = [
+        (dataset_dir / "annotations" / f"{record.page_id}.json").stat().st_mtime_ns
+        for record in records
+    ]
+    identity = ":".join(
+        (
+            "eval-cache-v1",
+            str(checkpoint.resolve()),
+            str(checkpoint_stat.st_size if checkpoint_stat else 0),
+            str(checkpoint_stat.st_mtime_ns if checkpoint_stat else 0),
+            str(len(records)),
+            str(max(annotation_mtimes, default=0)),
+        )
+    )
+    return hashlib.sha256(identity.encode()).hexdigest()[:20]
+
+
 def _metric(counts: dict[str, int]) -> dict[str, int | float | None]:
     examples = counts["examples"]
     return {
@@ -101,6 +132,25 @@ def _metric(counts: dict[str, int]) -> dict[str, int | float | None]:
 
 
 ProgressCallback = Callable[[int, int, str], None]
+_PROCESS_MODEL: DOMExtractor | None = None
+
+
+def _initialize_evaluation_process(checkpoint: Path) -> None:
+    global _PROCESS_MODEL
+
+    import torch
+
+    torch.set_num_threads(1)
+    _PROCESS_MODEL = DOMExtractor(checkpoint)
+
+
+def _evaluate_record_in_process(
+    record: PageRecord,
+    dataset_dir: Path,
+) -> dict[str, object]:
+    if _PROCESS_MODEL is None:
+        raise RuntimeError("evaluation worker model is not initialized")
+    return _evaluate_record(record, dataset_dir, _PROCESS_MODEL)
 
 
 def _evaluate_record(
@@ -110,11 +160,12 @@ def _evaluate_record(
 ) -> dict[str, object]:
     html = (dataset_dir / record.html_path).read_text(encoding="utf-8")
     page = parse_html(html, strip_chrome=True)
-    annotation = load_annotation(
-        dataset_dir / "annotations" / f"{record.page_id}.json"
-    )
+    annotation = load_annotation(dataset_dir / "annotations" / f"{record.page_id}.json")
     inference_started = time.perf_counter()
-    predicted = model.predict_ids(html)
+    predict_page = getattr(model, "predict_page", None)
+    predicted = (
+        predict_page(page) if callable(predict_page) else model.predict_ids(html)
+    )
     inference_ms = (time.perf_counter() - inference_started) * 1_000
     matches = 0
     baseline_matches = 0
@@ -162,11 +213,11 @@ def _evaluate_records(
     *,
     max_workers: int = 4,
     progress: ProgressCallback | None = None,
+    use_processes: bool = False,
 ) -> dict[str, object]:
     started = time.perf_counter()
     field_counts = {
-        field: {"correct": 0, "baseline_correct": 0, "examples": 0}
-        for field in FIELDS
+        field: {"correct": 0, "baseline_correct": 0, "examples": 0} for field in FIELDS
     }
     site_counts: dict[str, dict[str, int]] = defaultdict(
         lambda: {
@@ -180,12 +231,19 @@ def _evaluate_records(
     total = len(records)
     if total:
         worker_count = min(max_workers, total)
-        with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        executor_type = ProcessPoolExecutor if use_processes else ThreadPoolExecutor
+        executor_kwargs = (
+            {"initializer": _initialize_evaluation_process, "initargs": (checkpoint,)}
+            if use_processes
+            else {}
+        )
+        with executor_type(max_workers=worker_count, **executor_kwargs) as executor:
             pending = {
-                executor.submit(_evaluate_record, record, dataset_dir, model): (
-                    index,
-                    record,
-                )
+                (
+                    executor.submit(_evaluate_record_in_process, record, dataset_dir)
+                    if use_processes
+                    else executor.submit(_evaluate_record, record, dataset_dir, model)
+                ): (index, record)
                 for index, record in enumerate(records)
             }
             for completed, future in enumerate(as_completed(pending), start=1):
@@ -223,11 +281,12 @@ def _evaluate_records(
         "evaluated_at": datetime.now(UTC).isoformat(),
         "page_count": len(page_rows),
         "latency_ms": (time.perf_counter() - started) * 1_000,
-        "fields": {
-            field.value: _metric(field_counts[field]) for field in FIELDS
-        },
+        "fields": {field.value: _metric(field_counts[field]) for field in FIELDS},
         "sites": sites,
-        "pages": page_rows,
+        "pages": [
+            {key: value for key, value in row.items() if key != "fields"}
+            for row in page_rows
+        ],
     }
 
 
@@ -287,6 +346,7 @@ def create_app(
                     model,
                     max_workers=evaluation_workers,
                     progress=report_progress,
+                    use_processes=isinstance(model, DOMExtractor),
                 )
                 update_job(
                     job_id,
@@ -320,6 +380,7 @@ def create_app(
             "checkpoint": str(checkpoint),
             "page_count": len(reviewed),
             "evaluation_workers": evaluation_workers,
+            "cache_token": _evaluation_cache_token(reviewed, dataset_dir, checkpoint),
             "sites": [
                 {"website": website, "pages": pages}
                 for website, pages in sorted(site_pages.items())
@@ -337,6 +398,7 @@ def create_app(
                 checkpoint,
                 model,
                 max_workers=evaluation_workers,
+                use_processes=isinstance(model, DOMExtractor),
             )
 
     @app.post("/api/evals/jobs", status_code=202)

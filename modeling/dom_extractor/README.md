@@ -210,8 +210,11 @@ website. Page-level **[eval]** links open that input in the playground. Because
 this view includes training and validation pages, treat it as a fit and data
 quality report rather than an unbiased generalization score.
 
-The dashboard uses four parallel evaluation workers by default. While a run is
-active, it shows a live `classified / total` count and progress bar. Set another
+The dashboard uses four parallel worker processes by default. While a run is
+active, it shows a live `classified / total` count and progress bar. It stores
+the latest result in browser local storage, keyed by the checkpoint and reviewed
+labels. Returning from a page evaluation restores that result without another
+whole-corpus run. Click **RUN ALL** or **RUN SITE** to refresh it. Set another
 bounded worker count when you start the app with `--eval-workers`, for example
 `--eval-workers 2` on a machine with limited CPU or memory.
 

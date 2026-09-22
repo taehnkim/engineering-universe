@@ -183,17 +183,14 @@ def test_whole_corpus_evaluation_dashboard_uses_human_reviews(
 
     options = client.get("/api/evals/options").json()
     result = client.post("/api/evals/run").json()
-    site_result = client.post(
-        "/api/evals/run?website=engineering.example.com"
-    ).json()
+    site_result = client.post("/api/evals/run?website=engineering.example.com").json()
 
     assert client.get("/evals").status_code == 200
     assert client.get("/playground?page=page").status_code == 200
     assert options["page_count"] == 1
     assert options["evaluation_workers"] == 4
-    assert options["sites"] == [
-        {"website": "engineering.example.com", "pages": 1}
-    ]
+    assert options["cache_token"]
+    assert options["sites"] == [{"website": "engineering.example.com", "pages": 1}]
     assert result["page_count"] == 1
     assert result["pages"][0]["title"] == "Test title"
     assert result["sites"][0]["accuracy"] == 1.0
@@ -218,6 +215,7 @@ def test_whole_corpus_evaluation_dashboard_uses_human_reviews(
         assert job["status"] == "complete"
         assert job["completed"] == 1
         assert job["result"]["page_count"] == 1
+        assert "fields" not in job["result"]["pages"][0]
 
 
 def test_evaluation_dashboard_has_requested_controls_and_links() -> None:
@@ -230,4 +228,6 @@ def test_evaluation_dashboard_has_requested_controls_and_links() -> None:
     assert 'role="progressbar"' in EVALS_SHELL
     assert "pages classified" in EVALS_SHELL
     assert "fetch('/api/evals/jobs'" in EVALS_SHELL
+    assert "localStorage.setItem(cacheKey(website)" in EVALS_SHELL
+    assert "if(!restoreCached())run()" in EVALS_SHELL
     assert "run()}start()" in EVALS_SHELL
