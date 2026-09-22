@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -189,6 +190,7 @@ def test_whole_corpus_evaluation_dashboard_uses_human_reviews(
     assert client.get("/evals").status_code == 200
     assert client.get("/playground?page=page").status_code == 200
     assert options["page_count"] == 1
+    assert options["evaluation_workers"] == 4
     assert options["sites"] == [
         {"website": "engineering.example.com", "pages": 1}
     ]
@@ -199,6 +201,24 @@ def test_whole_corpus_evaluation_dashboard_uses_human_reviews(
     assert site_result["page_count"] == 1
     assert client.post("/api/evals/run?website=unknown.example.com").status_code == 404
 
+    with TestClient(
+        create_app(
+            tmp_path,
+            Path("best.pt"),
+            extractor=FakeExtractor(article_id, title_id),
+        )
+    ) as job_client:
+        job = job_client.post("/api/evals/jobs").json()
+        assert job["total"] == 1
+        for _ in range(100):
+            job = job_client.get(f"/api/evals/jobs/{job['job_id']}").json()
+            if job["status"] not in {"queued", "running"}:
+                break
+            time.sleep(0.01)
+        assert job["status"] == "complete"
+        assert job["completed"] == 1
+        assert job["result"]["page_count"] == 1
+
 
 def test_evaluation_dashboard_has_requested_controls_and_links() -> None:
     assert 'id="run-all" class="run-all">RUN ALL</button>' in EVALS_SHELL
@@ -207,4 +227,7 @@ def test_evaluation_dashboard_has_requested_controls_and_links() -> None:
     assert "Accuracy by site" in EVALS_SHELL
     assert 'href="${esc(page.url)}"' in EVALS_SHELL
     assert 'href="/playground?page=${encodeURIComponent(page.page_id)}"' in EVALS_SHELL
+    assert 'role="progressbar"' in EVALS_SHELL
+    assert "pages classified" in EVALS_SHELL
+    assert "fetch('/api/evals/jobs'" in EVALS_SHELL
     assert "run()}start()" in EVALS_SHELL

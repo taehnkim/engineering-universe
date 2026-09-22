@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import threading
 import time
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
@@ -46,16 +49,18 @@ async function start(){allPages=await fetch('/api/pages').then(r=>r.json());$('p
 EVALS_SHELL = r"""<!doctype html>
 <html><head><meta charset="utf-8"><title>DOM extractor evaluations</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font:14px system-ui;background:#0f172a;color:#e5e7eb}header{position:sticky;top:0;z-index:2;padding:16px 20px;background:#1e293b;border-bottom:1px solid #334155}h1{margin:0 0 5px;font-size:22px}.subtitle{color:#94a3b8}.controls{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}button,select{padding:8px 10px;border-radius:6px;border:1px solid #475569;background:#111827;color:#e5e7eb}button{cursor:pointer;font-weight:650}button:hover{border-color:#94a3b8}button:disabled{opacity:.55;cursor:wait}.run-all{background:#166534;border-color:#22c55e}.status{color:#a7f3d0;margin-left:4px}main{padding:18px 20px 40px;max-width:1500px;margin:auto}.notice{padding:10px 12px;border:1px solid #854d0e;background:#422006;color:#fde68a;border-radius:7px;margin-bottom:14px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.card{padding:12px;border:1px solid #334155;background:#1e293b;border-radius:8px}.card h3{margin:0 0 8px;font-size:14px}.accuracy{font-size:25px;font-weight:750}.baseline{margin-top:5px;color:#94a3b8}.delta.positive{color:#86efac}.delta.negative{color:#fca5a5}section{margin-top:22px}table{width:100%;border-collapse:collapse;background:#111827;border:1px solid #334155}th,td{text-align:left;padding:8px 9px;border-bottom:1px solid #263244}th{position:sticky;top:112px;background:#1e293b;color:#cbd5e1;font-size:12px}tbody tr:hover{background:#172554}.number{text-align:right;font-variant-numeric:tabular-nums}.links{white-space:nowrap}a{color:#93c5fd}.title{max-width:620px}.muted{color:#94a3b8}.empty{padding:30px;text-align:center;color:#94a3b8}
+*{box-sizing:border-box}body{margin:0;font:14px system-ui;background:#0f172a;color:#e5e7eb}header{position:sticky;top:0;z-index:2;padding:16px 20px;background:#1e293b;border-bottom:1px solid #334155}h1{margin:0 0 5px;font-size:22px}.subtitle{color:#94a3b8}.controls{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}button,select{padding:8px 10px;border-radius:6px;border:1px solid #475569;background:#111827;color:#e5e7eb}button{cursor:pointer;font-weight:650}button:hover{border-color:#94a3b8}button:disabled{opacity:.55;cursor:wait}.run-all{background:#166534;border-color:#22c55e}.status{color:#a7f3d0;margin-left:4px}.progress{display:none;align-items:center;gap:10px;margin-top:11px}.progress.visible{display:flex}.progress-track{width:min(520px,70vw);height:10px;background:#0f172a;border:1px solid #475569;border-radius:999px;overflow:hidden}.progress-bar{width:0;height:100%;background:#22c55e;transition:width .15s linear}.progress-text{color:#cbd5e1;font-variant-numeric:tabular-nums;white-space:nowrap}main{padding:18px 20px 40px;max-width:1500px;margin:auto}.notice{padding:10px 12px;border:1px solid #854d0e;background:#422006;color:#fde68a;border-radius:7px;margin-bottom:14px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.card{padding:12px;border:1px solid #334155;background:#1e293b;border-radius:8px}.card h3{margin:0 0 8px;font-size:14px}.accuracy{font-size:25px;font-weight:750}.baseline{margin-top:5px;color:#94a3b8}.delta.positive{color:#86efac}.delta.negative{color:#fca5a5}section{margin-top:22px}table{width:100%;border-collapse:collapse;background:#111827;border:1px solid #334155}th,td{text-align:left;padding:8px 9px;border-bottom:1px solid #263244}th{position:sticky;top:145px;background:#1e293b;color:#cbd5e1;font-size:12px}tbody tr:hover{background:#172554}.number{text-align:right;font-variant-numeric:tabular-nums}.links{white-space:nowrap}a{color:#93c5fd}.title{max-width:620px}.muted{color:#94a3b8}.empty{padding:30px;text-align:center;color:#94a3b8}
 </style></head><body>
-<header><h1>DOM extractor evaluations</h1><div class="subtitle">Checkpoint: <span id="checkpoint"></span></div><div class="controls"><button id="run-all" class="run-all">RUN ALL</button><select id="site"></select><button id="run-site">RUN SITE</button><span id="status" class="status"></span></div></header>
+<header><h1>DOM extractor evaluations</h1><div class="subtitle">Checkpoint: <span id="checkpoint"></span> · <span id="workers"></span> parallel workers</div><div class="controls"><button id="run-all" class="run-all">RUN ALL</button><select id="site"></select><button id="run-site">RUN SITE</button><span id="status" class="status"></span></div><div id="progress" class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"><div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div><span id="progress-text" class="progress-text"></span></div></header>
 <main><div class="notice">Whole-corpus accuracy includes train and validation pages. Use it to inspect fit and labeling consistency; use the test split for unbiased generalization accuracy.</div><div id="cards" class="cards"></div><section><h2>Accuracy by site</h2><div id="sites" class="empty">Waiting for evaluation…</div></section><section><h2>Pages</h2><div id="pages" class="empty">Waiting for evaluation…</div></section></main>
 <script>
 const names=['article','title','authors','date','summary','relative_date'];const $=id=>document.getElementById(id);const esc=s=>(s??'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const pct=n=>n==null?'—':(n*100).toFixed(1)+'%';
 function delta(model,baseline){const value=model-baseline,style=value>=0?'positive':'negative';return `<span class="delta ${style}">${value>=0?'+':''}${(value*100).toFixed(1)} pp</span>`}
 function draw(result){$('checkpoint').textContent=result.checkpoint;$('cards').innerHTML=names.map(name=>{const item=result.fields[name];return `<article class="card"><h3>${name}</h3><div class="accuracy">${pct(item.accuracy)}</div><div class="baseline">baseline ${pct(item.baseline_accuracy)} · ${delta(item.accuracy,item.baseline_accuracy)}</div><div class="muted">${item.correct}/${item.examples} exact</div></article>`}).join('');$('sites').className='';$('sites').innerHTML=`<table><thead><tr><th>Site</th><th class="number">Pages</th><th class="number">Model</th><th class="number">Baseline</th><th class="number">Delta</th></tr></thead><tbody>${result.sites.map(site=>`<tr><td>${esc(site.website)}</td><td class="number">${site.pages}</td><td class="number">${pct(site.accuracy)}</td><td class="number">${pct(site.baseline_accuracy)}</td><td class="number">${delta(site.accuracy,site.baseline_accuracy)}</td></tr>`).join('')}</tbody></table>`;$('pages').className='';$('pages').innerHTML=`<table><thead><tr><th>Title</th><th>Site</th><th>Split</th><th class="number">Model</th><th class="number">Baseline</th><th>Links</th></tr></thead><tbody>${result.pages.map(page=>`<tr><td class="title">${esc(page.title)}</td><td>${esc(page.website)}</td><td>${esc(page.split)}</td><td class="number">${page.matches}/${page.field_count}</td><td class="number">${page.baseline_matches}/${page.field_count}</td><td class="links"><a href="${esc(page.url)}" target="_blank" rel="noopener">[url]</a> <a href="/playground?page=${encodeURIComponent(page.page_id)}">[eval]</a></td></tr>`).join('')}</tbody></table>`}
-async function run(website=null){const buttons=[$('run-all'),$('run-site')];buttons.forEach(button=>button.disabled=true);$('status').textContent=website?`Running ${website}…`:'Running entire corpus…';try{const query=website?`?website=${encodeURIComponent(website)}`:'';const response=await fetch('/api/evals/run'+query,{method:'POST'});if(!response.ok)throw new Error(await response.text());const result=await response.json();draw(result);$('status').textContent=`${result.page_count} pages · ${result.latency_ms.toFixed(1)} ms`}catch(error){$('status').textContent=`Error: ${error.message}`}finally{buttons.forEach(button=>button.disabled=false)}}
-async function start(){const options=await fetch('/api/evals/options').then(response=>response.json());$('checkpoint').textContent=options.checkpoint;$('site').innerHTML=options.sites.map(site=>`<option value="${esc(site.website)}">${esc(site.website)} (${site.pages})</option>`).join('');$('run-all').onclick=()=>run();$('run-site').onclick=()=>run($('site').value);run()}start();
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function showProgress(completed,total,state){const root=$('progress'),safeTotal=Math.max(total,1),percent=Math.min(100,completed/safeTotal*100);root.classList.add('visible');root.setAttribute('aria-valuemax',total);root.setAttribute('aria-valuenow',completed);$('progress-bar').style.width=`${percent}%`;$('progress-text').textContent=state==='queued'?`Queued · 0/${total} pages classified`:`${completed}/${total} pages classified`}
+async function run(website=null){const buttons=[$('run-all'),$('run-site')];buttons.forEach(button=>button.disabled=true);$('status').textContent=website?`Running ${website}…`:'Running entire corpus…';showProgress(0,website?Number($('site').selectedOptions[0]?.dataset.pages||0):window.corpusPages,'queued');try{const query=website?`?website=${encodeURIComponent(website)}`:'';const started=await fetch('/api/evals/jobs'+query,{method:'POST'});if(!started.ok)throw new Error(await started.text());const created=await started.json();let job=created;while(job.status==='queued'||job.status==='running'){showProgress(job.completed,job.total,job.status);await wait(250);const response=await fetch(`/api/evals/jobs/${job.job_id}`);if(!response.ok)throw new Error(await response.text());job=await response.json()}showProgress(job.completed,job.total,job.status);if(job.status==='failed')throw new Error(job.error||'Evaluation failed');draw(job.result);$('status').textContent=`${job.result.page_count} pages · ${job.result.latency_ms.toFixed(1)} ms`}catch(error){$('status').textContent=`Error: ${error.message}`}finally{buttons.forEach(button=>button.disabled=false)}}
+async function start(){const options=await fetch('/api/evals/options').then(response=>response.json());window.corpusPages=options.page_count;$('checkpoint').textContent=options.checkpoint;$('workers').textContent=options.evaluation_workers;$('site').innerHTML=options.sites.map(site=>`<option value="${esc(site.website)}" data-pages="${site.pages}">${esc(site.website)} (${site.pages})</option>`).join('');$('run-all').onclick=()=>run();$('run-site').onclick=()=>run($('site').value);run()}start();
 </script></body></html>"""
 
 
@@ -95,11 +100,68 @@ def _metric(counts: dict[str, int]) -> dict[str, int | float | None]:
     }
 
 
+ProgressCallback = Callable[[int, int, str], None]
+
+
+def _evaluate_record(
+    record: PageRecord,
+    dataset_dir: Path,
+    model: DOMExtractor | Any,
+) -> dict[str, object]:
+    html = (dataset_dir / record.html_path).read_text(encoding="utf-8")
+    page = parse_html(html, strip_chrome=True)
+    annotation = load_annotation(
+        dataset_dir / "annotations" / f"{record.page_id}.json"
+    )
+    inference_started = time.perf_counter()
+    predicted = model.predict_ids(html)
+    inference_ms = (time.perf_counter() - inference_started) * 1_000
+    matches = 0
+    baseline_matches = 0
+    fields: dict[str, dict[str, int | bool | None]] = {}
+    for field in FIELDS:
+        expected = annotation.labels[field]
+        actual = predicted[field]
+        baseline = heuristic_select(page, field)
+        exact = actual == expected
+        baseline_exact = baseline == expected
+        matches += int(exact)
+        baseline_matches += int(baseline_exact)
+        fields[field.value] = {
+            "expected": expected,
+            "predicted": actual,
+            "baseline": baseline,
+            "exact": exact,
+            "baseline_exact": baseline_exact,
+        }
+    title_id = annotation.labels[Field.TITLE]
+    title = (
+        page.candidate(title_id).get_text(" ", strip=True)
+        if title_id is not None
+        else record.page_id
+    )
+    return {
+        "page_id": record.page_id,
+        "title": title[:300] or record.page_id,
+        "url": record.url,
+        "website": record.website,
+        "split": record.split,
+        "matches": matches,
+        "baseline_matches": baseline_matches,
+        "field_count": len(FIELDS),
+        "latency_ms": inference_ms,
+        "fields": fields,
+    }
+
+
 def _evaluate_records(
     records: Sequence[PageRecord],
     dataset_dir: Path,
     checkpoint: Path,
     model: DOMExtractor | Any,
+    *,
+    max_workers: int = 4,
+    progress: ProgressCallback | None = None,
 ) -> dict[str, object]:
     started = time.perf_counter()
     field_counts = {
@@ -114,62 +176,40 @@ def _evaluate_records(
             "examples": 0,
         }
     )
-    page_rows: list[dict[str, object]] = []
-    for record in records:
-        html = (dataset_dir / record.html_path).read_text(encoding="utf-8")
-        page = parse_html(html, strip_chrome=True)
-        annotation = load_annotation(
-            dataset_dir / "annotations" / f"{record.page_id}.json"
-        )
-        inference_started = time.perf_counter()
-        predicted = model.predict_ids(html)
-        inference_ms = (time.perf_counter() - inference_started) * 1_000
-        matches = 0
-        baseline_matches = 0
-        fields: dict[str, dict[str, int | bool | None]] = {}
-        for field in FIELDS:
-            expected = annotation.labels[field]
-            actual = predicted[field]
-            baseline = heuristic_select(page, field)
-            exact = actual == expected
-            baseline_exact = baseline == expected
-            matches += int(exact)
-            baseline_matches += int(baseline_exact)
-            field_counts[field]["examples"] += 1
-            field_counts[field]["correct"] += int(exact)
-            field_counts[field]["baseline_correct"] += int(baseline_exact)
-            fields[field.value] = {
-                "expected": expected,
-                "predicted": actual,
-                "baseline": baseline,
-                "exact": exact,
-                "baseline_exact": baseline_exact,
+    indexed_rows: list[tuple[int, dict[str, object]]] = []
+    total = len(records)
+    if total:
+        worker_count = min(max_workers, total)
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
+            pending = {
+                executor.submit(_evaluate_record, record, dataset_dir, model): (
+                    index,
+                    record,
+                )
+                for index, record in enumerate(records)
             }
-        site = site_counts[record.website]
+            for completed, future in enumerate(as_completed(pending), start=1):
+                index, record = pending[future]
+                indexed_rows.append((index, future.result()))
+                if progress is not None:
+                    progress(completed, total, record.page_id)
+    page_rows = [row for _, row in sorted(indexed_rows)]
+    for row in page_rows:
+        matches = int(row["matches"])
+        baseline_matches = int(row["baseline_matches"])
+        fields = row["fields"]
+        for field in FIELDS:
+            field_result = fields[field.value]
+            field_counts[field]["examples"] += 1
+            field_counts[field]["correct"] += int(field_result["exact"])
+            field_counts[field]["baseline_correct"] += int(
+                field_result["baseline_exact"]
+            )
+        site = site_counts[str(row["website"])]
         site["pages"] += 1
         site["correct"] += matches
         site["baseline_correct"] += baseline_matches
         site["examples"] += len(FIELDS)
-        title_id = annotation.labels[Field.TITLE]
-        title = (
-            page.candidate(title_id).get_text(" ", strip=True)
-            if title_id is not None
-            else record.page_id
-        )
-        page_rows.append(
-            {
-                "page_id": record.page_id,
-                "title": title[:300] or record.page_id,
-                "url": record.url,
-                "website": record.website,
-                "split": record.split,
-                "matches": matches,
-                "baseline_matches": baseline_matches,
-                "field_count": len(FIELDS),
-                "latency_ms": inference_ms,
-                "fields": fields,
-            }
-        )
     sites = [
         {
             "website": website,
@@ -196,12 +236,67 @@ def create_app(
     checkpoint: Path,
     *,
     extractor: DOMExtractor | Any | None = None,
+    evaluation_workers: int = 4,
 ) -> FastAPI:
+    if evaluation_workers < 1:
+        raise ValueError("evaluation_workers must be at least 1")
     app = FastAPI(title="DOM inference playground")
     manifest = DatasetManifest.load(dataset_dir / "manifest.json")
     records = {record.page_id: record for record in manifest.pages}
     model = extractor or DOMExtractor(checkpoint)
     evaluation_lock = asyncio.Lock()
+    evaluation_jobs: dict[str, dict[str, object]] = {}
+    evaluation_jobs_lock = threading.Lock()
+    evaluation_tasks: set[asyncio.Task[None]] = set()
+
+    def reviewed_for(website: str | None) -> list[PageRecord]:
+        reviewed = _reviewed_records(manifest.pages, dataset_dir)
+        if website is not None:
+            reviewed = [record for record in reviewed if record.website == website]
+            if not reviewed:
+                raise HTTPException(404, "unknown site or no human-reviewed pages")
+        return reviewed
+
+    def update_job(job_id: str, **changes: object) -> None:
+        with evaluation_jobs_lock:
+            evaluation_jobs[job_id].update(changes)
+
+    async def execute_evaluation_job(
+        job_id: str,
+        reviewed: Sequence[PageRecord],
+    ) -> None:
+        try:
+            async with evaluation_lock:
+                started = time.perf_counter()
+                update_job(job_id, status="running", started_at=time.time())
+
+                def report_progress(completed: int, total: int, page_id: str) -> None:
+                    update_job(
+                        job_id,
+                        completed=completed,
+                        total=total,
+                        current_page=page_id,
+                        elapsed_ms=(time.perf_counter() - started) * 1_000,
+                    )
+
+                result = await asyncio.to_thread(
+                    _evaluate_records,
+                    reviewed,
+                    dataset_dir,
+                    checkpoint,
+                    model,
+                    max_workers=evaluation_workers,
+                    progress=report_progress,
+                )
+                update_job(
+                    job_id,
+                    status="complete",
+                    completed=len(reviewed),
+                    elapsed_ms=result["latency_ms"],
+                    result=result,
+                )
+        except Exception as error:  # noqa: BLE001 - report background failures
+            update_job(job_id, status="failed", error=str(error))
 
     @app.get("/", response_class=HTMLResponse)
     async def shell() -> str:
@@ -224,6 +319,7 @@ def create_app(
         return {
             "checkpoint": str(checkpoint),
             "page_count": len(reviewed),
+            "evaluation_workers": evaluation_workers,
             "sites": [
                 {"website": website, "pages": pages}
                 for website, pages in sorted(site_pages.items())
@@ -232,11 +328,7 @@ def create_app(
 
     @app.post("/api/evals/run")
     async def run_evaluation(website: str | None = None) -> dict[str, object]:
-        reviewed = _reviewed_records(manifest.pages, dataset_dir)
-        if website is not None:
-            reviewed = [record for record in reviewed if record.website == website]
-            if not reviewed:
-                raise HTTPException(404, "unknown site or no human-reviewed pages")
+        reviewed = reviewed_for(website)
         async with evaluation_lock:
             return await asyncio.to_thread(
                 _evaluate_records,
@@ -244,7 +336,37 @@ def create_app(
                 dataset_dir,
                 checkpoint,
                 model,
+                max_workers=evaluation_workers,
             )
+
+    @app.post("/api/evals/jobs", status_code=202)
+    async def start_evaluation_job(website: str | None = None) -> dict[str, object]:
+        reviewed = reviewed_for(website)
+        job_id = uuid4().hex
+        job: dict[str, object] = {
+            "job_id": job_id,
+            "status": "queued",
+            "completed": 0,
+            "total": len(reviewed),
+            "current_page": None,
+            "elapsed_ms": 0.0,
+            "result": None,
+            "error": None,
+        }
+        with evaluation_jobs_lock:
+            evaluation_jobs[job_id] = job
+        task = asyncio.create_task(execute_evaluation_job(job_id, reviewed))
+        evaluation_tasks.add(task)
+        task.add_done_callback(evaluation_tasks.discard)
+        return dict(job)
+
+    @app.get("/api/evals/jobs/{job_id}")
+    async def get_evaluation_job(job_id: str) -> dict[str, object]:
+        with evaluation_jobs_lock:
+            job = evaluation_jobs.get(job_id)
+            if job is None:
+                raise HTTPException(404, "unknown evaluation job")
+            return dict(job)
 
     @app.get("/api/pages")
     async def list_pages() -> list[dict[str, object]]:
@@ -341,6 +463,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8767)
+    parser.add_argument(
+        "--eval-workers",
+        type=int,
+        default=4,
+        help="Parallel workers for whole-corpus evaluation. Default: 4.",
+    )
     return parser
 
 
@@ -349,7 +477,11 @@ def main(argv: Sequence[str] | None = None) -> None:
 
     args = build_parser().parse_args(argv)
     uvicorn.run(
-        create_app(args.dataset_dir, args.checkpoint),
+        create_app(
+            args.dataset_dir,
+            args.checkpoint,
+            evaluation_workers=args.eval_workers,
+        ),
         host=args.host,
         port=args.port,
     )

@@ -210,6 +210,11 @@ website. Page-level **[eval]** links open that input in the playground. Because
 this view includes training and validation pages, treat it as a fit and data
 quality report rather than an unbiased generalization score.
 
+The dashboard uses four parallel evaluation workers by default. While a run is
+active, it shows a live `classified / total` count and progress bar. Set another
+bounded worker count when you start the app with `--eval-workers`, for example
+`--eval-workers 2` on a machine with limited CPU or memory.
+
 The annotation page uses a sandboxed iframe without script permission. Hover
 to highlight, choose a field and click an element, move to its parent when a
 wrapper is too narrow, preview the chosen text, mark a field missing, or mark
