@@ -204,12 +204,11 @@ reference, and jumps the rendered page to the selected prediction.
 
 Open `/evals` on the same server for the whole-corpus dashboard. It runs the
 checkpoint against every human-reviewed page across train, validation, and
-test, compares exact-node accuracy with the heuristic baseline, and reports
-results by field, site, and page. **RUN SITE** evaluates only the selected
-website. Click a site row to show its indented page results in place. Page-level
-**[eval]** links open that input in the playground. Because this view includes
-training and validation pages, treat it as a fit and data quality report rather
-than an unbiased generalization score.
+test, and reports exact-node accuracy by field, site, and page. **RUN SITE**
+evaluates only the selected website. Click a site row to show its indented page
+results in place. Page-level **[eval]** links open that input in the playground.
+Because this view includes training and validation pages, treat it as a fit and
+data quality report rather than an unbiased generalization score.
 
 The dashboard uses four parallel worker processes by default. While a run is
 active, it shows a live `classified / total` count and progress bar. It stores
@@ -268,11 +267,11 @@ candidates plus its learned missing score.
 
 Evaluation is run only on held-out websites after checkpoint selection. It
 reports per-field exact-node accuracy, missing precision/recall, missing and
-unwanted word counts, per-website results, a heuristic baseline, checkpoint and
-deployment size, peak process memory, latency, and an HTML failure inspector.
-The first justified follow-up, if structurally similar candidates remain hard
-to distinguish, is compact text/context features (for example class-token and
-nearby-node embeddings), not a larger MLP or quantization.
+unwanted word counts, per-website results, checkpoint and deployment size, peak
+process memory, latency, and an HTML failure inspector. The first justified
+follow-up, if structurally similar candidates remain hard to distinguish, is
+compact text/context features (for example class-token and nearby-node
+embeddings), not a larger MLP or quantization.
 
 ## Inference
 

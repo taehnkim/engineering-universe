@@ -21,7 +21,6 @@ from fastapi.responses import HTMLResponse
 from eng_universe.extraction.contract import FIELDS, Field, load_annotation
 from eng_universe.extraction.dom import annotation_html, parse_html
 from eng_universe.extraction.inference import DOMExtractor
-from modeling.dom_extractor.evaluation import heuristic_select
 from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
 SHELL = r"""<!doctype html>
@@ -50,15 +49,15 @@ async function start(){allPages=await fetch('/api/pages').then(r=>r.json());$('p
 EVALS_SHELL = r"""<!doctype html>
 <html><head><meta charset="utf-8"><title>DOM extractor evaluations</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font:14px system-ui;background:#0f172a;color:#e5e7eb}header{position:sticky;top:0;z-index:2;padding:16px 20px;background:#1e293b;border-bottom:1px solid #334155}h1{margin:0 0 5px;font-size:22px}.subtitle{color:#94a3b8}.controls{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}button,select{padding:8px 10px;border-radius:6px;border:1px solid #475569;background:#111827;color:#e5e7eb}button{cursor:pointer;font-weight:650}button:hover{border-color:#94a3b8}button:disabled{opacity:.55;cursor:wait}.run-all{background:#166534;border-color:#22c55e}.status{color:#a7f3d0;margin-left:4px}.progress{display:none;align-items:center;gap:10px;margin-top:11px}.progress.visible{display:flex}.progress-track{width:min(520px,70vw);height:10px;background:#0f172a;border:1px solid #475569;border-radius:999px;overflow:hidden}.progress-bar{width:0;height:100%;background:#22c55e;transition:width .15s linear}.progress-text{color:#cbd5e1;font-variant-numeric:tabular-nums;white-space:nowrap}main{padding:18px 20px 40px;max-width:1500px;margin:auto}.notice{padding:10px 12px;border:1px solid #854d0e;background:#422006;color:#fde68a;border-radius:7px;margin-bottom:14px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.card{padding:12px;border:1px solid #334155;background:#1e293b;border-radius:8px}.card h3{margin:0 0 8px;font-size:14px}.accuracy{font-size:25px;font-weight:750}.baseline{margin-top:5px;color:#94a3b8}.delta.positive{color:#86efac}.delta.negative{color:#fca5a5}section{margin-top:22px}table{width:100%;border-collapse:collapse;background:#111827;border:1px solid #334155}th,td{text-align:left;padding:8px 9px;border-bottom:1px solid #263244}th{position:sticky;top:145px;background:#1e293b;color:#cbd5e1;font-size:12px}tbody tr:hover{background:#172554}.site-row{cursor:pointer;font-weight:650}.site-row:focus-visible{outline:2px solid #fbbf24;outline-offset:-2px}.disclosure{display:inline-block;width:18px;color:#93c5fd}.site-page{background:#0b1220;color:#cbd5e1}.site-page:hover{background:#111d35}.site-page-title{position:relative;padding-left:35px;max-width:680px}.site-page-title::before{content:'↳';position:absolute;margin-left:-21px;color:#64748b}.number{text-align:right;font-variant-numeric:tabular-nums}.links{white-space:nowrap}a{color:#93c5fd}.title{max-width:620px}.muted{color:#94a3b8}.empty{padding:30px;text-align:center;color:#94a3b8}
+*{box-sizing:border-box}body{margin:0;font:14px system-ui;background:#0f172a;color:#e5e7eb}header{position:sticky;top:0;z-index:2;padding:16px 20px;background:#1e293b;border-bottom:1px solid #334155}h1{margin:0 0 5px;font-size:22px}.subtitle{color:#94a3b8}.controls{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}button,select{padding:8px 10px;border-radius:6px;border:1px solid #475569;background:#111827;color:#e5e7eb}button{cursor:pointer;font-weight:650}button:hover{border-color:#94a3b8}button:disabled{opacity:.55;cursor:wait}.run-all{background:#166534;border-color:#22c55e}.status{color:#a7f3d0;margin-left:4px}.progress{display:none;align-items:center;gap:10px;margin-top:11px}.progress.visible{display:flex}.progress-track{width:min(520px,70vw);height:10px;background:#0f172a;border:1px solid #475569;border-radius:999px;overflow:hidden}.progress-bar{width:0;height:100%;background:#22c55e;transition:width .15s linear}.progress-text{color:#cbd5e1;font-variant-numeric:tabular-nums;white-space:nowrap}main{padding:18px 20px 40px;max-width:1500px;margin:auto}.notice{padding:10px 12px;border:1px solid #854d0e;background:#422006;color:#fde68a;border-radius:7px;margin-bottom:14px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.card{padding:13px;border:1px solid #334155;border-radius:8px}.card h3{margin:0 0 9px;font-size:19px}.card.kpi-green{background:#052e16;border-color:#16a34a}.card.kpi-orange{background:#431407;border-color:#ea580c}.card.kpi-red{background:#450a0a;border-color:#dc2626}.accuracy{font-size:27px;font-weight:750}section{margin-top:22px}table{width:100%;border-collapse:collapse;background:#111827;border:1px solid #334155}th,td{text-align:left;padding:8px 9px;border-bottom:1px solid #263244}th{position:sticky;top:145px;background:#1e293b;color:#cbd5e1;font-size:12px}tbody tr:hover{background:#172554}.site-row{cursor:pointer;font-weight:650}.site-row:focus-visible{outline:2px solid #fbbf24;outline-offset:-2px}.disclosure{display:inline-block;width:18px;color:#93c5fd}.site-page{background:#0b1220;color:#cbd5e1}.site-page:hover{background:#111d35}.site-page-title{position:relative;padding-left:35px;max-width:680px}.site-page-title::before{content:'↳';position:absolute;margin-left:-21px;color:#64748b}.result-mark{font-size:16px;font-weight:800}.result-mark.pass{color:#4ade80}.result-mark.fail{color:#f87171}.number{text-align:right;font-variant-numeric:tabular-nums}.links{white-space:nowrap}a{color:#93c5fd}.title{max-width:620px}.muted{color:#94a3b8}.empty{padding:30px;text-align:center;color:#94a3b8}
 </style></head><body>
 <header><h1>DOM extractor evaluations</h1><div class="subtitle">Checkpoint: <span id="checkpoint"></span> · <span id="workers"></span> parallel workers</div><div class="controls"><button id="run-all" class="run-all">RUN ALL</button><select id="site"></select><button id="run-site">RUN SITE</button><span id="status" class="status"></span></div><div id="progress" class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"><div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div><span id="progress-text" class="progress-text"></span></div></header>
 <main><div class="notice">Whole-corpus accuracy includes train and validation pages. Use it to inspect fit and labeling consistency; use the test split for unbiased generalization accuracy.</div><div id="cards" class="cards"></div><section><h2>Accuracy by site</h2><div id="sites" class="empty">Waiting for evaluation…</div></section><section><h2>Pages</h2><div id="pages" class="empty">Waiting for evaluation…</div></section></main>
 <script>
 const names=['article','title','authors','date','summary','relative_date'];let evalOptions=null,currentResult=null;const expandedSites=new Set();const $=id=>document.getElementById(id);const esc=s=>(s??'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const pct=n=>n==null?'—':(n*100).toFixed(1)+'%';
-function delta(model,baseline){const value=model-baseline,style=value>=0?'positive':'negative';return `<span class="delta ${style}">${value>=0?'+':''}${(value*100).toFixed(1)} pp</span>`}
-function renderSites(){const result=currentResult;if(!result)return;const pageRows=page=>`<tr class="site-page"><td class="site-page-title">${esc(page.title)}</td><td>${esc(page.split)}</td><td class="number">${page.matches}/${page.field_count}</td><td class="number">${page.baseline_matches}/${page.field_count}</td><td class="links"><a href="${esc(page.url)}" target="_blank" rel="noopener">[url]</a> <a href="/playground?page=${encodeURIComponent(page.page_id)}">[eval]</a></td></tr>`;$('sites').className='';$('sites').innerHTML=`<table><thead><tr><th>Site / page</th><th class="number">Pages / split</th><th class="number">Model</th><th class="number">Baseline</th><th class="number">Delta / links</th></tr></thead><tbody>${result.sites.map(site=>{const open=expandedSites.has(site.website),children=open?result.pages.filter(page=>page.website===site.website).map(pageRows).join(''):'';return `<tr class="site-row" data-site="${esc(site.website)}" role="button" tabindex="0" aria-expanded="${open}"><td><span class="disclosure" aria-hidden="true">${open?'▾':'▸'}</span>${esc(site.website)}</td><td class="number">${site.pages}</td><td class="number">${pct(site.accuracy)}</td><td class="number">${pct(site.baseline_accuracy)}</td><td class="number">${delta(site.accuracy,site.baseline_accuracy)}</td></tr>${children}`}).join('')}</tbody></table>`;document.querySelectorAll('.site-row').forEach(row=>{const toggle=()=>{expandedSites.has(row.dataset.site)?expandedSites.delete(row.dataset.site):expandedSites.add(row.dataset.site);renderSites()};row.onclick=toggle;row.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle()}}})}
-function draw(result){currentResult=result;$('checkpoint').textContent=result.checkpoint;$('cards').innerHTML=names.map(name=>{const item=result.fields[name];return `<article class="card"><h3>${name}</h3><div class="accuracy">${pct(item.accuracy)}</div><div class="baseline">baseline ${pct(item.baseline_accuracy)} · ${delta(item.accuracy,item.baseline_accuracy)}</div><div class="muted">${item.correct}/${item.examples} exact</div></article>`}).join('');renderSites();$('pages').className='';$('pages').innerHTML=`<table><thead><tr><th>Title</th><th>Site</th><th>Split</th><th class="number">Model</th><th class="number">Baseline</th><th>Links</th></tr></thead><tbody>${result.pages.map(page=>`<tr><td class="title">${esc(page.title)}</td><td>${esc(page.website)}</td><td>${esc(page.split)}</td><td class="number">${page.matches}/${page.field_count}</td><td class="number">${page.baseline_matches}/${page.field_count}</td><td class="links"><a href="${esc(page.url)}" target="_blank" rel="noopener">[url]</a> <a href="/playground?page=${encodeURIComponent(page.page_id)}">[eval]</a></td></tr>`).join('')}</tbody></table>`}
+const scoreClass=value=>value>=.8?'green':value>=.5?'orange':'red';const resultMark=exact=>`<span class="result-mark ${exact?'pass':'fail'}" aria-label="${exact?'correct':'incorrect'}" title="${exact?'correct':'incorrect'}">${exact?'✓':'×'}</span>`;
+function renderSites(){const result=currentResult;if(!result)return;const fieldHeaders=names.map(name=>`<th class="number">${name}</th>`).join(''),pageRows=page=>`<tr class="site-page"><td class="site-page-title">${esc(page.title)}</td><td>${esc(page.split)}</td>${names.map(name=>`<td class="number">${resultMark(page.field_matches[name])}</td>`).join('')}<td class="links"><a href="${esc(page.url)}" target="_blank" rel="noopener">[url]</a> <a href="/playground?page=${encodeURIComponent(page.page_id)}">[eval]</a></td></tr>`;$('sites').className='';$('sites').innerHTML=`<table><thead><tr><th>Site / page</th><th class="number">Pages / split</th>${fieldHeaders}<th>Links</th></tr></thead><tbody>${result.sites.map(site=>{const open=expandedSites.has(site.website),children=open?result.pages.filter(page=>page.website===site.website).map(pageRows).join(''):'';return `<tr class="site-row" data-site="${esc(site.website)}" role="button" tabindex="0" aria-expanded="${open}"><td><span class="disclosure" aria-hidden="true">${open?'▾':'▸'}</span>${esc(site.website)}</td><td class="number">${site.pages}</td>${names.map(name=>`<td class="number">${pct(site.fields[name].accuracy)}</td>`).join('')}<td></td></tr>${children}`}).join('')}</tbody></table>`;document.querySelectorAll('.site-row').forEach(row=>{const toggle=()=>{expandedSites.has(row.dataset.site)?expandedSites.delete(row.dataset.site):expandedSites.add(row.dataset.site);renderSites()};row.onclick=toggle;row.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle()}}})}
+function draw(result){currentResult=result;$('checkpoint').textContent=result.checkpoint;$('cards').innerHTML=names.map(name=>{const item=result.fields[name];return `<article class="card kpi-${scoreClass(item.accuracy)}"><h3>${name}</h3><div class="accuracy">${pct(item.accuracy)}</div><div class="muted">${item.correct}/${item.examples} exact</div></article>`}).join('');renderSites();$('pages').className='';$('pages').innerHTML=`<table><thead><tr><th>Title</th><th>Site</th><th>Split</th><th class="number">Exact</th><th>Links</th></tr></thead><tbody>${result.pages.map(page=>`<tr><td class="title">${esc(page.title)}</td><td>${esc(page.website)}</td><td>${esc(page.split)}</td><td class="number">${page.matches}/${page.field_count}</td><td class="links"><a href="${esc(page.url)}" target="_blank" rel="noopener">[url]</a> <a href="/playground?page=${encodeURIComponent(page.page_id)}">[eval]</a></td></tr>`).join('')}</tbody></table>`}
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 function showProgress(completed,total,state){const root=$('progress'),safeTotal=Math.max(total,1),percent=Math.min(100,completed/safeTotal*100);root.classList.add('visible');root.setAttribute('aria-valuemax',total);root.setAttribute('aria-valuenow',completed);$('progress-bar').style.width=`${percent}%`;$('progress-text').textContent=state==='queued'?`Queued · 0/${total} pages classified`:`${completed}/${total} pages classified`}
 function cacheKey(website){return `dom-extractor-evals:v1:${evalOptions.cache_token}:${website||'all'}`}
@@ -110,7 +109,7 @@ def _evaluation_cache_token(
     ]
     identity = ":".join(
         (
-            "eval-cache-v1",
+            "eval-cache-v2",
             str(checkpoint.resolve()),
             str(checkpoint_stat.st_size if checkpoint_stat else 0),
             str(checkpoint_stat.st_mtime_ns if checkpoint_stat else 0),
@@ -126,9 +125,6 @@ def _metric(counts: dict[str, int]) -> dict[str, int | float | None]:
     return {
         **counts,
         "accuracy": counts["correct"] / examples if examples else None,
-        "baseline_accuracy": (
-            counts["baseline_correct"] / examples if examples else None
-        ),
     }
 
 
@@ -169,22 +165,16 @@ def _evaluate_record(
     )
     inference_ms = (time.perf_counter() - inference_started) * 1_000
     matches = 0
-    baseline_matches = 0
     fields: dict[str, dict[str, int | bool | None]] = {}
     for field in FIELDS:
         expected = annotation.labels[field]
         actual = predicted[field]
-        baseline = heuristic_select(page, field)
         exact = actual == expected
-        baseline_exact = baseline == expected
         matches += int(exact)
-        baseline_matches += int(baseline_exact)
         fields[field.value] = {
             "expected": expected,
             "predicted": actual,
-            "baseline": baseline,
             "exact": exact,
-            "baseline_exact": baseline_exact,
         }
     title_id = annotation.labels[Field.TITLE]
     title = (
@@ -199,7 +189,6 @@ def _evaluate_record(
         "website": record.website,
         "split": record.split,
         "matches": matches,
-        "baseline_matches": baseline_matches,
         "field_count": len(FIELDS),
         "latency_ms": inference_ms,
         "fields": fields,
@@ -217,16 +206,10 @@ def _evaluate_records(
     use_processes: bool = False,
 ) -> dict[str, object]:
     started = time.perf_counter()
-    field_counts = {
-        field: {"correct": 0, "baseline_correct": 0, "examples": 0} for field in FIELDS
-    }
-    site_counts: dict[str, dict[str, int]] = defaultdict(
-        lambda: {
-            "pages": 0,
-            "correct": 0,
-            "baseline_correct": 0,
-            "examples": 0,
-        }
+    field_counts = {field: {"correct": 0, "examples": 0} for field in FIELDS}
+    site_pages: dict[str, int] = defaultdict(int)
+    site_field_counts: dict[str, dict[Field, dict[str, int]]] = defaultdict(
+        lambda: {field: {"correct": 0, "examples": 0} for field in FIELDS}
     )
     indexed_rows: list[tuple[int, dict[str, object]]] = []
     total = len(records)
@@ -254,27 +237,23 @@ def _evaluate_records(
                     progress(completed, total, record.page_id)
     page_rows = [row for _, row in sorted(indexed_rows)]
     for row in page_rows:
-        matches = int(row["matches"])
-        baseline_matches = int(row["baseline_matches"])
         fields = row["fields"]
+        website = str(row["website"])
+        site_pages[website] += 1
         for field in FIELDS:
             field_result = fields[field.value]
+            exact = int(field_result["exact"])
             field_counts[field]["examples"] += 1
-            field_counts[field]["correct"] += int(field_result["exact"])
-            field_counts[field]["baseline_correct"] += int(
-                field_result["baseline_exact"]
-            )
-        site = site_counts[str(row["website"])]
-        site["pages"] += 1
-        site["correct"] += matches
-        site["baseline_correct"] += baseline_matches
-        site["examples"] += len(FIELDS)
+            field_counts[field]["correct"] += exact
+            site_field_counts[website][field]["examples"] += 1
+            site_field_counts[website][field]["correct"] += exact
     sites = [
         {
             "website": website,
-            **_metric(counts),
+            "pages": site_pages[website],
+            "fields": {field.value: _metric(counts[field]) for field in FIELDS},
         }
-        for website, counts in sorted(site_counts.items())
+        for website, counts in sorted(site_field_counts.items())
     ]
     return {
         "checkpoint": str(checkpoint),
@@ -285,7 +264,13 @@ def _evaluate_records(
         "fields": {field.value: _metric(field_counts[field]) for field in FIELDS},
         "sites": sites,
         "pages": [
-            {key: value for key, value in row.items() if key != "fields"}
+            {
+                **{key: value for key, value in row.items() if key != "fields"},
+                "field_matches": {
+                    field.value: bool(row["fields"][field.value]["exact"])
+                    for field in FIELDS
+                },
+            }
             for row in page_rows
         ],
     }

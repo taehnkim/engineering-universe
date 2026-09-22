@@ -193,7 +193,10 @@ def test_whole_corpus_evaluation_dashboard_uses_human_reviews(
     assert options["sites"] == [{"website": "engineering.example.com", "pages": 1}]
     assert result["page_count"] == 1
     assert result["pages"][0]["title"] == "Test title"
-    assert result["sites"][0]["accuracy"] == 1.0
+    assert all(
+        field["accuracy"] == 1.0 for field in result["sites"][0]["fields"].values()
+    )
+    assert all(result["pages"][0]["field_matches"].values())
     assert all(field["accuracy"] == 1.0 for field in result["fields"].values())
     assert site_result["page_count"] == 1
     assert client.post("/api/evals/run?website=unknown.example.com").status_code == 404
@@ -221,7 +224,7 @@ def test_whole_corpus_evaluation_dashboard_uses_human_reviews(
 def test_evaluation_dashboard_has_requested_controls_and_links() -> None:
     assert 'id="run-all" class="run-all">RUN ALL</button>' in EVALS_SHELL
     assert 'id="run-site">RUN SITE</button>' in EVALS_SHELL
-    assert "baseline_accuracy" in EVALS_SHELL
+    assert "baseline" not in EVALS_SHELL.lower()
     assert "Accuracy by site" in EVALS_SHELL
     assert 'href="${esc(page.url)}"' in EVALS_SHELL
     assert 'href="/playground?page=${encodeURIComponent(page.page_id)}"' in EVALS_SHELL
@@ -234,4 +237,7 @@ def test_evaluation_dashboard_has_requested_controls_and_links() -> None:
     assert 'aria-expanded="${open}"' in EVALS_SHELL
     assert 'class="site-page-title"' in EVALS_SHELL
     assert "row.onclick=toggle" in EVALS_SHELL
+    assert "site.fields[name].accuracy" in EVALS_SHELL
+    assert "value>=.8?'green':value>=.5?'orange':'red'" in EVALS_SHELL
+    assert 'class="card kpi-${scoreClass(item.accuracy)}"' in EVALS_SHELL
     assert "run()}start()" in EVALS_SHELL
