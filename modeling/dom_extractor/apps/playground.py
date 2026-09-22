@@ -9,7 +9,7 @@ import threading
 import time
 from collections import defaultdict
 from collections.abc import Callable, Sequence
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -23,9 +23,7 @@ from eng_universe.extraction.dom import annotation_html, parse_html
 from eng_universe.extraction.inference import DOMExtractor
 from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
-DEFAULT_EVALUATION_WORKERS = 10
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
-
 SHELL = r"""<!doctype html>
 <html><head><meta charset="utf-8"><title>DOM inference playground</title>
 <style>
@@ -53,23 +51,28 @@ async function start(){$('run').onclick=run;if(uploadMode){$('page-controls').hi
 EVALS_SHELL = r"""<!doctype html>
 <html><head><meta charset="utf-8"><title>DOM extractor evaluations</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font:14px system-ui;background:#0f172a;color:#e5e7eb}header{position:sticky;top:0;z-index:2;padding:16px 20px;background:#1e293b;border-bottom:1px solid #334155}h1{margin:0 0 5px;font-size:22px}.subtitle{color:#94a3b8}.controls{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}button,select,.playground-button{padding:8px 10px;border-radius:6px;border:1px solid #475569;background:#111827;color:#e5e7eb}button{cursor:pointer;font-weight:650}button:hover{border-color:#94a3b8}button:disabled{opacity:.55;cursor:wait}.run-all{background:#166534;border-color:#22c55e}.playground-button{background:#1d4ed8;border-color:#3b82f6;font-weight:650;text-decoration:none}.status{color:#a7f3d0;margin-left:4px}.progress{display:none;align-items:center;gap:10px;margin-top:11px}.progress.visible{display:flex}.progress-track{width:min(520px,70vw);height:10px;background:#0f172a;border:1px solid #475569;border-radius:999px;overflow:hidden}.progress-bar{width:0;height:100%;background:#22c55e;transition:width .15s linear}.progress-text{color:#cbd5e1;font-variant-numeric:tabular-nums;white-space:nowrap}main{padding:18px 20px 40px;max-width:1500px;margin:auto}.notice{padding:10px 12px;border:1px solid #854d0e;background:#422006;color:#fde68a;border-radius:7px;margin-bottom:14px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.card{padding:13px;border:1px solid #334155;border-radius:8px}.card h3{margin:0 0 9px;font-size:19px}.card.kpi-green,.metric-cell.kpi-green{background:#052e16;border-color:#16a34a}.card.kpi-orange,.metric-cell.kpi-orange{background:#713f12;border-color:#fbbf24}.card.kpi-red,.metric-cell.kpi-red{background:#450a0a;border-color:#dc2626}.accuracy{font-size:27px;font-weight:750}section{margin-top:22px}table{width:100%;border-collapse:collapse;background:#111827;border:1px solid #334155}th,td{text-align:left;padding:8px 9px;border-bottom:1px solid #263244}th{position:sticky;top:145px;background:#1e293b;color:#cbd5e1;font-size:12px}.sort-button{display:flex;align-items:center;gap:5px;width:100%;padding:0;border:0;background:none;border-radius:0;color:inherit;font:inherit;text-align:inherit}.sort-button:hover{color:#fff}.number .sort-button{justify-content:flex-end}.sort-indicator{width:12px;color:#94a3b8}tbody tr:hover{background:#172554}.site-row{cursor:pointer;font-weight:650}.site-row:focus-visible{outline:2px solid #fbbf24;outline-offset:-2px}.disclosure{display:inline-block;width:18px;color:#93c5fd}.site-page{background:#0b1220;color:#cbd5e1}.site-page:hover{background:#111d35}.site-page-title{position:relative;padding-left:35px;max-width:680px}.site-page-title::before{content:'↳';position:absolute;margin-left:-21px;color:#64748b}.eval-title{font-weight:650}.result-mark{font-size:16px;font-weight:800}.result-mark.pass{color:#4ade80}.result-mark.fail{color:#f87171}.number{text-align:right;font-variant-numeric:tabular-nums}.links{white-space:nowrap}a{color:#93c5fd}.title{max-width:620px}.muted{color:#94a3b8}.empty{padding:30px;text-align:center;color:#94a3b8}
+*{box-sizing:border-box}body{margin:0;font:14px system-ui;background:#0f172a;color:#e5e7eb}header{position:sticky;top:0;z-index:2;padding:16px 20px;background:#1e293b;border-bottom:1px solid #334155}h1{margin:0 0 5px;font-size:22px}.subtitle{color:#94a3b8}.controls{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}button,select{padding:8px 10px;border-radius:6px;border:1px solid #475569;background:#111827;color:#e5e7eb}button{cursor:pointer;font-weight:650}button:hover{border-color:#94a3b8}button:disabled{opacity:.55;cursor:wait}.run-all{background:#166534;border-color:#22c55e}.status{color:#a7f3d0;margin-left:4px}.progress{display:none;align-items:center;gap:10px;margin-top:11px}.progress.visible{display:flex}.progress-track{width:min(520px,70vw);height:10px;background:#0f172a;border:1px solid #475569;border-radius:999px;overflow:hidden}.progress-bar{width:0;height:100%;background:#22c55e;transition:width .15s linear}.progress-text{color:#cbd5e1;font-variant-numeric:tabular-nums;white-space:nowrap}main{padding:18px 20px 40px;max-width:1500px;margin:auto}.notice{padding:10px 12px;border:1px solid #854d0e;background:#422006;color:#fde68a;border-radius:7px;margin-bottom:14px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.card{padding:13px;border:1px solid #334155;border-radius:8px}.card-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.card h3{margin:0;font-size:19px}.metric-toggle{padding:4px 7px;font-size:11px;font-weight:650;background:#0f172a}.metric-toggle[aria-pressed="true"]{background:#1d4ed8;border-color:#60a5fa;color:#fff}.card.kpi-green,.metric-cell.kpi-green{background:#052e16;border-color:#16a34a}.card.kpi-orange,.metric-cell.kpi-orange{background:#713f12;border-color:#fbbf24}.card.kpi-red,.metric-cell.kpi-red{background:#450a0a;border-color:#dc2626}.card.kpi-neutral,.metric-cell.kpi-neutral{background:#1e293b;border-color:#64748b}.accuracy{font-size:27px;font-weight:750}section{margin-top:22px}table{width:100%;border-collapse:collapse;background:#111827;border:1px solid #334155}th,td{text-align:left;padding:8px 9px;border-bottom:1px solid #263244}th{position:sticky;top:145px;background:#1e293b;color:#cbd5e1;font-size:12px}.sort-button{display:flex;align-items:center;gap:5px;width:100%;padding:0;border:0;background:none;border-radius:0;color:inherit;font:inherit;text-align:inherit}.sort-button:hover{color:#fff}.number .sort-button{justify-content:flex-end}.sort-indicator{width:12px;color:#94a3b8}tbody tr:hover{background:#172554}.site-row{cursor:pointer;font-weight:650}.site-row:focus-visible{outline:2px solid #fbbf24;outline-offset:-2px}.disclosure{display:inline-block;width:18px;color:#93c5fd}.site-page{background:#0b1220;color:#cbd5e1}.site-page:hover{background:#111d35}.site-page-title{position:relative;padding-left:35px;max-width:680px}.site-page-title::before{content:'↳';position:absolute;margin-left:-21px;color:#64748b}.eval-title{font-weight:650}.result-mark{font-size:16px;font-weight:800}.result-mark.pass{color:#4ade80}.result-mark.fail{color:#f87171}.number{text-align:right;font-variant-numeric:tabular-nums}.links{white-space:nowrap}a{color:#93c5fd}.title{max-width:620px}.muted{color:#94a3b8}.empty{padding:30px;text-align:center;color:#94a3b8}
+.playground-button{padding:8px 10px;border:1px solid #3b82f6;border-radius:6px;background:#1d4ed8;color:#fff;font-weight:650;text-decoration:none}
+.section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.section-heading h2{margin-bottom:10px}.site-filter{display:flex;align-items:center;gap:7px;color:#cbd5e1;font-size:12px}.site-filter select{padding:5px 8px}
 </style></head><body>
 <header><h1>DOM extractor evaluations</h1><div class="subtitle">Checkpoint: <span id="checkpoint"></span> · <span id="workers"></span> parallel workers</div><div class="controls"><button id="run-all" class="run-all">RUN ALL</button><select id="site"></select><button id="run-site">RUN SITE</button><a class="playground-button" href="/playground/upload">PLAYGROUND</a><span id="status" class="status"></span></div><div id="progress" class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"><div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div><span id="progress-text" class="progress-text"></span></div></header>
-<main><div class="notice">Whole-corpus accuracy includes train and validation pages. Use it to inspect fit and labeling consistency; use the test split for unbiased generalization accuracy.</div><div id="cards" class="cards"></div><section><h2>Accuracy by site</h2><div id="sites" class="empty">Waiting for evaluation…</div></section><section><h2>Pages</h2><div id="pages" class="empty">Waiting for evaluation…</div></section></main>
+<main><div class="notice">Whole-corpus accuracy includes train and validation pages. Use it to inspect fit and labeling consistency; use the test split for unbiased generalization accuracy.</div><div id="cards" class="cards"></div><section><div class="section-heading"><h2>Accuracy by site</h2><label class="site-filter" for="present-filter">Show URLs<select id="present-filter" title="Only include URLs whose human label contains this field"><option value="all">All URLs</option><option value="authors">Authors present only</option><option value="date">Date present only</option><option value="summary">Summary present only</option></select></label></div><div id="sites" class="empty">Waiting for evaluation…</div></section><section><h2>Pages</h2><div id="pages" class="empty">Waiting for evaluation…</div></section></main>
 <script>
-const names=['article','title','authors','date','summary','relative_date'];let evalOptions=null,currentResult=null,siteSort={key:'website',direction:'asc'};const expandedSites=new Set();const $=id=>document.getElementById(id);const esc=s=>(s??'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const pct=n=>n==null?'—':(n*100).toFixed(1)+'%';
-const scoreClass=value=>value>=.8?'green':value>=.5?'orange':'red';const resultMark=exact=>`<span class="result-mark ${exact?'pass':'fail'}" aria-label="${exact?'correct':'incorrect'}" title="${exact?'correct':'incorrect'}">${exact?'✓':'×'}</span>`;
+const names=['article','title','authors','date','summary','relative_date'];const presentToggleFields=new Set(['authors','date','summary']),presentOnly=new Set();let evalOptions=null,currentResult=null,sitePresentField='all',siteSort={key:'website',direction:'asc'};const expandedSites=new Set();const $=id=>document.getElementById(id);const esc=s=>(s??'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const pct=n=>n==null?'—':(n*100).toFixed(1)+'%';
+const scoreClass=value=>value==null?'neutral':value>=.8?'green':value>=.5?'orange':'red';const resultMark=exact=>`<span class="result-mark ${exact?'pass':'fail'}" aria-label="${exact?'correct':'incorrect'}" title="${exact?'correct':'incorrect'}">${exact?'✓':'×'}</span>`;
 function sortHeader(label,key,numeric=false){const active=siteSort.key===key,direction=active?siteSort.direction:'none',indicator=active?(direction==='asc'?'↑':'↓'):'↕';return `<th class="${numeric?'number':''}" aria-sort="${direction==='asc'?'ascending':direction==='desc'?'descending':'none'}"><button class="sort-button" data-sort="${key}" type="button">${label}<span class="sort-indicator" aria-hidden="true">${indicator}</span></button></th>`}
-function renderSites(){const result=currentResult;if(!result)return;const valueFor=(site,key)=>key==='website'?site.website:key==='pages'?site.pages:site.fields[key].accuracy,sortedSites=[...result.sites].sort((left,right)=>{const a=valueFor(left,siteSort.key),b=valueFor(right,siteSort.key),order=typeof a==='string'?a.localeCompare(b):a-b;return siteSort.direction==='asc'?order:-order}),fieldHeaders=names.map(name=>sortHeader(name,name,true)).join(''),pageRows=page=>`<tr class="site-page"><td class="site-page-title" colspan="2"><a href="${esc(page.url)}" target="_blank" rel="noopener">[url]</a> <a class="eval-title" href="/playground?page=${encodeURIComponent(page.page_id)}" target="_blank" rel="noopener">${esc(page.title)}</a></td>${names.map(name=>`<td class="number metric-cell kpi-${scoreClass(page.field_matches[name]?1:0)}">${resultMark(page.field_matches[name])}</td>`).join('')}</tr>`;$('sites').className='';$('sites').innerHTML=`<table><thead><tr>${sortHeader('Site / page','website')}${sortHeader('Pages','pages',true)}${fieldHeaders}</tr></thead><tbody>${sortedSites.map(site=>{const open=expandedSites.has(site.website),children=open?result.pages.filter(page=>page.website===site.website).map(pageRows).join(''):'';return `<tr class="site-row" data-site="${esc(site.website)}" role="button" tabindex="0" aria-expanded="${open}"><td><span class="disclosure" aria-hidden="true">${open?'▾':'▸'}</span>${esc(site.website)}</td><td class="number">${site.pages}</td>${names.map(name=>{const accuracy=site.fields[name].accuracy;return `<td class="number metric-cell kpi-${scoreClass(accuracy)}">${pct(accuracy)}</td>`}).join('')}</tr>${children}`}).join('')}</tbody></table>`;document.querySelectorAll('[data-sort]').forEach(button=>button.onclick=()=>{const key=button.dataset.sort;siteSort=siteSort.key===key?{key,direction:siteSort.direction==='asc'?'desc':'asc'}:{key,direction:key==='website'?'asc':'desc'};renderSites()});document.querySelectorAll('.site-row').forEach(row=>{const toggle=()=>{expandedSites.has(row.dataset.site)?expandedSites.delete(row.dataset.site):expandedSites.add(row.dataset.site);renderSites()};row.onclick=toggle;row.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle()}}})}
-function draw(result){currentResult=result;$('checkpoint').textContent=result.checkpoint;$('cards').innerHTML=names.map(name=>{const item=result.fields[name];return `<article class="card kpi-${scoreClass(item.accuracy)}"><h3>${name}</h3><div class="accuracy">${pct(item.accuracy)}</div><div class="muted">${item.correct}/${item.examples} exact</div></article>`}).join('');renderSites();$('pages').className='';$('pages').innerHTML=`<table><thead><tr><th>Title</th><th>Site</th><th>Split</th><th class="number">Exact</th><th>Links</th></tr></thead><tbody>${result.pages.map(page=>`<tr><td class="title">${esc(page.title)}</td><td>${esc(page.website)}</td><td>${esc(page.split)}</td><td class="number">${page.matches}/${page.field_count}</td><td class="links"><a href="${esc(page.url)}" target="_blank" rel="noopener">[url]</a> <a href="/playground?page=${encodeURIComponent(page.page_id)}">[eval]</a></td></tr>`).join('')}</tbody></table>`}
+function filteredSitePages(result){return sitePresentField==='all'?result.pages:result.pages.filter(page=>page.field_present[sitePresentField])}
+function filteredSiteRows(result,pages){if(sitePresentField==='all')return result.sites;const grouped=new Map();pages.forEach(page=>{if(!grouped.has(page.website))grouped.set(page.website,{website:page.website,pages:0,fields:Object.fromEntries(names.map(name=>[name,{correct:0,examples:0,accuracy:null}]))});const site=grouped.get(page.website);site.pages+=1;names.forEach(name=>{site.fields[name].examples+=1;site.fields[name].correct+=Number(page.field_matches[name])})});return [...grouped.values()].map(site=>{names.forEach(name=>site.fields[name].accuracy=site.fields[name].correct/site.fields[name].examples);return site})}
+function renderSites(){const result=currentResult;if(!result)return;const pages=filteredSitePages(result),sites=filteredSiteRows(result,pages);if(!sites.length){$('sites').className='empty';$('sites').textContent=`No URLs have a human ${sitePresentField} label.`;return}const valueFor=(site,key)=>key==='website'?site.website:key==='pages'?site.pages:site.fields[key].accuracy,sortedSites=[...sites].sort((left,right)=>{const a=valueFor(left,siteSort.key),b=valueFor(right,siteSort.key),order=typeof a==='string'?a.localeCompare(b):a-b;return siteSort.direction==='asc'?order:-order}),fieldHeaders=names.map(name=>sortHeader(name,name,true)).join(''),pageRows=page=>`<tr class="site-page"><td class="site-page-title" colspan="2"><a href="${esc(page.url)}" target="_blank" rel="noopener">[url]</a> <a class="eval-title" href="/playground?page=${encodeURIComponent(page.page_id)}" target="_blank" rel="noopener">${esc(page.title)}</a></td>${names.map(name=>`<td class="number metric-cell kpi-${scoreClass(page.field_matches[name]?1:0)}">${resultMark(page.field_matches[name])}</td>`).join('')}</tr>`;$('sites').className='';$('sites').innerHTML=`<table><thead><tr>${sortHeader('Site / page','website')}${sortHeader('Pages','pages',true)}${fieldHeaders}</tr></thead><tbody>${sortedSites.map(site=>{const open=expandedSites.has(site.website),children=open?pages.filter(page=>page.website===site.website).map(pageRows).join(''):'';return `<tr class="site-row" data-site="${esc(site.website)}" role="button" tabindex="0" aria-expanded="${open}"><td><span class="disclosure" aria-hidden="true">${open?'▾':'▸'}</span>${esc(site.website)}</td><td class="number">${site.pages}</td>${names.map(name=>{const accuracy=site.fields[name].accuracy;return `<td class="number metric-cell kpi-${scoreClass(accuracy)}">${pct(accuracy)}</td>`}).join('')}</tr>${children}`}).join('')}</tbody></table>`;document.querySelectorAll('[data-sort]').forEach(button=>button.onclick=()=>{const key=button.dataset.sort;siteSort=siteSort.key===key?{key,direction:siteSort.direction==='asc'?'desc':'asc'}:{key,direction:key==='website'?'asc':'desc'};renderSites()});document.querySelectorAll('.site-row').forEach(row=>{const toggle=()=>{expandedSites.has(row.dataset.site)?expandedSites.delete(row.dataset.site):expandedSites.add(row.dataset.site);renderSites()};row.onclick=toggle;row.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle()}}})}
+function renderCards(){if(!currentResult)return;$('cards').innerHTML=names.map(name=>{const item=currentResult.fields[name],onlyPresent=presentOnly.has(name),accuracy=onlyPresent?item.present_accuracy:item.accuracy,correct=onlyPresent?item.present_correct:item.correct,examples=onlyPresent?item.present_examples:item.examples,toggle=presentToggleFields.has(name)?`<button class="metric-toggle" type="button" data-present-field="${name}" aria-pressed="${onlyPresent}" title="Exclude pages where the human label is missing">${onlyPresent?'Present only':'All labels'}</button>`:'';return `<article class="card kpi-${scoreClass(accuracy)}"><div class="card-heading"><h3>${name}</h3>${toggle}</div><div class="accuracy">${pct(accuracy)}</div><div class="muted">${correct}/${examples} exact${onlyPresent?' · expected node present':''}</div></article>`}).join('');document.querySelectorAll('[data-present-field]').forEach(button=>button.onclick=()=>{const name=button.dataset.presentField;presentOnly.has(name)?presentOnly.delete(name):presentOnly.add(name);renderCards()})}
+function draw(result){currentResult=result;$('checkpoint').textContent=result.checkpoint;renderCards();renderSites();$('pages').className='';$('pages').innerHTML=`<table><thead><tr><th>Title</th><th>Site</th><th>Split</th><th class="number">Exact</th><th>Links</th></tr></thead><tbody>${result.pages.map(page=>`<tr><td class="title">${esc(page.title)}</td><td>${esc(page.website)}</td><td>${esc(page.split)}</td><td class="number">${page.matches}/${page.field_count}</td><td class="links"><a href="${esc(page.url)}" target="_blank" rel="noopener">[url]</a> <a href="/playground?page=${encodeURIComponent(page.page_id)}">[eval]</a></td></tr>`).join('')}</tbody></table>`}
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 function showProgress(completed,total,state){const root=$('progress'),safeTotal=Math.max(total,1),percent=Math.min(100,completed/safeTotal*100);root.classList.add('visible');root.setAttribute('aria-valuemax',total);root.setAttribute('aria-valuenow',completed);$('progress-bar').style.width=`${percent}%`;$('progress-text').textContent=state==='queued'?`Queued · 0/${total} pages classified`:`${completed}/${total} pages classified`}
-function cacheKey(website){return `dom-extractor-evals:v1:${evalOptions.cache_token}:${website||'all'}`}
+function cacheKey(website){return `dom-extractor-evals:v2:${evalOptions.cache_token}:${website||'all'}`}
 function saveCached(website,result){try{localStorage.setItem(cacheKey(website),JSON.stringify(result))}catch(error){console.warn('Could not cache evaluation result',error)}}
 function restoreCached(website=null){try{const value=localStorage.getItem(cacheKey(website));if(!value)return false;const result=JSON.parse(value);draw(result);showProgress(result.page_count,result.page_count,'complete');const when=new Date(result.evaluated_at).toLocaleString();$('status').textContent=`Cached ${result.page_count} pages · ${when}`;return true}catch(error){console.warn('Could not restore evaluation result',error);return false}}
 async function run(website=null){const buttons=[$('run-all'),$('run-site')];buttons.forEach(button=>button.disabled=true);$('status').textContent=website?`Running ${website}…`:'Running entire corpus…';showProgress(0,website?Number($('site').selectedOptions[0]?.dataset.pages||0):evalOptions.page_count,'queued');try{const query=website?`?website=${encodeURIComponent(website)}`:'';const started=await fetch('/api/evals/jobs'+query,{method:'POST'});if(!started.ok)throw new Error(await started.text());const created=await started.json();let job=created;while(job.status==='queued'||job.status==='running'){showProgress(job.completed,job.total,job.status);await wait(250);const response=await fetch(`/api/evals/jobs/${job.job_id}`);if(!response.ok)throw new Error(await response.text());job=await response.json()}showProgress(job.completed,job.total,job.status);if(job.status==='failed')throw new Error(job.error||'Evaluation failed');draw(job.result);saveCached(website,job.result);$('status').textContent=`${job.result.page_count} pages · ${job.result.latency_ms.toFixed(1)} ms`}catch(error){$('status').textContent=`Error: ${error.message}`}finally{buttons.forEach(button=>button.disabled=false)}}
-async function start(){evalOptions=await fetch('/api/evals/options').then(response=>response.json());$('checkpoint').textContent=evalOptions.checkpoint;$('workers').textContent=evalOptions.evaluation_workers;$('site').innerHTML=evalOptions.sites.map(site=>`<option value="${esc(site.website)}" data-pages="${site.pages}">${esc(site.website)} (${site.pages})</option>`).join('');$('run-all').onclick=()=>run();$('run-site').onclick=()=>run($('site').value);if(!restoreCached())run()}start();
+async function start(){evalOptions=await fetch('/api/evals/options').then(response=>response.json());$('checkpoint').textContent=evalOptions.checkpoint;$('workers').textContent=evalOptions.evaluation_workers;$('site').innerHTML=evalOptions.sites.map(site=>`<option value="${esc(site.website)}" data-pages="${site.pages}">${esc(site.website)} (${site.pages})</option>`).join('');$('present-filter').onchange=event=>{sitePresentField=event.target.value;expandedSites.clear();renderSites()};$('run-all').onclick=()=>run();$('run-site').onclick=()=>run($('site').value);if(!restoreCached())run()}start();
 </script></body></html>"""
 
 
@@ -127,32 +130,26 @@ def _evaluation_cache_token(
 
 def _metric(counts: dict[str, int]) -> dict[str, int | float | None]:
     examples = counts["examples"]
+    present_examples = counts["present_examples"]
     return {
         **counts,
         "accuracy": counts["correct"] / examples if examples else None,
+        "present_accuracy": (
+            counts["present_correct"] / present_examples if present_examples else None
+        ),
+    }
+
+
+def _empty_metric_counts() -> dict[str, int]:
+    return {
+        "correct": 0,
+        "examples": 0,
+        "present_correct": 0,
+        "present_examples": 0,
     }
 
 
 ProgressCallback = Callable[[int, int, str], None]
-_PROCESS_MODEL: DOMExtractor | None = None
-
-
-def _initialize_evaluation_process(checkpoint: Path) -> None:
-    global _PROCESS_MODEL
-
-    import torch
-
-    torch.set_num_threads(1)
-    _PROCESS_MODEL = DOMExtractor(checkpoint)
-
-
-def _evaluate_record_in_process(
-    record: PageRecord,
-    dataset_dir: Path,
-) -> dict[str, object]:
-    if _PROCESS_MODEL is None:
-        raise RuntimeError("evaluation worker model is not initialized")
-    return _evaluate_record(record, dataset_dir, _PROCESS_MODEL)
 
 
 def _evaluate_record(
@@ -206,33 +203,27 @@ def _evaluate_records(
     checkpoint: Path,
     model: DOMExtractor | Any,
     *,
-    max_workers: int = DEFAULT_EVALUATION_WORKERS,
+    max_workers: int = 10,
     progress: ProgressCallback | None = None,
-    use_processes: bool = False,
 ) -> dict[str, object]:
     started = time.perf_counter()
-    field_counts = {field: {"correct": 0, "examples": 0} for field in FIELDS}
+    field_counts = {field: _empty_metric_counts() for field in FIELDS}
     site_pages: dict[str, int] = defaultdict(int)
     site_field_counts: dict[str, dict[Field, dict[str, int]]] = defaultdict(
-        lambda: {field: {"correct": 0, "examples": 0} for field in FIELDS}
+        lambda: {field: _empty_metric_counts() for field in FIELDS}
     )
     indexed_rows: list[tuple[int, dict[str, object]]] = []
     total = len(records)
     if total:
         worker_count = min(max_workers, total)
-        executor_type = ProcessPoolExecutor if use_processes else ThreadPoolExecutor
-        executor_kwargs = (
-            {"initializer": _initialize_evaluation_process, "initargs": (checkpoint,)}
-            if use_processes
-            else {}
-        )
-        with executor_type(max_workers=worker_count, **executor_kwargs) as executor:
+        # The model is immutable during inference. Share the already-loaded
+        # checkpoint instead of spawning a PyTorch process per worker.
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
             pending = {
-                (
-                    executor.submit(_evaluate_record_in_process, record, dataset_dir)
-                    if use_processes
-                    else executor.submit(_evaluate_record, record, dataset_dir, model)
-                ): (index, record)
+                executor.submit(_evaluate_record, record, dataset_dir, model): (
+                    index,
+                    record,
+                )
                 for index, record in enumerate(records)
             }
             for completed, future in enumerate(as_completed(pending), start=1):
@@ -252,6 +243,11 @@ def _evaluate_records(
             field_counts[field]["correct"] += exact
             site_field_counts[website][field]["examples"] += 1
             site_field_counts[website][field]["correct"] += exact
+            if field_result["expected"] is not None:
+                field_counts[field]["present_examples"] += 1
+                field_counts[field]["present_correct"] += exact
+                site_field_counts[website][field]["present_examples"] += 1
+                site_field_counts[website][field]["present_correct"] += exact
     sites = [
         {
             "website": website,
@@ -273,6 +269,10 @@ def _evaluate_records(
                 **{key: value for key, value in row.items() if key != "fields"},
                 "field_matches": {
                     field.value: bool(row["fields"][field.value]["exact"])
+                    for field in FIELDS
+                },
+                "field_present": {
+                    field.value: row["fields"][field.value]["expected"] is not None
                     for field in FIELDS
                 },
             }
@@ -314,7 +314,7 @@ def create_app(
     checkpoint: Path,
     *,
     extractor: DOMExtractor | Any | None = None,
-    evaluation_workers: int = DEFAULT_EVALUATION_WORKERS,
+    evaluation_workers: int = 10,
 ) -> FastAPI:
     if evaluation_workers < 1:
         raise ValueError("evaluation_workers must be at least 1")
@@ -365,7 +365,6 @@ def create_app(
                     model,
                     max_workers=evaluation_workers,
                     progress=report_progress,
-                    use_processes=isinstance(model, DOMExtractor),
                 )
                 update_job(
                     job_id,
@@ -421,7 +420,6 @@ def create_app(
                 checkpoint,
                 model,
                 max_workers=evaluation_workers,
-                use_processes=isinstance(model, DOMExtractor),
             )
 
     @app.post("/api/evals/jobs", status_code=202)
@@ -560,11 +558,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--eval-workers",
         type=int,
-        default=DEFAULT_EVALUATION_WORKERS,
-        help=(
-            "Parallel workers for whole-corpus evaluation. "
-            f"Default: {DEFAULT_EVALUATION_WORKERS}."
-        ),
+        default=10,
+        help="Parallel workers for whole-corpus evaluation. Default: 10.",
     )
     return parser
 

@@ -179,7 +179,7 @@ def test_whole_corpus_evaluation_dashboard_uses_human_reviews(
                 "labels": {
                     "article": article_id,
                     "title": title_id,
-                    "authors": None,
+                    "authors": article_id,
                     "date": None,
                     "summary": None,
                     "relative_date": None,
@@ -208,11 +208,22 @@ def test_whole_corpus_evaluation_dashboard_uses_human_reviews(
     assert options["sites"] == [{"website": "engineering.example.com", "pages": 1}]
     assert result["page_count"] == 1
     assert result["pages"][0]["title"] == "Test title"
-    assert all(
-        field["accuracy"] == 1.0 for field in result["sites"][0]["fields"].values()
-    )
-    assert all(result["pages"][0]["field_matches"].values())
-    assert all(field["accuracy"] == 1.0 for field in result["fields"].values())
+    assert result["fields"]["authors"] == {
+        "correct": 0,
+        "examples": 1,
+        "present_correct": 0,
+        "present_examples": 1,
+        "accuracy": 0.0,
+        "present_accuracy": 0.0,
+    }
+    assert result["fields"]["date"]["accuracy"] == 1.0
+    assert result["fields"]["date"]["present_examples"] == 0
+    assert result["fields"]["date"]["present_accuracy"] is None
+    assert result["sites"][0]["fields"]["authors"]["present_accuracy"] == 0.0
+    assert not result["pages"][0]["field_matches"]["authors"]
+    assert result["pages"][0]["field_present"]["authors"]
+    assert not result["pages"][0]["field_present"]["date"]
+    assert result["pages"][0]["matches"] == len(FIELDS) - 1
     assert site_result["page_count"] == 1
     assert client.post("/api/evals/run?website=unknown.example.com").status_code == 404
 
@@ -255,7 +266,15 @@ def test_evaluation_dashboard_has_requested_controls_and_links() -> None:
     assert "row.onclick=toggle" in EVALS_SHELL
     assert "site.fields[name].accuracy" in EVALS_SHELL
     assert "value>=.8?'green':value>=.5?'orange':'red'" in EVALS_SHELL
-    assert 'class="card kpi-${scoreClass(item.accuracy)}"' in EVALS_SHELL
+    assert 'class="card kpi-${scoreClass(accuracy)}"' in EVALS_SHELL
+    assert "presentToggleFields=new Set(['authors','date','summary'])" in EVALS_SHELL
+    assert 'data-present-field="${name}"' in EVALS_SHELL
+    assert "item.present_accuracy" in EVALS_SHELL
+    assert "expected node present" in EVALS_SHELL
+    assert 'id="present-filter"' in EVALS_SHELL
+    assert "Authors present only" in EVALS_SHELL
+    assert "page.field_present[sitePresentField]" in EVALS_SHELL
+    assert "function filteredSiteRows(result,pages)" in EVALS_SHELL
     assert "sortHeader('Pages','pages',true)" in EVALS_SHELL
     assert "names.map(name=>sortHeader(name,name,true))" in EVALS_SHELL
     assert 'data-sort="${key}"' in EVALS_SHELL

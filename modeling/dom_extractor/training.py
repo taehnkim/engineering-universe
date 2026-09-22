@@ -3,20 +3,30 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
 import json
-from pathlib import Path
 import random
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 
-from eng_universe.extraction.model import DOMNodeSelector
-from eng_universe.extraction.contract import FIELDS
+from eng_universe.extraction.contract import FIELDS, Field
 from eng_universe.extraction.dom import DOM_CLEANUP_VERSION
+from eng_universe.extraction.features import FEATURE_VERSION
+from eng_universe.extraction.model import DOMNodeSelector
+
+FIELD_LOSS_WEIGHTS = {
+    Field.ARTICLE: 1.0,
+    Field.TITLE: 1.0,
+    Field.AUTHORS: 3.0,
+    Field.DATE: 2.0,
+    Field.SUMMARY: 1.0,
+    Field.RELATIVE_DATE: 1.0,
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,6 +35,11 @@ class MatrixPage:
     website: str
     tag_ids: torch.Tensor
     parent_tag_ids: torch.Tensor
+    grandparent_tag_ids: torch.Tensor
+    previous_tag_ids: torch.Tensor
+    next_tag_ids: torch.Tensor
+    attribute_token_ids: torch.Tensor
+    text_shape_token_ids: torch.Tensor
     numeric: torch.Tensor
     targets: torch.Tensor
 
@@ -43,6 +58,19 @@ class MatrixDataset(Dataset[MatrixPage]):
                 website=str(value["website"]),
                 tag_ids=torch.from_numpy(value["tag_ids"].copy()).long(),
                 parent_tag_ids=torch.from_numpy(value["parent_tag_ids"].copy()).long(),
+                grandparent_tag_ids=torch.from_numpy(
+                    value["grandparent_tag_ids"].copy()
+                ).long(),
+                previous_tag_ids=torch.from_numpy(
+                    value["previous_tag_ids"].copy()
+                ).long(),
+                next_tag_ids=torch.from_numpy(value["next_tag_ids"].copy()).long(),
+                attribute_token_ids=torch.from_numpy(
+                    value["attribute_token_ids"].copy()
+                ).long(),
+                text_shape_token_ids=torch.from_numpy(
+                    value["text_shape_token_ids"].copy()
+                ).long(),
                 numeric=torch.from_numpy(value["numeric"].copy()).float(),
                 targets=torch.from_numpy(value["targets"].copy()).long(),
             )
@@ -54,6 +82,11 @@ class Batch:
     websites: tuple[str, ...]
     tag_ids: torch.Tensor
     parent_tag_ids: torch.Tensor
+    grandparent_tag_ids: torch.Tensor
+    previous_tag_ids: torch.Tensor
+    next_tag_ids: torch.Tensor
+    attribute_token_ids: torch.Tensor
+    text_shape_token_ids: torch.Tensor
     numeric: torch.Tensor
     mask: torch.Tensor
     targets: torch.Tensor
@@ -64,6 +97,11 @@ class Batch:
             self.websites,
             self.tag_ids.to(device),
             self.parent_tag_ids.to(device),
+            self.grandparent_tag_ids.to(device),
+            self.previous_tag_ids.to(device),
+            self.next_tag_ids.to(device),
+            self.attribute_token_ids.to(device),
+            self.text_shape_token_ids.to(device),
             self.numeric.to(device),
             self.mask.to(device),
             self.targets.to(device),
@@ -75,6 +113,17 @@ def collate_pages(items: list[MatrixPage]) -> Batch:
     feature_count = items[0].numeric.shape[1]
     tag_ids = torch.zeros((len(items), max_candidates), dtype=torch.long)
     parent_tag_ids = torch.zeros_like(tag_ids)
+    grandparent_tag_ids = torch.zeros_like(tag_ids)
+    previous_tag_ids = torch.zeros_like(tag_ids)
+    next_tag_ids = torch.zeros_like(tag_ids)
+    max_attribute_tokens = items[0].attribute_token_ids.shape[1]
+    attribute_token_ids = torch.zeros(
+        (len(items), max_candidates, max_attribute_tokens), dtype=torch.long
+    )
+    max_text_shape_tokens = items[0].text_shape_token_ids.shape[1]
+    text_shape_token_ids = torch.zeros(
+        (len(items), max_candidates, max_text_shape_tokens), dtype=torch.long
+    )
     numeric = torch.zeros(
         (len(items), max_candidates, feature_count), dtype=torch.float32
     )
@@ -84,6 +133,11 @@ def collate_pages(items: list[MatrixPage]) -> Batch:
         count = len(item.tag_ids)
         tag_ids[index, :count] = item.tag_ids
         parent_tag_ids[index, :count] = item.parent_tag_ids
+        grandparent_tag_ids[index, :count] = item.grandparent_tag_ids
+        previous_tag_ids[index, :count] = item.previous_tag_ids
+        next_tag_ids[index, :count] = item.next_tag_ids
+        attribute_token_ids[index, :count] = item.attribute_token_ids
+        text_shape_token_ids[index, :count] = item.text_shape_token_ids
         numeric[index, :count] = item.numeric
         mask[index, :count] = True
         targets[index] = torch.where(
@@ -96,6 +150,11 @@ def collate_pages(items: list[MatrixPage]) -> Batch:
         tuple(item.website for item in items),
         tag_ids,
         parent_tag_ids,
+        grandparent_tag_ids,
+        previous_tag_ids,
+        next_tag_ids,
+        attribute_token_ids,
+        text_shape_token_ids,
         numeric,
         mask,
         targets,
@@ -104,9 +163,17 @@ def collate_pages(items: list[MatrixPage]) -> Batch:
 
 def _loss(scores: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
     # scores: [page, candidate-or-missing, field]
-    return nn.functional.cross_entropy(
-        scores.permute(0, 2, 1).reshape(-1, scores.shape[1]), targets.reshape(-1)
+    per_field = nn.functional.cross_entropy(
+        scores.permute(0, 2, 1).reshape(-1, scores.shape[1]),
+        targets.reshape(-1),
+        reduction="none",
+    ).reshape(targets.shape)
+    weights = torch.tensor(
+        [FIELD_LOSS_WEIGHTS[field] for field in FIELDS],
+        device=scores.device,
+        dtype=scores.dtype,
     )
+    return (per_field * weights).sum() / (targets.shape[0] * weights.sum())
 
 
 def _run_epoch(
@@ -124,7 +191,15 @@ def _run_epoch(
         batch = raw_batch.to(device)
         with torch.set_grad_enabled(training):
             scores = model(
-                batch.tag_ids, batch.parent_tag_ids, batch.numeric, batch.mask
+                batch.tag_ids,
+                batch.parent_tag_ids,
+                batch.grandparent_tag_ids,
+                batch.previous_tag_ids,
+                batch.next_tag_ids,
+                batch.attribute_token_ids,
+                batch.text_shape_token_ids,
+                batch.numeric,
+                batch.mask,
             )
             loss = _loss(scores, batch.targets)
             if optimizer is not None:
@@ -142,7 +217,9 @@ def _run_epoch(
     }
 
 
-def _loader(paths: Sequence[Path], batch_size: int, shuffle: bool) -> DataLoader[MatrixPage]:
+def _loader(
+    paths: Sequence[Path], batch_size: int, shuffle: bool
+) -> DataLoader[MatrixPage]:
     return DataLoader(
         MatrixDataset(paths),
         batch_size=batch_size,
@@ -153,11 +230,17 @@ def _loader(paths: Sequence[Path], batch_size: int, shuffle: bool) -> DataLoader
 
 def _new_model(
     tag_count: int,
+    semantic_token_count: int,
     feature_count: int,
     device: torch.device,
     field_count: int = len(FIELDS),
 ) -> DOMNodeSelector:
-    return DOMNodeSelector(tag_count, feature_count, field_count=field_count).to(device)
+    return DOMNodeSelector(
+        tag_count,
+        feature_count,
+        semantic_token_count,
+        field_count=field_count,
+    ).to(device)
 
 
 def train(
@@ -182,21 +265,33 @@ def train(
     )
     fields = preprocessing.get("fields", [field.value for field in FIELDS])
     if fields != [field.value for field in FIELDS]:
-        raise ValueError(f"prepared field schema does not match runtime schema: {fields}")
+        raise ValueError(
+            f"prepared field schema does not match runtime schema: {fields}"
+        )
     if preprocessing.get("dom_cleanup") != DOM_CLEANUP_VERSION:
         raise ValueError(
             "prepared DOM cleanup does not match runtime cleanup: "
             f"{preprocessing.get('dom_cleanup')!r}"
         )
+    if preprocessing.get("feature_version") != FEATURE_VERSION:
+        raise ValueError(
+            "prepared feature version does not match runtime features: "
+            f"{preprocessing.get('feature_version')!r}"
+        )
     tag_count = len(preprocessing["vocabulary"]["tags"])
+    semantic_token_count = len(preprocessing["semantic_vocabulary"]["tokens"])
     with np.load(train_paths[0], allow_pickle=False) as first:
         feature_count = int(first["numeric"].shape[1])
 
     # Required smoke test: independently prove the architecture can memorize a
     # few pages before spending time on the full split.
     overfit_paths = train_paths[: min(4, len(train_paths))]
-    overfit_model = _new_model(tag_count, feature_count, device, len(fields))
-    overfit_optimizer = torch.optim.Adam(overfit_model.parameters(), lr=learning_rate * 3)
+    overfit_model = _new_model(
+        tag_count, semantic_token_count, feature_count, device, len(fields)
+    )
+    overfit_optimizer = torch.optim.Adam(
+        overfit_model.parameters(), lr=learning_rate * 3
+    )
     overfit_loader = _loader(overfit_paths, len(overfit_paths), shuffle=True)
     overfit_metrics: dict[str, float] = {}
     for _ in range(overfit_epochs):
@@ -204,7 +299,9 @@ def train(
             overfit_model, overfit_loader, device, overfit_optimizer
         )
 
-    model = _new_model(tag_count, feature_count, device, len(fields))
+    model = _new_model(
+        tag_count, semantic_token_count, feature_count, device, len(fields)
+    )
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     train_loader = _loader(train_paths, batch_size, shuffle=True)
     validation_loader = _loader(validation_paths, batch_size, shuffle=False)
@@ -223,7 +320,13 @@ def train(
                 {
                     "model_state": model.state_dict(),
                     "tag_count": tag_count,
+                    "semantic_token_count": semantic_token_count,
                     "numeric_feature_count": feature_count,
+                    "model_config": {
+                        "embedding_dim": 6,
+                        "semantic_embedding_dim": 4,
+                        "hidden_dim": 36,
+                    },
                     "fields": fields,
                     "preprocessing": preprocessing,
                     "epoch": epoch,

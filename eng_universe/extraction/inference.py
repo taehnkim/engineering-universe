@@ -12,7 +12,9 @@ import torch
 from eng_universe.extraction.contract import FIELDS, Field
 from eng_universe.extraction.dom import DOM_CLEANUP_VERSION, ParsedPage, parse_html
 from eng_universe.extraction.features import (
+    FEATURE_VERSION,
     FeatureNormalizer,
+    SemanticVocabulary,
     TagVocabulary,
     featurize_page,
 )
@@ -55,11 +57,24 @@ class DOMExtractor:
                 "checkpoint DOM cleanup does not match runtime cleanup: "
                 f"{preprocessing.get('dom_cleanup')!r}"
             )
+        if preprocessing.get("feature_version") != FEATURE_VERSION:
+            raise ValueError(
+                "checkpoint feature version does not match runtime features: "
+                f"{preprocessing.get('feature_version')!r}"
+            )
         self.vocabulary = TagVocabulary.from_dict(preprocessing["vocabulary"])
+        self.semantic_vocabulary = SemanticVocabulary.from_dict(
+            preprocessing["semantic_vocabulary"]
+        )
         self.normalizer = FeatureNormalizer.from_dict(preprocessing["normalizer"])
+        model_config = checkpoint.get("model_config", {})
         self.model = DOMNodeSelector(
             int(checkpoint["tag_count"]),
             int(checkpoint["numeric_feature_count"]),
+            int(checkpoint["semantic_token_count"]),
+            embedding_dim=int(model_config.get("embedding_dim", 6)),
+            semantic_embedding_dim=int(model_config.get("semantic_embedding_dim", 4)),
+            hidden_dim=int(model_config.get("hidden_dim", 36)),
             field_count=len(FIELDS),
         )
         self.model.load_state_dict(checkpoint["model_state"])
@@ -72,13 +87,20 @@ class DOMExtractor:
     def predict_page(self, page: ParsedPage) -> dict[Field, int | None]:
         """Predict node IDs from an already cleaned and parsed page."""
 
-        features = featurize_page(page, self.vocabulary, self.normalizer)
+        features = featurize_page(
+            page, self.vocabulary, self.semantic_vocabulary, self.normalizer
+        )
         if not page.candidates:
             return {field: None for field in FIELDS}
         with torch.inference_mode():
             scores = self.model(
                 torch.from_numpy(features.tag_ids).unsqueeze(0),
                 torch.from_numpy(features.parent_tag_ids).unsqueeze(0),
+                torch.from_numpy(features.grandparent_tag_ids).unsqueeze(0),
+                torch.from_numpy(features.previous_tag_ids).unsqueeze(0),
+                torch.from_numpy(features.next_tag_ids).unsqueeze(0),
+                torch.from_numpy(features.attribute_token_ids).unsqueeze(0),
+                torch.from_numpy(features.text_shape_token_ids).unsqueeze(0),
                 torch.from_numpy(features.numeric).unsqueeze(0),
                 torch.ones((1, len(page.candidates)), dtype=torch.bool),
             )

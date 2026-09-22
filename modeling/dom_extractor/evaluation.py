@@ -20,6 +20,7 @@ import torch
 
 from eng_universe.extraction.contract import FIELDS, Field
 from eng_universe.extraction.dom import ParsedPage
+from eng_universe.extraction.features import FEATURE_VERSION
 from eng_universe.extraction.inference import DOMExtractor
 from modeling.dom_extractor.dataset import iter_labeled_pages
 
@@ -168,6 +169,7 @@ def evaluate(
             if include_jev_drafts
             else "human_reviewed_only"
         ),
+        "feature_version": FEATURE_VERSION,
         "test_pages": len(pages),
         "fields": {field.value: _finish(counts[field]) for field in FIELDS},
         "by_website": {
@@ -185,10 +187,13 @@ def evaluate(
             else None,
             "process_peak_rss_bytes": peak_rss_bytes,
         },
-        "known_limitation": "v1 uses structural features and tag embeddings, not article words",
+        "known_limitation": (
+            "Exact-node accuracy penalizes a semantically correct nested or parent "
+            "wrapper as a full error; inspect word errors and failures too."
+        ),
         "next_experiment": (
-            "Add compact class/id token embeddings and neighboring-node context, then "
-            "re-evaluate title/date errors; do not enlarge or quantize the MLP first."
+            "Mine repeated failure shapes by website and add reviewed examples before "
+            "increasing the bounded semantic vocabulary or MLP."
         ),
     }
     output_dir.mkdir(parents=True, exist_ok=True)

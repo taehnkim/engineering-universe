@@ -9,7 +9,12 @@ def test_model_scores_candidates_and_one_missing_option() -> None:
     scores = model(
         torch.tensor([[2, 3, 0]]),
         torch.tensor([[3, 2, 0]]),
-        torch.zeros((1, 3, 8)),
+        torch.tensor([[3, 2, 0]]),
+        torch.tensor([[1, 3, 0]]),
+        torch.tensor([[3, 1, 0]]),
+        torch.zeros((1, 3, 8), dtype=torch.long),
+        torch.zeros((1, 3, 12), dtype=torch.long),
+        torch.zeros((1, 3, 49)),
         torch.tensor([[True, True, False]]),
     )
     assert scores.shape == (1, 4, len(FIELDS))
