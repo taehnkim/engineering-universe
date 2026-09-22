@@ -109,8 +109,14 @@ def _evaluation_cache_token(
     records: Sequence[PageRecord],
     dataset_dir: Path,
     checkpoint: Path,
+    author_boundary_checkpoint: Path | None = None,
 ) -> str:
     checkpoint_stat = checkpoint.stat() if checkpoint.exists() else None
+    boundary_stat = (
+        author_boundary_checkpoint.stat()
+        if author_boundary_checkpoint is not None
+        else None
+    )
     annotation_mtimes = [
         (dataset_dir / "annotations" / f"{record.page_id}.json").stat().st_mtime_ns
         for record in records
@@ -121,6 +127,13 @@ def _evaluation_cache_token(
             str(checkpoint.resolve()),
             str(checkpoint_stat.st_size if checkpoint_stat else 0),
             str(checkpoint_stat.st_mtime_ns if checkpoint_stat else 0),
+            str(
+                author_boundary_checkpoint.resolve()
+                if author_boundary_checkpoint
+                else ""
+            ),
+            str(boundary_stat.st_size if boundary_stat else 0),
+            str(boundary_stat.st_mtime_ns if boundary_stat else 0),
             str(len(records)),
             str(max(annotation_mtimes, default=0)),
         )
@@ -257,7 +270,12 @@ def _evaluate_records(
         for website, counts in sorted(site_field_counts.items())
     ]
     return {
-        "checkpoint": str(checkpoint),
+        "checkpoint": str(checkpoint)
+        + (
+            f" + {model.author_boundary_checkpoint}"
+            if getattr(model, "author_boundary_checkpoint", None) is not None
+            else ""
+        ),
         "scope": "all human-reviewed pages across train, validation, and test",
         "evaluated_at": datetime.now(UTC).isoformat(),
         "page_count": len(page_rows),
@@ -315,13 +333,21 @@ def create_app(
     *,
     extractor: DOMExtractor | Any | None = None,
     evaluation_workers: int = 10,
+    author_boundary_checkpoint: Path | None = None,
 ) -> FastAPI:
     if evaluation_workers < 1:
         raise ValueError("evaluation_workers must be at least 1")
     app = FastAPI(title="DOM inference playground")
     manifest = DatasetManifest.load(dataset_dir / "manifest.json")
     records = {record.page_id: record for record in manifest.pages}
-    model = extractor or DOMExtractor(checkpoint)
+    if extractor is not None and author_boundary_checkpoint is not None:
+        raise ValueError("pass either an extractor or an author boundary checkpoint")
+    model = extractor or DOMExtractor(
+        checkpoint, author_boundary_checkpoint=author_boundary_checkpoint
+    )
+    checkpoint_display = str(checkpoint) + (
+        f" + {author_boundary_checkpoint}" if author_boundary_checkpoint else ""
+    )
     evaluation_lock = asyncio.Lock()
     evaluation_jobs: dict[str, dict[str, object]] = {}
     evaluation_jobs_lock = threading.Lock()
@@ -399,10 +425,12 @@ def create_app(
         for record in reviewed:
             site_pages[record.website] += 1
         return {
-            "checkpoint": str(checkpoint),
+            "checkpoint": checkpoint_display,
             "page_count": len(reviewed),
             "evaluation_workers": evaluation_workers,
-            "cache_token": _evaluation_cache_token(reviewed, dataset_dir, checkpoint),
+            "cache_token": _evaluation_cache_token(
+                reviewed, dataset_dir, checkpoint, author_boundary_checkpoint
+            ),
             "sites": [
                 {"website": website, "pages": pages}
                 for website, pages in sorted(site_pages.items())
@@ -476,7 +504,7 @@ def create_app(
             "split": record.split,
             "website": record.website,
             "document_html": annotation_html(parse_html(html)),
-            "checkpoint": str(checkpoint),
+            "checkpoint": checkpoint_display,
             "reference_source": source,
         }
 
@@ -556,6 +584,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8767)
     parser.add_argument(
+        "--author-boundary-checkpoint",
+        type=Path,
+        help="Optional local author boundary ranker trained for --checkpoint.",
+    )
+    parser.add_argument(
         "--eval-workers",
         type=int,
         default=10,
@@ -573,6 +606,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             args.dataset_dir,
             args.checkpoint,
             evaluation_workers=args.eval_workers,
+            author_boundary_checkpoint=args.author_boundary_checkpoint,
         ),
         host=args.host,
         port=args.port,

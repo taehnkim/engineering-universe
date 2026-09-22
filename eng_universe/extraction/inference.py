@@ -9,6 +9,10 @@ from typing import Literal
 
 import torch
 
+from eng_universe.extraction.author_boundary import (
+    AUTHOR_FIELD_INDEX,
+    AuthorBoundaryRefiner,
+)
 from eng_universe.extraction.contract import FIELDS, Field
 from eng_universe.extraction.dom import DOM_CLEANUP_VERSION, ParsedPage, parse_html
 from eng_universe.extraction.features import (
@@ -40,7 +44,12 @@ class ExtractedDocument:
 
 
 class DOMExtractor:
-    def __init__(self, checkpoint_path: str | Path) -> None:
+    def __init__(
+        self,
+        checkpoint_path: str | Path,
+        *,
+        author_boundary_checkpoint: str | Path | None = None,
+    ) -> None:
         checkpoint = torch.load(
             Path(checkpoint_path), map_location="cpu", weights_only=False
         )
@@ -79,6 +88,12 @@ class DOMExtractor:
         )
         self.model.load_state_dict(checkpoint["model_state"])
         self.model.eval()
+        self.author_boundary_checkpoint = author_boundary_checkpoint
+        self.author_boundary = (
+            AuthorBoundaryRefiner(author_boundary_checkpoint, checkpoint_path)
+            if author_boundary_checkpoint is not None
+            else None
+        )
 
     def predict_ids(self, html: str) -> dict[Field, int | None]:
         page = parse_html(html, strip_chrome=True)
@@ -111,6 +126,14 @@ class DOMExtractor:
                 None
                 if selected_index == len(page.candidates)
                 else int(features.node_ids[selected_index])
+            )
+        selected_author = predictions[Field.AUTHORS]
+        if self.author_boundary is not None and selected_author is not None:
+            predictions[Field.AUTHORS] = self.author_boundary.refine(
+                page,
+                selected_author,
+                scores[0, :-1, AUTHOR_FIELD_INDEX].numpy(),
+                features.numeric,
             )
         return predictions
 

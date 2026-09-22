@@ -277,6 +277,38 @@ candidates plus its learned missing score. Author loss has weight 3 and date
 loss has weight 2, so good article/title performance cannot hide weak metadata
 selection.
 
+### Author boundary experiment
+
+The optional author boundary ranker starts from the current checkpoint's author
+node. It compares that node with up to five ancestors and descendants within
+seven DOM levels. It uses relative text coverage, author/profile links, date
+and reading-time markers, DOM shape, and the base model's scores to select the
+human-labeled wrapper. It leaves a `missing` author prediction unchanged and
+does not change the other five fields. The saved ranker is tied to the exact
+base checkpoint by SHA-256, so an incompatible pairing fails at startup.
+
+```bash
+uv run --group modeling python -m modeling.dom_extractor.commands.train_author_boundary \
+  --dataset-dir data/learned_extraction/raw \
+  --base-checkpoint data/learned_extraction/model/best.pt \
+  --output-dir data/learned_extraction/author_boundary_v1
+
+uv run --group modeling python -m modeling.dom_extractor.apps.playground \
+  --dataset-dir data/learned_extraction/raw \
+  --checkpoint data/learned_extraction/model/best.pt \
+  --author-boundary-checkpoint data/learned_extraction/author_boundary_v1/author_boundary.pt \
+  --port 8769
+```
+
+Open `http://127.0.0.1:8769/evals` to inspect the experiment. The ranker uses
+train pages for fitting, validation websites to choose its checkpoint and
+change margin, and the test split only for a final check. On the current data,
+author exact-node accuracy changed from 104/200 (52%) to 136/200 (68%) on
+validation, with 33 fixes and one regression. The 30-page test site remained
+25/30 (83.3%). Most validation gains came from one website: OpenAI Developers
+accounted for 25 of the 32 net fixes. This is an opt-in experiment; the base
+checkpoint is unchanged.
+
 Evaluation is run only on held-out websites after checkpoint selection. It
 reports per-field exact-node accuracy, missing precision/recall, missing and
 unwanted word counts, per-website results, checkpoint and deployment size, peak

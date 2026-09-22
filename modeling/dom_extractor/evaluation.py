@@ -90,8 +90,11 @@ def evaluate(
     output_dir: Path,
     *,
     include_jev_drafts: bool = False,
+    author_boundary_checkpoint: Path | None = None,
 ) -> dict[str, object]:
-    extractor = DOMExtractor(checkpoint)
+    extractor = DOMExtractor(
+        checkpoint, author_boundary_checkpoint=author_boundary_checkpoint
+    )
     counts = {field: _empty_counts() for field in FIELDS}
     website_counts: dict[str, dict[Field, dict[str, float]]] = defaultdict(
         lambda: {field: _empty_counts() for field in FIELDS}
@@ -214,6 +217,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser.add_argument("--dataset-dir", type=Path, required=True)
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--author-boundary-checkpoint", type=Path)
     parser.add_argument(
         "--include-jev-drafts",
         action="store_true",
@@ -227,6 +231,7 @@ def main(argv: Sequence[str] | None = None) -> None:
                 args.checkpoint,
                 args.output_dir,
                 include_jev_drafts=args.include_jev_drafts,
+                author_boundary_checkpoint=args.author_boundary_checkpoint,
             ),
             indent=2,
         )
