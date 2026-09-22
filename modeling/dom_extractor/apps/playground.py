@@ -20,7 +20,11 @@ from fastapi.responses import HTMLResponse
 
 from eng_universe.extraction.contract import FIELDS, Field, load_annotation
 from eng_universe.extraction.dom import annotation_html, parse_html
-from eng_universe.extraction.inference import DOMExtractor
+from eng_universe.extraction.inference import (
+    DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT,
+    DEFAULT_CHECKPOINT,
+    DOMExtractor,
+)
 from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
@@ -329,7 +333,7 @@ def _infer_html(html: str, model: DOMExtractor | Any) -> dict[str, object]:
 
 def create_app(
     dataset_dir: Path,
-    checkpoint: Path,
+    checkpoint: Path | None = None,
     *,
     extractor: DOMExtractor | Any | None = None,
     evaluation_workers: int = 10,
@@ -337,6 +341,10 @@ def create_app(
 ) -> FastAPI:
     if evaluation_workers < 1:
         raise ValueError("evaluation_workers must be at least 1")
+    if checkpoint is None:
+        checkpoint = DEFAULT_CHECKPOINT
+        if author_boundary_checkpoint is None and extractor is None:
+            author_boundary_checkpoint = DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT
     app = FastAPI(title="DOM inference playground")
     manifest = DatasetManifest.load(dataset_dir / "manifest.json")
     records = {record.page_id: record for record in manifest.pages}
@@ -579,14 +587,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--checkpoint",
         type=Path,
-        default=Path("data/learned_extraction/model/best.pt"),
+        help="Custom base checkpoint; omitting this uses the bundled two-model default.",
     )
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8767)
     parser.add_argument(
         "--author-boundary-checkpoint",
         type=Path,
-        help="Optional local author boundary ranker trained for --checkpoint.",
+        help="Author boundary ranker trained for a custom --checkpoint.",
     )
     parser.add_argument(
         "--eval-workers",

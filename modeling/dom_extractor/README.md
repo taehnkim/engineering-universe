@@ -150,8 +150,10 @@ per source plus listing-page negatives.
 
 The current human-reviewed corpus contains 659 pages: 429 train, 200 validation,
 and 30 test. Whole websites belong to one split only.
-The root `.gitignore` excludes local data, prepared NumPy matrices, checkpoints,
-and evaluation output.
+The root `.gitignore` excludes local data, prepared NumPy matrices, training
+checkpoints, and evaluation output. The 29 KB base checkpoint and 11 KB author
+refiner used for default inference are bundled separately under
+`eng_universe/extraction/checkpoints/` and included in the Python package.
 
 ```bash
 uv run --group modeling python -m modeling.dom_extractor.commands.sample_html
@@ -172,7 +174,6 @@ uv run --group modeling python -m modeling.dom_extractor.training \
   --output-dir data/learned_extraction/model
 uv run --group modeling python -m modeling.dom_extractor.evaluation \
   --dataset-dir data/learned_extraction/raw \
-  --checkpoint data/learned_extraction/model/best.pt \
   --output-dir data/learned_extraction/evaluation
 ```
 
@@ -201,8 +202,7 @@ Start the read-only inference playground on port 8767:
 
 ```bash
 uv run --group modeling python -m modeling.dom_extractor.apps.playground \
-  --dataset-dir data/learned_extraction/raw \
-  --checkpoint data/learned_extraction/model/best.pt
+  --dataset-dir data/learned_extraction/raw
 ```
 
 Choose a page and click **RUN**. The playground executes the checkpoint, shows
@@ -277,15 +277,19 @@ candidates plus its learned missing score. Author loss has weight 3 and date
 loss has weight 2, so good article/title performance cannot hide weak metadata
 selection.
 
-### Author boundary experiment
+### Default author boundary model
 
-The optional author boundary ranker starts from the current checkpoint's author
+The bundled author boundary ranker starts from the base checkpoint's author
 node. It compares that node with up to five ancestors and descendants within
 seven DOM levels. It uses relative text coverage, author/profile links, date
 and reading-time markers, DOM shape, and the base model's scores to select the
 human-labeled wrapper. It leaves a `missing` author prediction unchanged and
 does not change the other five fields. The saved ranker is tied to the exact
-base checkpoint by SHA-256, so an incompatible pairing fails at startup.
+base checkpoint by SHA-256, so an incompatible pairing fails at startup. The
+second model is a one-hidden-layer neural ranker with 24 hidden units and 76
+numeric inputs per local candidate (49 shared base features and 27 boundary
+features). It does not directly receive semantic embeddings; the base model's
+author scores carry that information indirectly.
 
 ```bash
 uv run --group modeling python -m modeling.dom_extractor.commands.train_author_boundary \
@@ -295,19 +299,25 @@ uv run --group modeling python -m modeling.dom_extractor.commands.train_author_b
 
 uv run --group modeling python -m modeling.dom_extractor.apps.playground \
   --dataset-dir data/learned_extraction/raw \
-  --checkpoint data/learned_extraction/model/best.pt \
-  --author-boundary-checkpoint data/learned_extraction/author_boundary_v1/author_boundary.pt \
-  --port 8769
+  --port 8767
 ```
 
-Open `http://127.0.0.1:8769/evals` to inspect the experiment. The ranker uses
+Omitting `--checkpoint` now loads the bundled base and refiner by default.
+Supplying `--checkpoint` runs that custom base alone unless you also supply its
+matching `--author-boundary-checkpoint`. The same rule applies to held-out
+evaluation and the terminal smoke test. Open `http://127.0.0.1:8767/evals` to
+inspect the default model. The ranker uses
 train pages for fitting, validation websites to choose its checkpoint and
 change margin, and the test split only for a final check. On the current data,
 author exact-node accuracy changed from 104/200 (52%) to 136/200 (68%) on
-validation, with 33 fixes and one regression. The 30-page test site remained
-25/30 (83.3%). Most validation gains came from one website: OpenAI Developers
-accounted for 25 of the 32 net fixes. This is an opt-in experiment; the base
-checkpoint is unchanged.
+validation, with 33 fixes and one regression. That training-time snapshot gave
+413/659 (62.7%) for the base and 468/659 (71.0%) for the pair. A fresh run
+against the current human labels gives 401/659 (60.8%) and 456/659 (69.2%);
+the number of present-author labels changed from 588 to 601. Both full-corpus
+totals include fitted train pages and validation pages used for selection.
+The 30-page held-out test site remains 25/30 (83.3%). OpenAI Developers
+accounted for 25 of the 32 net validation fixes, so broader generalization is
+not established. The base checkpoint itself is unchanged.
 
 Evaluation is run only on held-out websites after checkpoint selection. It
 reports per-field exact-node accuracy, missing precision/recall, missing and
@@ -321,7 +331,7 @@ so inspect word errors and failure HTML when diagnosing broad selections.
 ```python
 from eng_universe.extraction import DOMExtractor
 
-extractor = DOMExtractor("data/learned_extraction/model/best.pt")
+extractor = DOMExtractor()  # bundled base plus author boundary model
 result = extractor.extract(html, field="article")
 # {"node_id": 42, "html": "<article>...</article>", "text": "..."} or None
 
@@ -330,5 +340,8 @@ document = extractor.extract_document(html, scraped_at="2026-09-19T12:00:00Z")
 # document.published_at uses date, or relative_date resolved from scraped_at.
 ```
 
-For the convenience function with the requested two-argument shape, set
-`ENG_UNIVERSE_EXTRACTOR_CHECKPOINT` once and call `extract(html, field)`.
+The two-argument `extract(html, field)` function uses the same bundled pair.
+Set `ENG_UNIVERSE_EXTRACTOR_CHECKPOINT` to select a custom base; optionally set
+`ENG_UNIVERSE_AUTHOR_BOUNDARY_CHECKPOINT` to its matching refiner. Explicit
+`DOMExtractor(path)` also uses only that base unless a matching refiner is
+provided.

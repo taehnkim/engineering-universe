@@ -29,6 +29,10 @@ from eng_universe.extraction.postprocess import (
 )
 
 FieldName = Literal["article", "title", "authors", "date", "summary", "relative_date"]
+DEFAULT_CHECKPOINT = Path(__file__).parent / "checkpoints" / "best.pt"
+DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT = (
+    Path(__file__).parent / "checkpoints" / "author_boundary.pt"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,10 +50,14 @@ class ExtractedDocument:
 class DOMExtractor:
     def __init__(
         self,
-        checkpoint_path: str | Path,
+        checkpoint_path: str | Path | None = None,
         *,
         author_boundary_checkpoint: str | Path | None = None,
     ) -> None:
+        if checkpoint_path is None:
+            checkpoint_path = DEFAULT_CHECKPOINT
+            if author_boundary_checkpoint is None:
+                author_boundary_checkpoint = DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT
         checkpoint = torch.load(
             Path(checkpoint_path), map_location="cpu", weights_only=False
         )
@@ -189,16 +197,19 @@ _DEFAULT_EXTRACTOR: DOMExtractor | None = None
 def extract(html: str, field: FieldName = "article") -> dict[str, str | int] | None:
     """Select a wrapper and return its original-DOM HTML and plain text.
 
-    Set ``ENG_UNIVERSE_EXTRACTOR_CHECKPOINT`` to the trained ``best.pt`` path.
+    Use the bundled base checkpoint and author-boundary refiner by default.
+    Set ``ENG_UNIVERSE_EXTRACTOR_CHECKPOINT`` for a custom base checkpoint,
+    and ``ENG_UNIVERSE_AUTHOR_BOUNDARY_CHECKPOINT`` for its matching refiner.
     Reuse ``DOMExtractor`` directly when making many calls to avoid reloading.
     """
 
     global _DEFAULT_EXTRACTOR
     if _DEFAULT_EXTRACTOR is None:
         checkpoint = os.environ.get("ENG_UNIVERSE_EXTRACTOR_CHECKPOINT")
-        if not checkpoint:
-            raise RuntimeError(
-                "set ENG_UNIVERSE_EXTRACTOR_CHECKPOINT or construct DOMExtractor(path)"
-            )
-        _DEFAULT_EXTRACTOR = DOMExtractor(checkpoint)
+        author_boundary_checkpoint = os.environ.get(
+            "ENG_UNIVERSE_AUTHOR_BOUNDARY_CHECKPOINT"
+        )
+        _DEFAULT_EXTRACTOR = DOMExtractor(
+            checkpoint, author_boundary_checkpoint=author_boundary_checkpoint
+        )
     return _DEFAULT_EXTRACTOR.extract(html, field)

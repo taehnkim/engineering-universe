@@ -8,7 +8,16 @@ from fastapi.testclient import TestClient
 
 from eng_universe.extraction.contract import FIELDS, Field
 from eng_universe.extraction.dom import html_sha256, parse_html
-from modeling.dom_extractor.apps.playground import EVALS_SHELL, SHELL, create_app
+from eng_universe.extraction.inference import (
+    DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT,
+    DEFAULT_CHECKPOINT,
+)
+from modeling.dom_extractor.apps.playground import (
+    EVALS_SHELL,
+    SHELL,
+    build_parser,
+    create_app,
+)
 from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
 
@@ -28,6 +37,16 @@ class FakeExtractor:
             )
             for field in FIELDS
         }
+
+
+def test_playground_uses_bundled_two_model_default(tmp_path: Path) -> None:
+    DatasetManifest(1, ()).save(tmp_path / "manifest.json")
+    assert build_parser().parse_args([]).checkpoint is None
+
+    client = TestClient(create_app(tmp_path))
+    checkpoint = client.get("/api/evals/options").json()["checkpoint"]
+    assert str(DEFAULT_CHECKPOINT) in checkpoint
+    assert str(DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT) in checkpoint
 
 
 def test_playground_runs_inference_and_returns_visualizable_nodes(

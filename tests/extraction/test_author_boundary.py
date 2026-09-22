@@ -17,6 +17,23 @@ from eng_universe.extraction.author_boundary import (
 )
 from eng_universe.extraction.dom import parse_html
 from eng_universe.extraction.features import NUMERIC_FEATURE_NAMES
+from eng_universe.extraction.inference import (
+    DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT,
+    DEFAULT_CHECKPOINT,
+    DOMExtractor,
+)
+
+
+def test_bundled_default_loads_both_models_and_explicit_base_stays_base_only() -> None:
+    assert DEFAULT_CHECKPOINT.is_file()
+    assert DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT.is_file()
+
+    default = DOMExtractor()
+    assert default.author_boundary is not None
+    assert default.author_boundary_checkpoint == DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT
+
+    explicit_base = DOMExtractor(DEFAULT_CHECKPOINT)
+    assert explicit_base.author_boundary is None
 
 
 def test_local_search_can_restore_a_complete_multi_author_wrapper() -> None:
