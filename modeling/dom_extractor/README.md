@@ -200,7 +200,30 @@ uv run --group modeling python -m modeling.dom_extractor.apps.playground \
 
 Choose a page and click **RUN**. The playground executes the checkpoint, shows
 the predicted node for every field, compares it with the available human or Jev
-reference, and scrolls the rendered page to the selected prediction.
+reference, and jumps the rendered page to the selected prediction.
+
+Open `/evals` on the same server for the whole-corpus dashboard. It runs the
+checkpoint against every human-reviewed page across train, validation, and
+test, and reports exact-node accuracy by field, site, and page. **RUN SITE**
+evaluates only the selected website. Click a site row to show its indented page
+results in place. Every site-table column is sortable. Expanded page titles open
+that input in the playground, and each **[url]** link opens the source article.
+Because this view includes training and validation pages, treat it as a fit and
+data quality report rather than an unbiased generalization score.
+
+Click **PLAYGROUND** on `/evals` to test an HTML file that is not in the corpus.
+Choose a raw `.html` or `.htm` file up to 20 MB, then click **RUN**. The server
+applies the same DOM cleanup used by training and inference, runs the selected
+checkpoint, and displays the cleaned page with the predicted nodes highlighted.
+Uploaded files are processed in memory and are not added to the dataset.
+
+The dashboard uses ten parallel worker processes by default. While a run is
+active, it shows a live `classified / total` count and progress bar. It stores
+the latest result in browser local storage, keyed by the checkpoint and reviewed
+labels. Returning from a page evaluation restores that result without another
+whole-corpus run. Click **RUN ALL** or **RUN SITE** to refresh it. Set another
+bounded worker count when you start the app with `--eval-workers`, for example
+`--eval-workers 2` on a machine with limited CPU or memory.
 
 The annotation page uses a sandboxed iframe without script permission. Hover
 to highlight, choose a field and click an element, move to its parent when a
@@ -251,11 +274,11 @@ candidates plus its learned missing score.
 
 Evaluation is run only on held-out websites after checkpoint selection. It
 reports per-field exact-node accuracy, missing precision/recall, missing and
-unwanted word counts, per-website results, a heuristic baseline, checkpoint and
-deployment size, peak process memory, latency, and an HTML failure inspector.
-The first justified follow-up, if structurally similar candidates remain hard
-to distinguish, is compact text/context features (for example class-token and
-nearby-node embeddings), not a larger MLP or quantization.
+unwanted word counts, per-website results, checkpoint and deployment size, peak
+process memory, latency, and an HTML failure inspector. The first justified
+follow-up, if structurally similar candidates remain hard to distinguish, is
+compact text/context features (for example class-token and nearby-node
+embeddings), not a larger MLP or quantization.
 
 ## Inference
 

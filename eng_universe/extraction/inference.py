@@ -3,26 +3,26 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Literal
 
 import torch
 
 from eng_universe.extraction.contract import FIELDS, Field
-from eng_universe.extraction.dom import DOM_CLEANUP_VERSION, parse_html
+from eng_universe.extraction.dom import DOM_CLEANUP_VERSION, ParsedPage, parse_html
 from eng_universe.extraction.features import (
     FeatureNormalizer,
     TagVocabulary,
     featurize_page,
 )
 from eng_universe.extraction.model import DOMNodeSelector
-from eng_universe.extraction.postprocess import derive_published_at, normalize_scraped_at
+from eng_universe.extraction.postprocess import (
+    derive_published_at,
+    normalize_scraped_at,
+)
 
-
-FieldName = Literal[
-    "article", "title", "authors", "date", "summary", "relative_date"
-]
+FieldName = Literal["article", "title", "authors", "date", "summary", "relative_date"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,6 +67,11 @@ class DOMExtractor:
 
     def predict_ids(self, html: str) -> dict[Field, int | None]:
         page = parse_html(html, strip_chrome=True)
+        return self.predict_page(page)
+
+    def predict_page(self, page: ParsedPage) -> dict[Field, int | None]:
+        """Predict node IDs from an already cleaned and parsed page."""
+
         features = featurize_page(page, self.vocabulary, self.normalizer)
         if not page.candidates:
             return {field: None for field in FIELDS}
@@ -87,21 +92,18 @@ class DOMExtractor:
             )
         return predictions
 
-    def extract(self, html: str, field: FieldName = "article") -> dict[str, str | int] | None:
-        selected_id = self.predict_ids(html)[Field(field)]
-        return (
-            None
-            if selected_id is None
-            else parse_html(html, strip_chrome=True).selected_content(selected_id)
-        )
+    def extract(
+        self, html: str, field: FieldName = "article"
+    ) -> dict[str, str | int] | None:
+        page = parse_html(html, strip_chrome=True)
+        selected_id = self.predict_page(page)[Field(field)]
+        return None if selected_id is None else page.selected_content(selected_id)
 
     def extract_all(self, html: str) -> dict[str, dict[str, str | int] | None]:
         page = parse_html(html, strip_chrome=True)
         return {
-            field.value: (
-                None if node_id is None else page.selected_content(node_id)
-            )
-            for field, node_id in self.predict_ids(html).items()
+            field.value: (None if node_id is None else page.selected_content(node_id))
+            for field, node_id in self.predict_page(page).items()
         }
 
     def extract_document(self, html: str, scraped_at: str) -> ExtractedDocument:
@@ -130,7 +132,9 @@ class DOMExtractor:
             ),
         )
 
-    def extract_document_dict(self, html: str, scraped_at: str) -> dict[str, str | None]:
+    def extract_document_dict(
+        self, html: str, scraped_at: str
+    ) -> dict[str, str | None]:
         return asdict(self.extract_document(html, scraped_at))
 
 
