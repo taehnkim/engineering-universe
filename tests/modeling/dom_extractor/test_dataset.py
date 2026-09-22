@@ -1,11 +1,12 @@
 from eng_universe.extraction.contract import FIELDS, Annotation, Field
-from modeling.dom_extractor.dataset import LabeledPage, prepare_page
 from eng_universe.extraction.dom import parse_html
 from eng_universe.extraction.features import (
     FeatureNormalizer,
+    SemanticVocabulary,
     TagVocabulary,
     featurize_page,
 )
+from modeling.dom_extractor.dataset import LabeledPage, prepare_page
 from modeling.dom_extractor.manifest import PageRecord
 
 
@@ -31,9 +32,12 @@ def test_prepared_targets_map_stable_node_ids_to_clean_candidate_indices() -> No
         annotation=Annotation("page", page.html_hash, labels),
     )
     vocabulary = TagVocabulary.fit([page])
-    normalizer = FeatureNormalizer.fit([featurize_page(page, vocabulary).numeric])
+    semantic_vocabulary = SemanticVocabulary.fit([page])
+    normalizer = FeatureNormalizer.fit(
+        [featurize_page(page, vocabulary, semantic_vocabulary).numeric]
+    )
 
-    prepared = prepare_page(item, vocabulary, normalizer)
+    prepared = prepare_page(item, vocabulary, semantic_vocabulary, normalizer)
 
     expected_index = list(prepared.features.node_ids).index(title.node_id)
     assert prepared.targets[list(FIELDS).index(Field.TITLE)] == expected_index

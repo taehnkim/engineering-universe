@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
+from collections.abc import Iterator, Sequence
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator, Sequence
 
 import numpy as np
 
 from eng_universe.extraction.contract import FIELDS, Annotation, load_annotation
 from eng_universe.extraction.dom import DOM_CLEANUP_VERSION, ParsedPage, parse_html
 from eng_universe.extraction.features import (
+    FEATURE_VERSION,
     FeatureNormalizer,
     PageFeatures,
+    SemanticVocabulary,
     TagVocabulary,
     featurize_page,
 )
@@ -85,24 +87,28 @@ def iter_labeled_pages(
         yield LabeledPage(record, page, annotation)
 
 
-def fit_preprocessing(train_pages: Sequence[LabeledPage]) -> tuple[TagVocabulary, FeatureNormalizer]:
+def fit_preprocessing(
+    train_pages: Sequence[LabeledPage],
+) -> tuple[TagVocabulary, SemanticVocabulary, FeatureNormalizer]:
     vocabulary = TagVocabulary.fit(item.page for item in train_pages)
+    semantic_vocabulary = SemanticVocabulary.fit(item.page for item in train_pages)
     raw_matrices = [
-        featurize_page(item.page, vocabulary).numeric for item in train_pages
+        featurize_page(item.page, vocabulary, semantic_vocabulary).numeric
+        for item in train_pages
     ]
-    return vocabulary, FeatureNormalizer.fit(raw_matrices)
+    return vocabulary, semantic_vocabulary, FeatureNormalizer.fit(raw_matrices)
 
 
 def prepare_page(
     item: LabeledPage,
     vocabulary: TagVocabulary,
+    semantic_vocabulary: SemanticVocabulary,
     normalizer: FeatureNormalizer,
 ) -> PreparedPage:
-    features = featurize_page(item.page, vocabulary, normalizer)
+    features = featurize_page(item.page, vocabulary, semantic_vocabulary, normalizer)
     missing_index = len(item.page.candidates)
     candidate_index = {
-        candidate.node_id: index
-        for index, candidate in enumerate(item.page.candidates)
+        candidate.node_id: index for index, candidate in enumerate(item.page.candidates)
     }
     targets = np.asarray(
         [
@@ -126,6 +132,10 @@ def save_prepared_page(path: Path, item: PreparedPage) -> None:
         node_ids=item.features.node_ids,
         tag_ids=item.features.tag_ids,
         parent_tag_ids=item.features.parent_tag_ids,
+        grandparent_tag_ids=item.features.grandparent_tag_ids,
+        previous_tag_ids=item.features.previous_tag_ids,
+        next_tag_ids=item.features.next_tag_ids,
+        semantic_token_ids=item.features.semantic_token_ids,
         numeric=item.features.numeric,
         targets=item.targets,
     )
@@ -149,12 +159,13 @@ def prepare_dataset(
     }
     if not by_split["train"]:
         raise ValueError("no reviewed training annotations found")
-    vocabulary, normalizer = fit_preprocessing(by_split["train"])
+    vocabulary, semantic_vocabulary, normalizer = fit_preprocessing(by_split["train"])
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "preprocessing.json").write_text(
         json.dumps(
             {
                 "dom_cleanup": DOM_CLEANUP_VERSION,
+                "feature_version": FEATURE_VERSION,
                 "fields": [field.value for field in FIELDS],
                 "label_policy": (
                     "human_reviewed_and_jev_drafts"
@@ -162,6 +173,7 @@ def prepare_dataset(
                     else "human_reviewed_only"
                 ),
                 "vocabulary": vocabulary.to_dict(),
+                "semantic_vocabulary": semantic_vocabulary.to_dict(),
                 "normalizer": normalizer.to_dict(),
             },
             indent=2,
@@ -178,6 +190,6 @@ def prepare_dataset(
             stale_path.unlink()
         counts[split] = len(pages)
         for item in pages:
-            prepared = prepare_page(item, vocabulary, normalizer)
+            prepared = prepare_page(item, vocabulary, semantic_vocabulary, normalizer)
             save_prepared_page(split_dir / f"{item.record.page_id}.npz", prepared)
     return counts

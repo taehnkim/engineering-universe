@@ -1,10 +1,10 @@
-# Learned DOM extraction v1
+# Learned DOM extraction
 
 Version one is a node selector. Given HTML and one of `article`, `title`,
 `authors`, `date`, `summary`, or `relative_date`, it selects one DOM element or
 the learned `missing` option. Ordinary code returns the selected element's
-original-DOM HTML and plain text. The model sees structural features and tag
-embeddings, **not the article's words**.
+original-DOM HTML and plain text. The compact model combines DOM structure,
+explicit author/date signals, and bounded semantic-token embeddings.
 
 ## Repository layout
 
@@ -113,25 +113,26 @@ prepared data and checkpoint record the `chrome-v2` cleanup version.
 Inference rejects an older checkpoint instead of silently using different DOM
 preprocessing. Training and inference always apply the same cleanup.
 
-For each candidate the model receives two categorical IDs (its lowercase tag
-and its parent's lowercase tag) plus these eight numeric values:
+Feature schema `semantic-v2` gives each candidate five shared tag embeddings:
+its own tag, parent, grandparent, previous sibling, and next sibling. It also
+averages at most 12 tokens from a 64-entry vocabulary fit on training pages.
+Tokens come from `class`, `id`, `itemprop`, `rel`, `aria-label`, and the first
+few words of short candidate text. CamelCase and punctuation-separated names
+are split, so values such as `writtenBy`, `site_author`, and `date-published`
+remain useful without storing arbitrary article text.
 
-1. `log1p` of Unicode character count in stripped descendant text.
-2. `log1p` of descendant `p` count, including the candidate itself if it is a
-   `p`.
-3. Linked descendant-text characters divided by all descendant-text
-   characters, clipped to `[0, 1]`.
-4. `log1p` of element-ancestor count.
-5. Candidate ID divided by `max(candidate_count - 1, 1)`.
-6. One when the candidate itself has a `datetime` attribute, else zero.
-7. One when descendant text matches the documented ISO/numeric or English
-   month-name date pattern, else zero.
-8. One when descendant text contains a relative publication date, else zero.
+Forty numeric features cover size, depth, position, paragraph/link/span counts,
+direct versus descendant text, leaf/wrapper shape, capitalization, byline and
+profile markers, absolute and relative date patterns, publication/update and
+reading-time markers, schema attributes, semantic ancestors, and distance/order
+relative to deterministic title and date anchors. These anchor features supply
+the useful part of a two-pass model without running the neural network twice.
+Continuous columns are standardized from training websites only. Node IDs are
+used only for bookkeeping and targets.
 
-The five continuous columns are standardized with means and standard
-deviations fit on training websites only. The tag vocabulary is also fit on
-training websites only and reserves `<pad>` and `<unknown>`. Node IDs are for
-bookkeeping/targets and never enter the model.
+Prepared data and checkpoints record `semantic-v2`. Training and inference
+reject older artifacts instead of silently applying a different feature
+schema. Rebuild prepared data and retrain after changing the schema.
 
 ## Data, annotation, and training
 
@@ -141,8 +142,8 @@ configured sitemaps when a listing is short, renders every selected page in
 Chrome, and rejects duplicate canonical URLs. Its default target is 30 articles
 per source plus listing-page negatives.
 
-The local raw corpus currently contains 757 rendered DOMs from 29 websites: 520
-train, 206 validation, and 31 test. Whole websites belong to one split only.
+The current human-reviewed corpus contains 660 pages: 430 train, 200 validation,
+and 30 test. Whole websites belong to one split only.
 The root `.gitignore` excludes local data, prepared NumPy matrices, checkpoints,
 and evaluation output.
 
@@ -260,25 +261,19 @@ ordinary code keeps an absolute `date` unchanged. If only `relative_date` is
 present, it subtracts that duration from `scraped_at` and stores the result as
 `published_at`.
 
-The current local corpus has 750 bootstrap drafts and 7 human-reviewed
-annotations. Only 2 reviewed pages are in the training split, 5 are in the
-validation split, and none are in the test split. A local six-field checkpoint
-can confirm that the pipeline works. Do not treat its validation score as a
-useful quality estimate, and do not report held-out accuracy until test pages
-have been reviewed.
-
 Training first tries to overfit four pages, then trains the full training split
 and keeps the checkpoint with the lowest validation loss. Batches pad candidate
 lists and mask padding. Each field applies cross-entropy over all real
-candidates plus its learned missing score.
+candidates plus its learned missing score. Author loss has weight 3 and date
+loss has weight 2, so good article/title performance cannot hide weak metadata
+selection.
 
 Evaluation is run only on held-out websites after checkpoint selection. It
 reports per-field exact-node accuracy, missing precision/recall, missing and
 unwanted word counts, per-website results, checkpoint and deployment size, peak
-process memory, latency, and an HTML failure inspector. The first justified
-follow-up, if structurally similar candidates remain hard to distinguish, is
-compact text/context features (for example class-token and nearby-node
-embeddings), not a larger MLP or quantization.
+process memory, latency, and an HTML failure inspector. Exact-node accuracy is
+strict: a semantically correct parent or child wrapper still counts as wrong,
+so inspect word errors and failure HTML when diagnosing broad selections.
 
 ## Inference
 
