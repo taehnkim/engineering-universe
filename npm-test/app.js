@@ -58,6 +58,25 @@ function confidenceLabel(value) {
   return value == null ? "confidence unavailable" : `${(value * 100).toFixed(1)}% confidence`;
 }
 
+function confidenceClass(value) {
+  if (value == null) return "confidence missing";
+  if (value > 0.8) return "confidence high";
+  if (value >= 0.5) return "confidence medium";
+  return "confidence low";
+}
+
+function setPayloadAvailable(link, available) {
+  if (available) {
+    link.href = "#payload";
+    link.removeAttribute("aria-disabled");
+    link.tabIndex = 0;
+  } else {
+    link.removeAttribute("href");
+    link.setAttribute("aria-disabled", "true");
+    link.tabIndex = -1;
+  }
+}
+
 function snippet(value) {
   const text = (value ?? "").replace(/\s+/g, " ").trim();
   return text.length > 240 ? `${text.slice(0, 239)}…` : text;
@@ -112,7 +131,10 @@ function showFormat(format) {
 function showField(pageId, field, result) {
   openSelection = result.payload[field];
   fieldDialogTitle.textContent = `${pageId} · ${field}`;
-  fieldDialogMeta.textContent = `Selected node ${result.payload.predictions[field] ?? "missing"} · ${confidenceLabel(openSelection?.confidence)}`;
+  fieldDialogMeta.replaceChildren(
+    `Selected node ${result.payload.predictions[field] ?? "missing"} · `,
+    element("span", confidenceClass(openSelection?.confidence), confidenceLabel(openSelection?.confidence)),
+  );
   showFormat("text");
   fieldDialog.showModal();
 }
@@ -156,7 +178,7 @@ function renderResult(pageId, result) {
     const card = element("div", "field");
     const top = element("div", "field-top");
     top.append(element("span", "", field));
-    top.append(element("span", "confidence", confidenceLabel(selection?.confidence)));
+    top.append(element("span", confidenceClass(selection?.confidence), confidenceLabel(selection?.confidence)));
     card.append(top);
     card.append(element("div", "nodes", `node ${result.payload.predictions[field] ?? "missing"}`));
     const preview = snippet(selection?.text);
@@ -181,9 +203,9 @@ function renderResult(pageId, result) {
 }
 
 async function runPage(page) {
-  const { button, payloadButton, output } = cards.get(page.id);
+  const { button, payloadLink, output } = cards.get(page.id);
   button.disabled = true;
-  payloadButton.disabled = true;
+  setPayloadAvailable(payloadLink, false);
   button.textContent = "Running…";
   results.delete(page.id);
   updateTotals();
@@ -204,7 +226,7 @@ async function runPage(page) {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error ?? `HTTP ${response.status}`);
     results.set(page.id, result);
-    payloadButton.disabled = false;
+    setPayloadAvailable(payloadLink, true);
     renderResult(page.id, result);
   } catch (error) {
     results.set(page.id, null);
@@ -224,14 +246,14 @@ function renderPage(page, atTop = false) {
   main.append(element("div", "meta", page.website));
   head.append(main);
   const actions = element("div", "actions");
-  const payloadButton = element("button", "", "Payload");
-  payloadButton.type = "button";
-  payloadButton.disabled = true;
-  payloadButton.addEventListener("click", () => {
+  const payloadLink = element("a", "", "Payload");
+  setPayloadAvailable(payloadLink, false);
+  payloadLink.addEventListener("click", (event) => {
+    event.preventDefault();
     const result = results.get(page.id);
     if (result) showPayload(page.displayName ?? page.id, result);
   });
-  actions.append(payloadButton);
+  actions.append(payloadLink);
   const rawLink = element("a", "", "Raw HTML");
   rawLink.href = page.rawUrl ?? `/api/html/${encodeURIComponent(page.id)}`;
   rawLink.target = "_blank";
@@ -255,7 +277,7 @@ function renderPage(page, atTop = false) {
   card.append(output);
   if (atTop) pagesElement.prepend(card);
   else pagesElement.append(card);
-  cards.set(page.id, { page, button, payloadButton, output });
+  cards.set(page.id, { page, button, payloadLink, output });
 }
 
 function renderPages() {
@@ -311,9 +333,9 @@ async function runAll() {
   runAllButton.disabled = true;
   uploadButton.disabled = true;
   results.clear();
-  for (const { button, payloadButton, output } of cards.values()) {
+  for (const { button, payloadLink, output } of cards.values()) {
     button.disabled = true;
-    payloadButton.disabled = true;
+    setPayloadAvailable(payloadLink, false);
     output.hidden = true;
   }
   updateTotals();
