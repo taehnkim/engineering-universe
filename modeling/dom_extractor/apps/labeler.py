@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-from dataclasses import asdict
-from datetime import datetime, timezone
 import json
 import os
-from pathlib import Path
 import shutil
-from typing import Any, Sequence
+from collections.abc import Sequence
+from dataclasses import asdict
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -43,7 +44,7 @@ body{margin:0;height:100vh;overflow:hidden;display:flex;flex-direction:column;fo
 <header><div class="toolbar"><select id="split"><option value="all">All splits</option><option value="train">Train</option><option value="validation">Validation</option><option value="test">Test</option></select><select id="source"><option value="all">All labels</option><option value="jev">Jev first pass</option><option value="human">No Jev pass</option></select><select id="review-filter"><option value="all">All review states</option><option value="needs">Needs human review</option><option value="verified">Human verified</option></select><select id="pages"></select><button id="parent">Select parent</button><span id="status"></span><button id="remove" class="danger">Remove page</button></div><div id="url" class="url-row"></div></header>
 <main><iframe id="page" sandbox="allow-same-origin"></iframe><aside><div id="jev"></div><button id="save" class="save-review" data-keyboard-target="save">SAVE</button><label id="review-card" class="field review-card" data-keyboard-target="review" tabindex="0"><input id="review" type="checkbox" tabindex="-1"><span>Page needs review</span></label><div id="fields"></div><h3>Preview</h3><div id="preview" class="preview"></div></aside></main>
 <script>
-const names=['article','title','authors','date','summary','relative_date']; let active='article', current=null, payload=null, labels={},allPages=[];
+const names=['article','title','authors','date']; let active='article', current=null, payload=null, labels={},allPages=[];
 const $=id=>document.getElementById(id); const esc=s=>(s??'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function selectedElement(){const d=$('page').contentDocument,id=labels[active];return !d||id==null?null:d.querySelector(`[data-eu-node-id="${id}"]`)}
 function focusSelection(scroll=false){const d=$('page').contentDocument;if(!d)return;d.querySelectorAll('[data-labeler-selected]').forEach(el=>delete el.dataset.labelerSelected);const el=selectedElement();current=el;if(!el)return;el.dataset.labelerSelected='true';if(scroll)el.scrollIntoView({behavior:'instant',block:'center',inline:'nearest'})}
@@ -85,7 +86,7 @@ def create_app(
         value = json.loads(path.read_text(encoding="utf-8"))
         if value.get("page_id") != page_id or value.get("html_hash") != html_hash:
             return None
-        if set(value.get("labels", {})) != {field.value for field in FIELDS}:
+        if not {field.value for field in FIELDS}.issubset(value.get("labels", {})):
             return None
         return value
 
@@ -146,8 +147,10 @@ def create_app(
         )
         if request.html_hash != page.html_hash:
             raise HTTPException(409, "HTML changed; reload before saving")
-        if set(request.labels) != {field.value for field in FIELDS}:
+        if not {field.value for field in FIELDS}.issubset(request.labels):
             raise HTTPException(422, "all extraction fields are required")
+        existing_path = annotations_dir / f"{page_id}.json"
+        existing = load_annotation(existing_path) if existing_path.exists() else None
         annotation = Annotation.from_dict(
             {
                 "page_id": page_id,
@@ -157,6 +160,15 @@ def create_app(
                 "review_status": "reviewed",
             }
         )
+        if existing is not None:
+            annotation = Annotation(
+                page_id=annotation.page_id,
+                html_hash=annotation.html_hash,
+                labels=annotation.labels,
+                needs_review=annotation.needs_review,
+                review_status=annotation.review_status,
+                legacy_labels=existing.legacy_labels,
+            )
         for field, node_id in annotation.labels.items():
             if node_id is not None and node_id not in page.node_by_id:
                 raise HTTPException(422, f"{field.value}: unknown node ID {node_id}")
@@ -190,7 +202,7 @@ def create_app(
         audit["labels"][field.value] = result["node_id"]
         audit["metadata"][field.value] = result["metadata"]
         audit["model"] = result["model"]
-        audit["labeled_at"] = datetime.now(timezone.utc).isoformat()
+        audit["labeled_at"] = datetime.now(UTC).isoformat()
         reruns = audit.setdefault("field_reruns", {})
         reruns[field.value] = {
             "latency_ms": result["latency_ms"],
@@ -227,7 +239,7 @@ def create_app(
                 json.dumps(
                     {
                         "manifest_version": manifest.version,
-                        "removed_at": datetime.now(timezone.utc).isoformat(),
+                        "removed_at": datetime.now(UTC).isoformat(),
                         "page": asdict(record),
                     },
                     indent=2,

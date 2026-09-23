@@ -21,7 +21,7 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
     page_id: pageId,
     review_status: "reviewed",
     needs_review: false,
-    labels: Object.fromEntries(["article", "title", "authors", "date", "summary", "relative_date"]
+    labels: Object.fromEntries(["article", "title", "authors", "date"]
       .map((field) => [field, null])),
   }));
   await writeFile(join(fixture, "manifest.json"), JSON.stringify({ pages: [{
@@ -67,7 +67,7 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
     });
     assert.equal(response.status, 200);
     const result = await response.json();
-    assert.equal(Object.keys(result.comparisons).length, 6);
+    assert.equal(Object.keys(result.comparisons).length, 4);
     assert.equal(typeof result.comparisons.title.predicted, "number");
     assert.equal(result.articleText, "Fixture article.");
     assert.ok(result.inferenceMs >= 0);

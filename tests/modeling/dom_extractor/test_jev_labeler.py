@@ -108,8 +108,6 @@ def test_question_choices_include_candidates_and_missing() -> None:
         "title",
         "authors",
         "date",
-        "summary",
-        "relative_date",
     }
     for question in questions.values():
         assert set(question.criteria) == {"node_4", "node_8", "missing"}

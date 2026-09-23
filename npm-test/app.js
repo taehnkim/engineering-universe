@@ -1,4 +1,4 @@
-const FIELDS = ["article", "title", "authors", "date", "summary", "relative_date"];
+const FIELDS = ["article", "title", "authors", "date"];
 const pagesElement = document.querySelector("#pages");
 const runAllButton = document.querySelector("#run-all");
 const statusElement = document.querySelector("#status");

@@ -1,7 +1,7 @@
 # Learned DOM extraction
 
-Version one is a node selector. Given HTML and one of `article`, `title`,
-`authors`, `date`, `summary`, or `relative_date`, it selects one DOM element or
+The current checkpoint is a node selector. Given HTML and one of `article`, `title`,
+`authors`, or `date`, it selects one DOM element or
 the learned `missing` option. Ordinary code returns the selected element's
 original-DOM HTML and plain text. The compact model combines DOM structure,
 explicit author/date signals, and bounded semantic-token embeddings.
@@ -34,7 +34,7 @@ repository ignores this file.
 
 ## Labeling guide
 
-All six fields must be either one candidate node ID or `null`:
+All four active fields must be either one candidate node ID or `null`:
 
 - `article`: the tightest single wrapper containing the article body, including
   its headings, paragraphs, lists, code, tables, and content images. Exclude the
@@ -49,11 +49,10 @@ All six fields must be either one candidate node ID or `null`:
 - `date`: the tightest element containing the displayed publication date. Do
   not use an updated date when a distinct publication date is shown. Use this
   field only for an absolute date.
-- `summary`: the subtitle, standfirst, deck, or short summary that belongs to
-  the title. Use `null` when the page has no such element.
-- `relative_date`: the tightest element containing a relative publication date
-  such as `2 days ago`. A reading time such as `5 min read` is not a relative
-  date.
+
+Older annotation JSON may still contain `summary` and `relative_date`. Those
+keys are ignored by training and inference but preserved on every labeler save.
+Do not delete them to prepare the four-field dataset.
 
 Use `null` only when the field is genuinely absent. Bootstrap output has
 `review_status: "draft"` and is always excluded from training. Saving a page in
@@ -66,9 +65,9 @@ Correct article selections preserve nested code blocks, lists, tables, and
 figures while avoiding recommendations, navigation, comments, and the footer.
 Selecting only the paragraph text is too narrow; selecting `<main>` when it
 also includes the title/byline and related stories is too broad. Correct title,
-authors, date, summary, and relative-date selections are the smallest semantic
+authors, and date selections are the smallest semantic
 wrappers; selecting the entire article header is too broad. Listing pages
-intentionally included in the corpus should normally have all six fields set
+intentionally included in the corpus should normally have all four active fields set
 to `null`, not
 `needs_review`—they are useful negative examples.
 
@@ -85,9 +84,7 @@ for incorrect candidates:
     "article": 42,
     "title": 45,
     "authors": 48,
-    "date": null,
-    "summary": 46,
-    "relative_date": null
+    "date": null
   }
 }
 ```
@@ -190,6 +187,32 @@ checkpoints, and evaluation output. The 29 KB base checkpoint and 11 KB author
 refiner used for default inference are bundled separately under
 `eng_universe/extraction/checkpoints/` and included in the Python package.
 
+Before bulk relabeling or retraining, back up the complete raw dataset:
+
+```bash
+make backup-labeled-data
+# Optional: DATASET_DIR=/path/to/raw BACKUP_DIR=/path/to/backups
+```
+
+The command creates a timestamped `.tar.gz` under the ignored backups
+directory, verifies every archived file, and prints its SHA-256. It includes
+the manifest, raw HTML, human annotations, Jev audits, and removed-page
+records; it does not modify the source dataset.
+
+The default four-field checkpoint retains the trained encoder and four output
+heads from the previous six-field checkpoint. A from-scratch four-field train
+was run but rejected after validation quality fell. A separately retrained
+author-boundary model also failed to improve its validation pages, so the
+matching default refiner retains the prior learned weights and is retied to
+the new base checkpoint SHA. See `DECISION_LOG.md` for the comparison. The
+reproducible projection command is:
+
+```bash
+uv run --group modeling python -m modeling.dom_extractor.commands.convert_checkpoint_schema \
+  --source old-best.pt --output new-best.pt \
+  --source-refiner old-author_boundary.pt --output-refiner new-author_boundary.pt
+```
+
 ```bash
 uv run --group modeling python -m modeling.dom_extractor.commands.sample_html
 uv run --group modeling python -m modeling.dom_extractor.commands.bootstrap_annotations
@@ -255,7 +278,7 @@ evaluates only the selected website. Click a site row to show its indented page
 results in place. Every site-table column is sortable. Expanded page titles open
 that input in the playground, and each **[url]** link opens the source article.
 Use the **Show URLs** filter to restrict the site table and its expanded URLs to
-pages where the human label contains an author, date, or summary node. Site
+pages where the human label contains an author or date node. Site
 accuracies and page counts are recalculated for the filtered subset.
 Because this view includes training and validation pages, treat it as a fit and
 data quality report rather than an unbiased generalization score.
@@ -305,9 +328,8 @@ field latency, and refreshes the Jev audit file. The returned choice remains an
 unsaved human edit until **Save** is clicked.
 
 The collector records `scraped_at` when it fetches each page. After extraction,
-ordinary code keeps an absolute `date` unchanged. If only `relative_date` is
-present, it subtracts that duration from `scraped_at` and stores the result as
-`published_at`.
+ordinary code keeps an absolute `date` unchanged as `published_at`. Relative
+publication dates are no longer extracted or resolved into this result.
 
 Training first tries to overfit four pages, then trains the full training split
 and keeps the checkpoint with the lowest validation loss. Batches pad candidate
@@ -323,7 +345,7 @@ node. It compares that node with up to five ancestors and descendants within
 seven DOM levels. It uses relative text coverage, author/profile links, date
 and reading-time markers, DOM shape, and the base model's scores to select the
 human-labeled wrapper. It leaves a `missing` author prediction unchanged and
-does not change the other five fields. The saved ranker is tied to the exact
+does not change the other three fields. The saved ranker is tied to the exact
 base checkpoint by SHA-256, so an incompatible pairing fails at startup. The
 second model is a one-hidden-layer neural ranker with 24 hidden units and 76
 numeric inputs per local candidate (49 shared base features and 27 boundary
@@ -377,11 +399,14 @@ from eng_universe.extraction import DOMExtractor
 
 extractor = DOMExtractor()  # bundled base plus author boundary model
 result = extractor.extract(html, field="article")
-# {"node_id": 42, "html": "<article>...</article>", "text": "..."} or None
+# {"node_id": 42, "html": "<article>...</article>",
+#  "text": "Paragraph one.\n\nParagraph two.", "confidence": 0.92} or None
 
 document = extractor.extract_document(html, scraped_at="2026-09-19T12:00:00Z")
-# document.authors is one string containing the full byline.
-# document.published_at uses date, or relative_date resolved from scraped_at.
+# document.article_text keeps paragraph breaks; document.article_html keeps markup.
+# Every field has _text, _html, and _confidence properties.
+# Confidence is an uncalibrated score share, not a correctness guarantee.
+# document.published_at uses the absolute date field, if present.
 ```
 
 The two-argument `extract(html, field)` function uses the same bundled pair.

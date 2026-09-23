@@ -1,4 +1,4 @@
-"""Migrate extraction annotations and capture timestamps to schema version 2."""
+"""Capture scrape timestamps while preserving all legacy annotation labels."""
 
 from __future__ import annotations
 
@@ -7,10 +7,8 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 
-from eng_universe.extraction.contract import Annotation, Field, load_annotation, save_annotation
-from eng_universe.extraction.dom import parse_html
+from eng_universe.extraction.contract import load_annotation, save_annotation
 from modeling.dom_extractor.manifest import DatasetManifest
-from modeling.dom_extractor.commands.bootstrap_annotations import draft_annotation
 
 
 def _file_timestamp(path: Path) -> str:
@@ -35,31 +33,11 @@ def migrate(dataset_dir: Path) -> dict[str, int]:
     counts = {
         "manifest_pages": len(records),
         "annotations": 0,
-        "draft_summaries": 0,
-        "draft_relative_dates": 0,
     }
-    by_id = {record.page_id: record for record in records}
     for path in sorted((dataset_dir / "annotations").glob("*.json")):
         annotation = load_annotation(path)
-        record = by_id[annotation.page_id]
-        labels = dict(annotation.labels)
-        if annotation.review_status == "draft":
-            page = parse_html((dataset_dir / record.html_path).read_text(encoding="utf-8"))
-            generated = draft_annotation(record.page_id, page, record.is_article)
-            labels[Field.SUMMARY] = generated.labels[Field.SUMMARY]
-            labels[Field.RELATIVE_DATE] = generated.labels[Field.RELATIVE_DATE]
-        counts["draft_summaries"] += int(labels[Field.SUMMARY] is not None)
-        counts["draft_relative_dates"] += int(labels[Field.RELATIVE_DATE] is not None)
-        save_annotation(
-            path,
-            Annotation(
-                page_id=annotation.page_id,
-                html_hash=annotation.html_hash,
-                labels=labels,
-                needs_review=annotation.needs_review,
-                review_status=annotation.review_status,
-            ),
-        )
+        # Keep legacy labels intact when rewriting an annotation.
+        save_annotation(path, annotation)
         counts["annotations"] += 1
     return counts
 

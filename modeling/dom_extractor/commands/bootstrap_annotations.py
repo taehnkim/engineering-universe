@@ -23,7 +23,6 @@ from eng_universe.extraction.contract import (
 from eng_universe.extraction.dom import ParsedPage, parse_html
 from eng_universe.extraction.features import DATE_LIKE_RE
 from modeling.dom_extractor.manifest import DatasetManifest
-from eng_universe.extraction.postprocess import extract_relative_publication_date
 
 
 CONTENT_TOKENS = re.compile(
@@ -33,10 +32,6 @@ CONTENT_TOKENS = re.compile(
 )
 AUTHOR_TOKENS = re.compile(r"author|byline|writer", re.IGNORECASE)
 DATE_TOKENS = re.compile(r"date|publish|posted|timestamp", re.IGNORECASE)
-SUMMARY_TOKENS = re.compile(
-    r"subtitle|sub-title|subhead|standfirst|dek|excerpt|description|lead",
-    re.IGNORECASE,
-)
 
 
 def _attrs(element: Tag) -> str:
@@ -138,38 +133,6 @@ def _article(page: ParsedPage, title: Tag | None) -> Tag | None:
     return max(choices, key=lambda item: item[0])[1] if choices else None
 
 
-def _summary(page: ParsedPage, title: Tag | None) -> Tag | None:
-    choices: list[tuple[float, Tag]] = []
-    for candidate in page.candidates:
-        element = candidate.element
-        text = _visible_text(element)
-        if not 20 <= len(text) <= 600 or not SUMMARY_TOKENS.search(_attrs(element)):
-            continue
-        score = 100 - math.log1p(len(text))
-        if element.name in {"h2", "p"}:
-            score += 20
-        if title is not None and title.parent is element.parent:
-            score += 25
-        choices.append((score, element))
-    return max(choices, key=lambda item: item[0])[1] if choices else None
-
-
-def _relative_date(page: ParsedPage) -> Tag | None:
-    choices: list[tuple[float, Tag]] = []
-    for candidate in page.candidates:
-        element = candidate.element
-        text = _visible_text(element)
-        phrase = extract_relative_publication_date(text)
-        if phrase is None or len(text) > 160:
-            continue
-        attrs = _attrs(element)
-        semantic = element.name == "time" or bool(DATE_TOKENS.search(attrs))
-        score = (60 if semantic else 0) - math.log1p(len(text))
-        score -= candidate.node_id / max(1, len(page.candidates))
-        choices.append((score, element))
-    return max(choices, key=lambda item: item[0])[1] if choices else None
-
-
 def _small_semantic_element(
     page: ParsedPage,
     token_pattern: re.Pattern[str],
@@ -237,15 +200,11 @@ def draft_annotation(page_id: str, page: ParsedPage, is_article: bool) -> Annota
         preferred_texts=_schema_author_names(page),
     )
     date = _small_semantic_element(page, DATE_TOKENS, date=True)
-    summary = _summary(page, title)
-    relative_date = _relative_date(page)
     labels = {
         Field.ARTICLE: _node_id(page, article),
         Field.TITLE: _node_id(page, title),
         Field.AUTHORS: _node_id(page, authors),
         Field.DATE: _node_id(page, date),
-        Field.SUMMARY: _node_id(page, summary),
-        Field.RELATIVE_DATE: _node_id(page, relative_date),
     }
     return Annotation(
         page_id,

@@ -297,7 +297,7 @@ def test_evaluation_dashboard_has_requested_controls_and_links() -> None:
     assert "site.fields[name].accuracy" in EVALS_SHELL
     assert "value>=.8?'green':value>=.5?'orange':'red'" in EVALS_SHELL
     assert 'class="card kpi-${scoreClass(accuracy)}"' in EVALS_SHELL
-    assert "presentToggleFields=new Set(['authors','date','summary'])" in EVALS_SHELL
+    assert "presentToggleFields=new Set(['authors','date'])" in EVALS_SHELL
     assert 'data-present-field="${name}"' in EVALS_SHELL
     assert "item.present_accuracy" in EVALS_SHELL
     assert "expected node present" in EVALS_SHELL

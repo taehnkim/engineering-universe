@@ -117,6 +117,30 @@ export function elementText(element) {
   return parts.join(" ");
 }
 
+const TEXT_BLOCKS = new Set([
+  "article", "blockquote", "div", "figcaption", "h1", "h2", "h3", "h4", "h5", "h6",
+  "header", "li", "main", "ol", "p", "pre", "section", "table", "td", "th", "ul",
+]);
+
+export function readableText(element) {
+  const parts = [];
+  function walk(node) {
+    for (const child of node.childNodes) {
+      if (child.nodeType === 3) parts.push(child.nodeValue.replace(/\s+/g, " "));
+      else if (child.nodeType === 1) {
+        const name = child.localName.toLowerCase();
+        if (name === "br") { parts.push("\n"); continue; }
+        const block = TEXT_BLOCKS.has(name);
+        if (block) parts.push("\n\n");
+        walk(child);
+        if (block) parts.push("\n\n");
+      }
+    }
+  }
+  walk(element);
+  return parts.join("").replace(/[ \t]*\n[ \t]*/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 function stripPageChrome(document) {
   for (const element of allElements(document)) {
     if (CHROME_DROP_TAGS.has(tagName(element))) element.remove();
@@ -156,7 +180,7 @@ export function selectedContent(candidate) {
   return {
     nodeId: candidate.nodeId,
     html: candidate.element.outerHTML,
-    text: elementText(candidate.element),
+    text: readableText(candidate.element),
   };
 }
 

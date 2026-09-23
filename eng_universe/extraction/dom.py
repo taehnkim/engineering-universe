@@ -8,7 +8,7 @@ import re
 from collections.abc import Iterator
 from dataclasses import dataclass
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, NavigableString, Tag
 
 PARSER = "html.parser"
 DOM_CLEANUP_VERSION = "chrome-v2"
@@ -58,6 +58,37 @@ _HIDDEN_STYLE = re.compile(
     re.IGNORECASE,
 )
 _EMPTY_PRUNABLE_TAGS = frozenset({"div", "figure", "p", "section", "span"})
+_TEXT_BLOCKS = frozenset({
+    "article", "blockquote", "div", "figcaption", "h1", "h2", "h3", "h4", "h5", "h6",
+    "header", "li", "main", "ol", "p", "pre", "section", "table", "td", "th", "ul",
+})
+
+
+def readable_text(element: Tag) -> str:
+    """Keep block and paragraph boundaries while joining inline text."""
+
+    parts: list[str] = []
+
+    def walk(node: Tag) -> None:
+        for child in node.children:
+            if isinstance(child, NavigableString):
+                value = re.sub(r"\s+", " ", str(child))
+                parts.append(value)
+            elif isinstance(child, Tag):
+                if child.name == "br":
+                    parts.append("\n")
+                    continue
+                block = child.name in _TEXT_BLOCKS
+                if block:
+                    parts.append("\n\n")
+                walk(child)
+                if block:
+                    parts.append("\n\n")
+
+    walk(element)
+    text = "".join(parts)
+    text = re.sub(r"[ \t]*\n[ \t]*", "\n", text)
+    return re.sub(r"\n{3,}", "\n\n", text).strip()
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,7 +119,7 @@ class ParsedPage:
         return {
             "node_id": node_id,
             "html": str(element),
-            "text": element.get_text(" ", strip=True),
+            "text": readable_text(element),
         }
 
 

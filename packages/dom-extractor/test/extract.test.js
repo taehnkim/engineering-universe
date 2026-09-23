@@ -27,7 +27,10 @@ test("extract returns every model field and diagnostics", async () => {
   const result = await extract(HTML, { scrapedAt: "2026-09-21T12:00:00Z" });
 
   assert.deepEqual(Object.keys(result.predictions), fields);
-  assert.equal(result.article?.text, "This is the article body. It has two paragraphs.");
+  assert.equal(result.article?.text, "This is the article body.\n\nIt has two paragraphs.");
+  assert.equal(result.article_text, result.article?.text);
+  assert.equal(result.article_html, result.article?.html);
+  assert.ok(result.article_confidence >= 0 && result.article_confidence <= 1);
   assert.equal(result.title?.text, "A small DOM extraction test");
   assert.equal(result.predictions.article, 8);
   assert.equal(result.predictions.title, 5);
@@ -35,6 +38,8 @@ test("extract returns every model field and diagnostics", async () => {
   assert.ok(result.diagnostics.candidateCount > 0);
   for (const field of fields) {
     assert.ok(result[field] === null || typeof result[field].text === "string");
+    assert.equal(result[`${field}_text`], result[field]?.text ?? null);
+    assert.equal(result[`${field}_html`], result[field]?.html ?? null);
   }
 });
 

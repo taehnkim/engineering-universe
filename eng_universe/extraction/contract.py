@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from enum import Enum
-import json
 from pathlib import Path
 from typing import Any, Literal
 
@@ -14,8 +14,6 @@ class Field(str, Enum):
     TITLE = "title"
     AUTHORS = "authors"
     DATE = "date"
-    SUMMARY = "summary"
-    RELATIVE_DATE = "relative_date"
 
 
 FIELDS: tuple[Field, ...] = tuple(Field)
@@ -29,6 +27,7 @@ class Annotation:
     labels: dict[Field, int | None]
     needs_review: bool = False
     review_status: ReviewStatus = "legacy"
+    legacy_labels: dict[str, int | None] | None = None
 
     @classmethod
     def from_dict(cls, value: dict[str, Any]) -> Annotation:
@@ -52,6 +51,10 @@ class Annotation:
             labels=labels,
             needs_review=bool(value.get("needs_review", False)),
             review_status=_review_status(value.get("review_status", "legacy")),
+            legacy_labels={
+                key: node_id for key, node_id in raw_labels.items()
+                if key not in {field.value for field in FIELDS} and key != "author"
+            } or None,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -60,7 +63,10 @@ class Annotation:
             "html_hash": self.html_hash,
             "needs_review": self.needs_review,
             "review_status": self.review_status,
-            "labels": {field.value: self.labels[field] for field in FIELDS},
+            "labels": {
+                **(self.legacy_labels or {}),
+                **{field.value: self.labels[field] for field in FIELDS},
+            },
         }
 
 

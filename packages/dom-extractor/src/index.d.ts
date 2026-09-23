@@ -2,14 +2,14 @@ export type Field =
   | "article"
   | "title"
   | "authors"
-  | "date"
-  | "summary"
-  | "relative_date";
+  | "date";
 
 export interface Selection {
   nodeId: number;
   html: string;
   text: string;
+  /** Uncalibrated softmax share for the final node. */
+  confidence: number;
 }
 
 export interface ExtractionOptions {
@@ -18,6 +18,18 @@ export interface ExtractionOptions {
 }
 
 export type ExtractionResult = Record<Field, Selection | null> & {
+  article_text: string | null;
+  article_html: string | null;
+  article_confidence: number | null;
+  title_text: string | null;
+  title_html: string | null;
+  title_confidence: number | null;
+  authors_text: string | null;
+  authors_html: string | null;
+  authors_confidence: number | null;
+  date_text: string | null;
+  date_html: string | null;
+  date_confidence: number | null;
   scrapedAt: string;
   publishedAt: string | null;
   predictions: Record<Field, number | null>;

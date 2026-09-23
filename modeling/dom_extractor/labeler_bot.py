@@ -302,15 +302,6 @@ def build_questions(
             "Which `prepared_html` element is the tightest wrapper around the article's "
             "absolute publication date? Choose missing when only a relative date is present."
         ),
-        Field.SUMMARY: (
-            "Which `prepared_html` element is the article subtitle, standfirst, deck, or "
-            "short summary directly associated with the title? Choose missing when absent."
-        ),
-        Field.RELATIVE_DATE: (
-            "Which `prepared_html` element contains a relative publication date such as "
-            "'2 days ago'? Do not select reading times such as '5 min read'. Choose "
-            "missing when no relative publication date is present."
-        ),
     }
     return {
         field.value: Choice(instructions=instructions[field], criteria=criteria)

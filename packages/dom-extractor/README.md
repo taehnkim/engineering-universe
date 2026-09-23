@@ -19,7 +19,7 @@ npm pack
 To consume the package locally from another Node.js project:
 
 ```bash
-npm install /path/to/eng-universe/packages/dom-extractor/eng-universe-dom-extractor-0.1.0.tgz
+npm install /path/to/eng-universe/packages/dom-extractor/eng-universe-dom-extractor-0.2.0.tgz
 ```
 
 After publication:
@@ -41,10 +41,10 @@ const result = await extract(html, {
 
 console.log(result.title?.text);
 console.log(result.authors?.text);
-console.log(result.article?.text);
-console.log(result.date?.text);
-console.log(result.summary?.text);
-console.log(result.relative_date?.text);
+console.log(result.article_text); // paragraphs retain newlines
+console.log(result.article_html); // selected wrapper and its markup
+console.log(result.article_confidence); // uncalibrated model score share
+console.log(result.date_text);
 console.log(result.publishedAt);
 
 // Each non-missing field also includes the selected wrapper.
@@ -60,14 +60,20 @@ No other program is launched by `extract()`. The `npm test` suite installs the
 packed artifact into a temporary project and calls it with Python and Go absent
 from `PATH`.
 
-The six extracted fields are `article`, `title`, `authors`, `date`, `summary`,
-and `relative_date`. A field is `null` when the model selects its learned
-missing option. Otherwise it has `{ nodeId, html, text }`.
+The four extracted fields are `article`, `title`, `authors`, and `date`. Each
+field has top-level `<field>_text`, `<field>_html`, and `<field>_confidence`
+values. The existing `result.article`-style selection is also available;
+when present it has `{ nodeId, html, text, confidence }`. Missing fields are
+`null`. Article text retains paragraph boundaries. Confidence is a softmax
+share of the final node's base-model logit across candidates and the missing
+option. It is **not calibrated** to correctness; the author-boundary ranker can
+move the selected author node after base scoring.
 
 `scrapedAt` defaults to the current time. Pass the actual page-fetch timestamp
-when possible. The package uses it to turn relative publication dates such as
-`2 days ago` into `publishedAt`. Reading times such as `5 min read` are not
-treated as relative dates.
+when possible. The date output represents absolute publication dates only;
+`publishedAt` is the selected date text when absolute, otherwise `null`.
+The legacy `summary` and `relative_date` labels remain in local annotation
+files for history, but they are not model outputs.
 
 To extract only one field:
 
@@ -109,17 +115,14 @@ used only for training and this export step, never for consumer inference.
 
 ## Size and parity
 
-This accuracy-preserving build is **not under 100 KB installed**. The measured
-package is about 332 KB unpacked and 135 KB as an npm tarball. It has
-no runtime npm dependencies. The bundled checkpoint weights are 29,916 bytes;
-the minified JavaScript is 282,204 bytes. Third-party license notices add
-13,312 bytes. The parser and DOM behavior are the main cost: minifying the HTML
-parser plus DOM cleanup module produced about 263 KB. Packaging only
-the weights would be smaller, but could not accept raw HTML.
+This standalone package is **not under 100 KB installed**. Its measured npm
+tarball is about 135 KB and its unpacked size is about 333 KB. The minified
+JavaScript is 283,048 bytes (102,020 bytes gzipped); weights are 29,612 bytes
+(27,643 bytes gzipped). It has no runtime npm dependencies. The HTML parser
+and DOM behavior dominate the size. Packaging only the weights would be
+smaller, but could not accept raw HTML.
 
-On the 659 human-reviewed pages in the local corpus, this JavaScript build
-selected exactly the same node IDs as the unchanged Python checkpoint for all
-six fields. The model was not retrained. The development-only parity audit is
+The development-only full-corpus parity audit is
 `node scripts/audit_corpus.mjs DATASET_DIR PYTHON_REFERENCE_JSON`; those local
 HTML files and labels are not part of the npm package.
 

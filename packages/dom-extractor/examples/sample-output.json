@@ -2,37 +2,48 @@
   "article": {
     "nodeId": 8,
     "html": "<article>\n        <p>A small learned model can select the right article wrapper.</p>\n        <p>It uses DOM structure instead of article words.</p>\n      </article>",
-    "text": "A small learned model can select the right article wrapper. It uses DOM structure instead of article words."
+    "text": "A small learned model can select the right article wrapper.\n\nIt uses DOM structure instead of article words.",
+    "confidence": 0.9800373591222913
   },
   "title": {
     "nodeId": 5,
     "html": "<h1>Making extraction models smaller</h1>",
-    "text": "Making extraction models smaller"
+    "text": "Making extraction models smaller",
+    "confidence": 0.9976704255610097
   },
   "authors": {
     "nodeId": 6,
     "html": "<p class=\"byline\">By Ada Lovelace</p>",
-    "text": "By Ada Lovelace"
+    "text": "By Ada Lovelace",
+    "confidence": 0.9444251988604105
   },
   "date": null,
-  "summary": null,
-  "relative_date": null,
+  "article_text": "A small learned model can select the right article wrapper.\n\nIt uses DOM structure instead of article words.",
+  "article_html": "<article>\n        <p>A small learned model can select the right article wrapper.</p>\n        <p>It uses DOM structure instead of article words.</p>\n      </article>",
+  "article_confidence": 0.9800373591222913,
+  "title_text": "Making extraction models smaller",
+  "title_html": "<h1>Making extraction models smaller</h1>",
+  "title_confidence": 0.9976704255610097,
+  "authors_text": "By Ada Lovelace",
+  "authors_html": "<p class=\"byline\">By Ada Lovelace</p>",
+  "authors_confidence": 0.9444251988604105,
+  "date_text": null,
+  "date_html": null,
+  "date_confidence": null,
   "scrapedAt": "2026-09-22T12:00:00.000Z",
   "publishedAt": null,
   "predictions": {
     "article": 8,
     "title": 5,
     "authors": 6,
-    "date": null,
-    "summary": null,
-    "relative_date": null
+    "date": null
   },
   "diagnostics": {
     "candidateCount": 10,
     "cleanupVersion": "chrome-v2",
     "featureVersion": "semantic-v3",
     "modelVersion": "epoch-11+author-boundary-v1",
-    "checkpointSha256": "8a111927422cace4cfabea2ed285bc4a6b89bcbc43c28d31592d9fcc481a5a27",
+    "checkpointSha256": "df0b2855f23dc75b6956ae47c0577661e8c22d4f72538e82dc2187296e88f788",
     "domBackend": "javascript"
   }
 }

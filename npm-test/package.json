@@ -8,7 +8,7 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@eng-universe/dom-extractor": "file:../packages/dom-extractor/eng-universe-dom-extractor-0.1.0.tgz"
+    "@eng-universe/dom-extractor": "file:../packages/dom-extractor/eng-universe-dom-extractor-0.2.0.tgz"
   },
   "engines": {
     "node": ">=20"

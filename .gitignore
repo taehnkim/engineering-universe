@@ -16,3 +16,5 @@ secrets.env
 
 # Local crawl data and generated extraction artifacts
 data/
+# Compressed copies of labeled data stay local, even if the data rule changes.
+data/learned_extraction/backups/
