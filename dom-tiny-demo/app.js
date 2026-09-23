@@ -171,24 +171,25 @@ payloadDialog.addEventListener("click", (event) => {
 });
 
 function renderResult(pageId, result) {
-  const { output, page } = cards.get(pageId);
+  const { output, page, latency } = cards.get(pageId);
   hideTooltip();
   output.replaceChildren();
   if (result.error) {
+    latency.hidden = true;
     output.append(element("div", "error", result.error));
     return;
   }
-  const summary = element("div", "result-summary");
-  summary.append(`${result.inferenceMs.toFixed(1)} ms`);
+  latency.textContent = `${result.inferenceMs.toFixed(1)} ms`;
+  latency.hidden = false;
   if (result.payload.debug) {
-    summary.append(" · ");
+    const summary = element("div", "result-summary");
     summary.append(infoTerm(`${result.payload.debug.candidateCount} candidates`,
       "HTML elements the model considered for this page."));
     summary.append(" · ");
     summary.append(infoTerm(result.payload.debug.modelVersion,
       "The trained model and author-refinement version used for this run."));
+    output.append(summary);
   }
-  output.append(summary);
   const grid = element("div", "fields");
   for (const field of FIELDS) {
     const selection = result.payload[field];
@@ -220,9 +221,10 @@ function renderResult(pageId, result) {
 }
 
 async function runPage(page) {
-  const { button, payloadLink, output } = cards.get(page.id);
+  const { button, payloadLink, output, latency } = cards.get(page.id);
   button.disabled = true;
   setPayloadAvailable(payloadLink, false);
+  latency.hidden = true;
   button.textContent = "Running…";
   results.delete(page.id);
   updateTotals();
@@ -259,7 +261,12 @@ function renderPage(page, atTop = false) {
   const card = element("article", "page");
   const head = element("div", "page-head");
   const main = element("div", "page-main");
-  main.append(element("h2", "page-title", page.displayName ?? page.id));
+  const titleRow = element("div", "page-title-row");
+  titleRow.append(element("h2", "page-title", page.displayName ?? page.id));
+  const latency = element("span", "inference-latency");
+  latency.hidden = true;
+  titleRow.append(latency);
+  main.append(titleRow);
   main.append(element("div", "meta", page.website));
   head.append(main);
   const actions = element("div", "actions");
@@ -294,7 +301,7 @@ function renderPage(page, atTop = false) {
   card.append(output);
   if (atTop) pagesElement.prepend(card);
   else pagesElement.append(card);
-  cards.set(page.id, { page, button, payloadLink, output });
+  cards.set(page.id, { page, button, payloadLink, output, latency });
 }
 
 function renderPages() {
@@ -350,9 +357,10 @@ async function runAll() {
   runAllButton.disabled = true;
   uploadButton.disabled = true;
   results.clear();
-  for (const { button, payloadLink, output } of cards.values()) {
+  for (const { button, payloadLink, output, latency } of cards.values()) {
     button.disabled = true;
     setPayloadAvailable(payloadLink, false);
+    latency.hidden = true;
     output.hidden = true;
   }
   updateTotals();

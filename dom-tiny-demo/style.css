@@ -33,7 +33,9 @@ progress::-moz-progress-bar { background: #50a6ff; }
 .page { background: #151f2e; border: 1px solid #304157; border-radius: 13px; overflow: hidden; }
 .page-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 15px 18px; }
 .page-main { min-width: 0; }
-.page-title { margin: 0 0 5px; font-size: 17px; overflow-wrap: anywhere; }
+.page-title-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px 12px; margin-bottom: 5px; }
+.page-title { margin: 0; font-size: 17px; overflow-wrap: anywhere; }
+.inference-latency { color: #72dda5; font-size: 19px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .meta { color: #9eacc0; font-size: 13px; }
 .actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .actions a { color: #acd0ff; font-size: 13px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
