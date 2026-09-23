@@ -4,14 +4,18 @@ const runAllButton = document.querySelector("#run-all");
 const statusElement = document.querySelector("#status");
 const totalsElement = document.querySelector("#totals");
 const progressElement = document.querySelector("#progress");
-const articleDialog = document.querySelector("#article-dialog");
-const articleDialogTitle = document.querySelector("#article-dialog-title");
-const articleDialogMeta = document.querySelector("#article-dialog-meta");
-const articleDialogText = document.querySelector("#article-dialog-text");
+const fieldDialog = document.querySelector("#field-dialog");
+const fieldDialogTitle = document.querySelector("#field-dialog-title");
+const fieldDialogMeta = document.querySelector("#field-dialog-meta");
+const fieldDialogNote = document.querySelector("#field-dialog-note");
+const fieldDialogOutput = document.querySelector("#field-dialog-output");
+const textButton = document.querySelector("#field-dialog-show-text");
+const htmlButton = document.querySelector("#field-dialog-show-html");
 const cards = new Map();
 const results = new Map();
 let pages = [];
 let runningAll = false;
+let openComparison = null;
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -30,19 +34,37 @@ function updateTotals() {
   if (!runningAll) statusElement.textContent = completed ? "Results ready" : "Choose a page or run all";
 }
 
-function showArticle(pageId, result) {
-  const text = result.articleText;
-  articleDialogTitle.textContent = pageId;
-  articleDialogMeta.textContent = text
-    ? `Predicted node ${result.comparisons.article.predicted} · ${text.length.toLocaleString()} characters`
-    : "The model did not select an article node";
-  articleDialogText.textContent = text || "No article content selected.";
-  articleDialog.showModal();
+function confidenceLabel(value) {
+  return value == null ? "confidence unavailable" : `${(value * 100).toFixed(1)}% confidence`;
 }
 
-document.querySelector("#article-dialog-close").addEventListener("click", () => articleDialog.close());
-articleDialog.addEventListener("click", (event) => {
-  if (event.target === articleDialog) articleDialog.close();
+function showFormat(format) {
+  const isText = format === "text";
+  textButton.classList.toggle("selected", isText);
+  htmlButton.classList.toggle("selected", !isText);
+  textButton.setAttribute("aria-pressed", String(isText));
+  htmlButton.setAttribute("aria-pressed", String(!isText));
+  const value = openComparison?.[format];
+  fieldDialogOutput.textContent = value ?? "No content selected.";
+  fieldDialogOutput.classList.toggle("html-source", !isText);
+  fieldDialogNote.textContent = isText
+    ? "Full extracted text. Article paragraphs retain their line breaks."
+    : "Selected-node markup, shown as text. npm and Python can serialize the same node differently.";
+}
+
+function showField(pageId, field, comparison) {
+  openComparison = comparison;
+  fieldDialogTitle.textContent = `${pageId} · ${field}`;
+  fieldDialogMeta.textContent = `Predicted node ${comparison.predicted ?? "missing"} · human node ${comparison.expected ?? "missing"} · ${confidenceLabel(comparison.confidence)}`;
+  showFormat("text");
+  fieldDialog.showModal();
+}
+
+textButton.addEventListener("click", () => showFormat("text"));
+htmlButton.addEventListener("click", () => showFormat("html"));
+document.querySelector("#field-dialog-close").addEventListener("click", () => fieldDialog.close());
+fieldDialog.addEventListener("click", (event) => {
+  if (event.target === fieldDialog) fieldDialog.close();
 });
 
 function renderResult(pageId, result) {
@@ -64,26 +86,25 @@ function renderResult(pageId, result) {
     top.append(element("span", "", field));
     top.append(element("span", "verdict", comparison.exact ? "✓ exact" : "✕ different"));
     card.append(top);
+    card.append(element("div", "confidence", confidenceLabel(comparison.confidence)));
     const predicted = comparison.predicted ?? "missing";
     const expected = comparison.expected ?? "missing";
     card.append(element("div", "nodes", `predicted ${predicted} · human ${expected}`));
     card.append(element("p", `snippet${comparison.snippet ? "" : " muted"}`,
       comparison.snippet || "No content selected"));
-    if (field === "article") {
-      card.classList.add("openable");
-      card.tabIndex = 0;
-      card.setAttribute("role", "button");
-      card.setAttribute("aria-haspopup", "dialog");
-      card.setAttribute("aria-label", `Open full predicted article text for ${pageId}`);
-      card.title = "Click to read the full predicted article text";
-      card.addEventListener("click", () => showArticle(pageId, result));
-      card.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          showArticle(pageId, result);
-        }
-      });
-    }
+    card.classList.add("openable");
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-haspopup", "dialog");
+    card.setAttribute("aria-label", `Inspect predicted ${field} text and HTML for ${pageId}`);
+    card.title = `Inspect full ${field} text and HTML`;
+    card.addEventListener("click", () => showField(pageId, field, comparison));
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        showField(pageId, field, comparison);
+      }
+    });
     grid.append(card);
   }
   output.append(grid);

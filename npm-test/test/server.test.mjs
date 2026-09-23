@@ -11,7 +11,7 @@ const appDir = dirname(dirname(fileURLToPath(import.meta.url)));
 test("the vanilla UI server lists a reviewed page and runs the installed model", async () => {
   const fixture = await mkdtemp(join(tmpdir(), "npm-test-dataset-"));
   const pageId = "anthropic-engineering-001";
-  const html = "<html><body><h1>Fixture title</h1><article><p>Fixture article.</p></article></body></html>";
+  const html = "<html><body><h1>Fixture title</h1><article><p>Fixture article.</p><p>Second paragraph.</p></article></body></html>";
   await Promise.all([
     mkdir(join(fixture, "html")),
     mkdir(join(fixture, "annotations")),
@@ -69,7 +69,14 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
     const result = await response.json();
     assert.equal(Object.keys(result.comparisons).length, 4);
     assert.equal(typeof result.comparisons.title.predicted, "number");
-    assert.equal(result.articleText, "Fixture article.");
+    assert.equal(result.comparisons.article.text, "Fixture article.\n\nSecond paragraph.");
+    assert.match(result.comparisons.article.html, /<p>Fixture article\.<\/p>/);
+    assert.equal(typeof result.comparisons.article.confidence, "number");
+    assert.ok(result.comparisons.article.confidence >= 0 && result.comparisons.article.confidence <= 1);
+    assert.equal(result.comparisons.title.text, "Fixture title");
+    assert.equal(result.comparisons.authors.text, null);
+    assert.equal(result.comparisons.authors.html, null);
+    assert.equal(result.comparisons.authors.confidence, null);
     assert.ok(result.inferenceMs >= 0);
 
     const raw = await fetch(`${base}/api/html/${pageId}`);

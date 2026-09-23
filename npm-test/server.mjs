@@ -130,7 +130,10 @@ async function createApp() {
           predicted: result.predictions[field],
           expected: page.labels[field] ?? null,
           exact: result.predictions[field] === (page.labels[field] ?? null),
-          snippet: snippet(result[field]?.text),
+          text: result[`${field}_text`],
+          html: result[`${field}_html`],
+          confidence: result[`${field}_confidence`],
+          snippet: snippet(result[`${field}_text`]),
         }]));
         json(response, 200, {
           pageId: page.id,
@@ -139,7 +142,6 @@ async function createApp() {
           modelVersion: result.diagnostics.modelVersion,
           checkpointSha256: result.diagnostics.checkpointSha256,
           exactCount: Object.values(comparisons).filter((entry) => entry.exact).length,
-          articleText: result.article_text,
           comparisons,
         });
         return;

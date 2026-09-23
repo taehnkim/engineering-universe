@@ -27,19 +27,24 @@
     </section>
 
     <section id="pages" class="pages" aria-label="Test pages"></section>
-    <p class="footnote">This page reads a fixed set of reviewed annotations. It does not modify the dataset. “HTML” opens the saved input as plain text.</p>
+    <p class="footnote">Click any result card to inspect its full extracted text and HTML. Confidence is an uncalibrated model score, not a measured chance of correctness. This page does not modify the dataset. “HTML” opens the saved input as plain text.</p>
   </main>
 
-  <dialog id="article-dialog" aria-labelledby="article-dialog-title">
+  <dialog id="field-dialog" aria-labelledby="field-dialog-title">
     <div class="dialog-head">
       <div>
-        <p class="eyebrow">Predicted article · full text</p>
-        <h2 id="article-dialog-title">Article</h2>
-        <p id="article-dialog-meta" class="meta"></p>
+        <p class="eyebrow">Installed npm package · extracted output</p>
+        <h2 id="field-dialog-title">Field</h2>
+        <p id="field-dialog-meta" class="meta"></p>
       </div>
-      <button id="article-dialog-close" type="button" aria-label="Close full article">Close</button>
+      <button id="field-dialog-close" type="button" aria-label="Close field output">Close</button>
     </div>
-    <div id="article-dialog-text" class="dialog-text"></div>
+    <div class="dialog-tabs" role="group" aria-label="Output format">
+      <button id="field-dialog-show-text" class="selected" type="button" aria-pressed="true">Text</button>
+      <button id="field-dialog-show-html" type="button" aria-pressed="false">HTML</button>
+    </div>
+    <p id="field-dialog-note" class="dialog-note"></p>
+    <pre id="field-dialog-output" class="dialog-output"></pre>
   </dialog>
 </body>
 </html>

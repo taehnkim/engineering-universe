@@ -49,6 +49,7 @@ progress::-moz-progress-bar { background: #50a6ff; }
 .field.exact .verdict { color: #80e0af; }
 .field.different .verdict { color: #ffaaa2; }
 .nodes { color: #aebbd0; font-size: 12px; margin-top: 5px; font-variant-numeric: tabular-nums; }
+.confidence { color: #9ec9f6; font-size: 12px; margin-top: 5px; font-variant-numeric: tabular-nums; }
 .snippet { color: #d9e3f2; font-size: 13px; line-height: 1.4; margin: 8px 0 0; overflow-wrap: anywhere; }
 .muted { color: #8192a9; }
 .error { color: #ffaaa2; }
@@ -58,7 +59,11 @@ dialog::backdrop { background: #050b14c9; }
 .dialog-head { position: sticky; top: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 19px 22px; border-bottom: 1px solid #344961; background: #18283c; }
 .dialog-head h2 { margin: 0 0 5px; font-size: 20px; overflow-wrap: anywhere; }
 .dialog-head .eyebrow { margin-bottom: 7px; }
-.dialog-text { padding: 24px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.65; font-size: 15px; }
+.dialog-tabs { display: flex; gap: 8px; padding: 14px 22px 0; }
+.dialog-tabs button.selected { border-color: #79aefb; background: #294f83; }
+.dialog-note { color: #9eacc0; font-size: 12px; line-height: 1.4; margin: 12px 22px 0; }
+.dialog-output { margin: 0; padding: 20px 22px 24px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.65; font: inherit; font-size: 15px; }
+.dialog-output.html-source { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; }
 @media (max-width: 720px) {
   .hero, .page-head { align-items: stretch; flex-direction: column; }
   .hero button { align-self: flex-start; }
