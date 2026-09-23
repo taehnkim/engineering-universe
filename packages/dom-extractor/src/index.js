@@ -11,7 +11,7 @@ function selectedConfidence(field, id, page, scores) {
   logits.push(model.weights.missingScores[fieldIndex]);
   const selectedIndex = id === null ? page.candidates.length
     : page.candidates.findIndex((candidate) => candidate.nodeId === id);
-  const maximum = Math.max(...logits);
+  const maximum = logits.reduce((best, value) => Math.max(best, value), -Infinity);
   const weights = logits.map((value) => Math.exp(value - maximum));
   return weights[selectedIndex] / weights.reduce((sum, value) => sum + value, 0);
 }

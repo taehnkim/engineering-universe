@@ -117,7 +117,7 @@ used only for training and this export step, never for consumer inference.
 
 This standalone package is **not under 100 KB installed**. Its measured npm
 tarball is about 135 KB and its unpacked size is about 333 KB. The minified
-JavaScript is 283,048 bytes (102,020 bytes gzipped); weights are 29,612 bytes
+JavaScript is 283,069 bytes (102,024 bytes gzipped); weights are 29,612 bytes
 (27,643 bytes gzipped). It has no runtime npm dependencies. The HTML parser
 and DOM behavior dominate the size. Packaging only the weights would be
 smaller, but could not accept raw HTML.
