@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DOM extractor · npm smoke test</title>
+  <title>DOM Extractor Neural Model</title>
   <link rel="stylesheet" href="/style.css">
   <script type="module" src="/app.js"></script>
 </head>
@@ -11,10 +11,14 @@
   <main class="shell">
     <header class="hero">
       <div>
-        <h1>DOM extractor smoke test</h1>
-        <p class="lede">This small model finds article text, titles, authors, and dates in raw HTML.</p>
+        <h1>DOM Extractor Neural Model</h1>
+        <p class="lede">This model reads a web page's HTML and picks out the article, headline, author names, and publication date.</p>
       </div>
-      <button id="run-all" class="primary" type="button" disabled>Run all 10</button>
+      <div class="hero-actions">
+        <input id="html-upload" class="visually-hidden" type="file" accept=".html,.htm,text/html" tabindex="-1">
+        <button id="upload-button" type="button">Upload HTML</button>
+        <button id="run-all" class="primary" type="button" disabled>Run all 10</button>
+      </div>
     </header>
 
     <section class="overview" aria-label="Run progress">
@@ -54,5 +58,6 @@
     <p id="field-dialog-note" class="dialog-note"></p>
     <pre id="field-dialog-output" class="dialog-output"></pre>
   </dialog>
+  <div id="info-tooltip" class="info-tooltip" role="tooltip" hidden></div>
 </body>
 </html>

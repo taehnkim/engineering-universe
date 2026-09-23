@@ -9,6 +9,8 @@ body { margin: 0; }
 button, a { -webkit-tap-highlight-color: transparent; }
 .shell { width: min(1220px, calc(100% - 32px)); margin: 0 auto; padding: 38px 0 64px; }
 .hero { display: flex; justify-content: space-between; align-items: end; gap: 28px; margin-bottom: 28px; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 h1 { font-size: clamp(29px, 3.5vw, 44px); line-height: 1.1; letter-spacing: -.035em; margin: 0 0 12px; }
 .lede { color: #aebbd0; margin: 0; line-height: 1.5; max-width: 720px; }
 button { font: inherit; cursor: pointer; border: 1px solid #52667e; border-radius: 9px; color: #eaf1ff; background: #1a293d; padding: 9px 16px; font-weight: 700; }
@@ -36,7 +38,11 @@ progress::-moz-progress-bar { background: #50a6ff; }
 .actions a:hover { color: #deedff; }
 .result { border-top: 1px solid #304157; padding: 12px 18px 16px; }
 .result-summary { color: #aebbd0; font-size: 13px; margin-bottom: 10px; }
-.result-summary strong { color: #e9f1ff; }
+.info-term { cursor: help; text-decoration: underline dotted #8baad1; text-underline-offset: 3px; }
+.info-term:hover, .info-term:focus-visible { color: #dcecff; }
+.info-term:focus-visible { outline: 2px solid #b6d0ff; outline-offset: 3px; border-radius: 2px; }
+.info-tooltip { position: fixed; z-index: 20; max-width: min(300px, calc(100vw - 16px)); padding: 9px 11px; border: 1px solid #79aefb; border-radius: 8px; background: #263e5e; color: #f4f8ff; box-shadow: 0 10px 24px #0008; font-size: 12px; line-height: 1.4; pointer-events: none; }
+.info-tooltip[hidden] { display: none; }
 .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(285px, 1fr)); gap: 8px; }
 .field { min-width: 0; border: 1px solid #344961; background: #111b29; padding: 10px 12px; border-radius: 8px; }
 .field.openable { cursor: pointer; }
@@ -60,6 +66,6 @@ dialog::backdrop { background: #050b14c9; }
 .dialog-output.json-source { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; white-space: pre; overflow: auto; }
 @media (max-width: 720px) {
   .hero, .page-head { align-items: stretch; flex-direction: column; }
-  .hero button { align-self: flex-start; }
+  .hero-actions { align-self: flex-start; }
   .actions { flex-wrap: wrap; }
 }

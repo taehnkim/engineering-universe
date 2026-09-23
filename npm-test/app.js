@@ -1,6 +1,8 @@
 const FIELDS = ["article", "title", "authors", "date"];
 const pagesElement = document.querySelector("#pages");
 const runAllButton = document.querySelector("#run-all");
+const uploadButton = document.querySelector("#upload-button");
+const uploadInput = document.querySelector("#html-upload");
 const statusElement = document.querySelector("#status");
 const totalsElement = document.querySelector("#totals");
 const progressElement = document.querySelector("#progress");
@@ -14,11 +16,14 @@ const htmlButton = document.querySelector("#field-dialog-show-html");
 const payloadDialog = document.querySelector("#payload-dialog");
 const payloadDialogMeta = document.querySelector("#payload-dialog-meta");
 const payloadDialogOutput = document.querySelector("#payload-dialog-output");
+const infoTooltip = document.querySelector("#info-tooltip");
 const cards = new Map();
 const results = new Map();
+const uploadedRawUrls = new Set();
 let pages = [];
 let runningAll = false;
 let openSelection = null;
+let uploadCount = 0;
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -38,7 +43,8 @@ function updateTotals() {
   progressElement.value = completed;
   if (runningAll) return;
   if (!timings.length) {
-    statusElement.textContent = completed ? "No successful inference runs" : "Starting inference…";
+    statusElement.textContent = completed ? "No successful inference runs"
+      : pages.length ? "Starting inference…" : "Upload an HTML file to run inference";
     return;
   }
   const middle = Math.floor(timings.length / 2);
@@ -56,6 +62,38 @@ function snippet(value) {
   const text = (value ?? "").replace(/\s+/g, " ").trim();
   return text.length > 240 ? `${text.slice(0, 239)}…` : text;
 }
+
+function hideTooltip() {
+  infoTooltip.hidden = true;
+}
+
+function showTooltip(target, message) {
+  infoTooltip.textContent = message;
+  infoTooltip.hidden = false;
+  const targetBox = target.getBoundingClientRect();
+  const tipBox = infoTooltip.getBoundingClientRect();
+  infoTooltip.style.left = `${Math.max(8, Math.min(targetBox.left, window.innerWidth - tipBox.width - 8))}px`;
+  const below = targetBox.bottom + 8;
+  infoTooltip.style.top = `${below + tipBox.height <= window.innerHeight
+    ? below : Math.max(8, targetBox.top - tipBox.height - 8)}px`;
+}
+
+function infoTerm(label, message) {
+  const term = element("span", "info-term", label);
+  term.tabIndex = 0;
+  term.setAttribute("aria-describedby", "info-tooltip");
+  term.addEventListener("pointerenter", () => showTooltip(term, message));
+  term.addEventListener("pointerleave", hideTooltip);
+  term.addEventListener("focus", () => showTooltip(term, message));
+  term.addEventListener("blur", hideTooltip);
+  term.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") hideTooltip();
+  });
+  return term;
+}
+
+window.addEventListener("scroll", hideTooltip, true);
+window.addEventListener("resize", hideTooltip);
 
 function showFormat(format) {
   const isText = format === "text";
@@ -97,14 +135,20 @@ payloadDialog.addEventListener("click", (event) => {
 });
 
 function renderResult(pageId, result) {
-  const { output } = cards.get(pageId);
+  const { output, page } = cards.get(pageId);
+  hideTooltip();
   output.replaceChildren();
   if (result.error) {
     output.append(element("div", "error", result.error));
     return;
   }
   const summary = element("div", "result-summary");
-  summary.append(`${result.inferenceMs.toFixed(1)} ms · ${result.payload.diagnostics.candidateCount} candidates · ${result.payload.diagnostics.modelVersion}`);
+  summary.append(`${result.inferenceMs.toFixed(1)} ms · `);
+  summary.append(infoTerm(`${result.payload.diagnostics.candidateCount} candidates`,
+    "HTML elements the model considered for this page."));
+  summary.append(" · ");
+  summary.append(infoTerm(result.payload.diagnostics.modelVersion,
+    "The trained model and author-refinement version used for this run."));
   output.append(summary);
   const grid = element("div", "fields");
   for (const field of FIELDS) {
@@ -122,13 +166,13 @@ function renderResult(pageId, result) {
     card.tabIndex = 0;
     card.setAttribute("role", "button");
     card.setAttribute("aria-haspopup", "dialog");
-    card.setAttribute("aria-label", `Inspect predicted ${field} text and HTML for ${pageId}`);
+    card.setAttribute("aria-label", `Inspect predicted ${field} text and HTML for ${page.displayName ?? pageId}`);
     card.title = `Inspect full ${field} text and HTML`;
-    card.addEventListener("click", () => showField(pageId, field, result));
+    card.addEventListener("click", () => showField(page.displayName ?? pageId, field, result));
     card.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        showField(pageId, field, result);
+        showField(page.displayName ?? pageId, field, result);
       }
     });
     grid.append(card);
@@ -146,11 +190,17 @@ async function runPage(page) {
   output.hidden = false;
   output.replaceChildren(element("div", "muted", "Running inference…"));
   try {
-    const response = await fetch("/api/run", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pageId: page.id }),
-    });
+    const response = page.uploadedHtml === undefined
+      ? await fetch("/api/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pageId: page.id }),
+      })
+      : await fetch("/api/run-upload", {
+        method: "POST",
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+        body: page.uploadedHtml,
+      });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error ?? `HTTP ${response.status}`);
     results.set(page.id, result);
@@ -166,55 +216,100 @@ async function runPage(page) {
   }
 }
 
+function renderPage(page, atTop = false) {
+  const card = element("article", "page");
+  const head = element("div", "page-head");
+  const main = element("div", "page-main");
+  main.append(element("h2", "page-title", page.displayName ?? page.id));
+  main.append(element("div", "meta", page.website));
+  head.append(main);
+  const actions = element("div", "actions");
+  const payloadButton = element("button", "", "Payload");
+  payloadButton.type = "button";
+  payloadButton.disabled = true;
+  payloadButton.addEventListener("click", () => {
+    const result = results.get(page.id);
+    if (result) showPayload(page.displayName ?? page.id, result);
+  });
+  actions.append(payloadButton);
+  const rawLink = element("a", "", "Raw HTML");
+  rawLink.href = page.rawUrl ?? `/api/html/${encodeURIComponent(page.id)}`;
+  rawLink.target = "_blank";
+  rawLink.rel = "noopener noreferrer";
+  actions.append(rawLink);
+  const sourceLink = element("a", "", "Source");
+  if (/^https?:\/\//.test(page.url)) {
+    sourceLink.href = page.url;
+    sourceLink.target = "_blank";
+    sourceLink.rel = "noopener noreferrer";
+    actions.append(sourceLink);
+  }
+  const button = element("button", "", "Run");
+  button.type = "button";
+  button.addEventListener("click", () => runPage(page));
+  actions.append(button);
+  head.append(actions);
+  card.append(head);
+  const output = element("div", "result");
+  output.hidden = true;
+  card.append(output);
+  if (atTop) pagesElement.prepend(card);
+  else pagesElement.append(card);
+  cards.set(page.id, { page, button, payloadButton, output });
+}
+
 function renderPages() {
   pagesElement.replaceChildren();
   cards.clear();
   for (const page of pages) {
-    const card = element("article", "page");
-    const head = element("div", "page-head");
-    const main = element("div", "page-main");
-    main.append(element("h2", "page-title", page.id));
-    main.append(element("div", "meta", `${page.website} · ${page.split}`));
-    head.append(main);
-    const actions = element("div", "actions");
-    const payloadButton = element("button", "", "Payload");
-    payloadButton.type = "button";
-    payloadButton.disabled = true;
-    payloadButton.addEventListener("click", () => {
-      const result = results.get(page.id);
-      if (result) showPayload(page.id, result);
-    });
-    actions.append(payloadButton);
-    const rawLink = element("a", "", "Raw HTML");
-    rawLink.href = `/api/html/${encodeURIComponent(page.id)}`;
-    rawLink.target = "_blank";
-    rawLink.rel = "noopener noreferrer";
-    actions.append(rawLink);
-    const sourceLink = element("a", "", "Source");
-    if (/^https?:\/\//.test(page.url)) {
-      sourceLink.href = page.url;
-      sourceLink.target = "_blank";
-      sourceLink.rel = "noopener noreferrer";
-      actions.append(sourceLink);
-    }
-    const button = element("button", "", "Run");
-    button.type = "button";
-    button.addEventListener("click", () => runPage(page));
-    actions.append(button);
-    head.append(actions);
-    card.append(head);
-    const output = element("div", "result");
-    output.hidden = true;
-    card.append(output);
-    pagesElement.append(card);
-    cards.set(page.id, { button, payloadButton, output });
+    renderPage(page);
   }
 }
+
+uploadButton.addEventListener("click", () => uploadInput.click());
+uploadInput.addEventListener("change", async () => {
+  const file = uploadInput.files?.[0];
+  uploadInput.value = "";
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) {
+    statusElement.textContent = "HTML file exceeds the 10 MB limit";
+    return;
+  }
+  uploadButton.disabled = true;
+  uploadButton.textContent = "Loading…";
+  try {
+    const html = await file.text();
+    if (!html) throw new Error("HTML file is empty");
+    const rawUrl = URL.createObjectURL(new Blob([html], { type: "text/plain" }));
+    uploadedRawUrls.add(rawUrl);
+    const page = {
+      id: `upload-${++uploadCount}`,
+      displayName: file.name,
+      website: "Uploaded HTML",
+      uploadedHtml: html,
+      rawUrl,
+    };
+    pages.unshift(page);
+    renderPage(page, true);
+    runAllButton.textContent = `Run all ${pages.length}`;
+    updateTotals();
+    await runPage(page);
+  } catch (error) {
+    statusElement.textContent = error.message;
+  } finally {
+    uploadButton.disabled = runningAll;
+    uploadButton.textContent = "Upload HTML";
+  }
+});
+window.addEventListener("pagehide", () => {
+  for (const rawUrl of uploadedRawUrls) URL.revokeObjectURL(rawUrl);
+});
 
 async function runAll() {
   if (runningAll) return;
   runningAll = true;
   runAllButton.disabled = true;
+  uploadButton.disabled = true;
   results.clear();
   for (const { button, payloadButton, output } of cards.values()) {
     button.disabled = true;
@@ -230,6 +325,7 @@ async function runAll() {
   } finally {
     runningAll = false;
     runAllButton.disabled = false;
+    uploadButton.disabled = false;
     for (const { button } of cards.values()) button.disabled = false;
     updateTotals();
   }

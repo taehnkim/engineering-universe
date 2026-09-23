@@ -9,6 +9,7 @@ const appDir = dirname(fileURLToPath(import.meta.url));
 const defaultDataDir = resolve(appDir, "../data/learned_extraction/raw");
 const dataDir = resolve(process.env.ANNOTATION_DATA_DIR ?? defaultDataDir);
 const port = Number(process.env.PORT ?? 8770);
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 const SAMPLE_IDS = [
   "anthropic-engineering-001",
   "airbnb-tech-001",
@@ -34,7 +35,14 @@ function json(response, status, value) {
 }
 
 async function loadSamples() {
-  const manifest = JSON.parse(await readFile(join(dataDir, "manifest.json"), "utf8"));
+  let manifestText;
+  try {
+    manifestText = await readFile(join(dataDir, "manifest.json"), "utf8");
+  } catch (error) {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  }
+  const manifest = JSON.parse(manifestText);
   const byId = new Map(manifest.pages.map((page) => [page.page_id, page]));
   const rows = [];
   for (const pageId of SAMPLE_IDS) {
@@ -51,9 +59,7 @@ async function loadSamples() {
     if (annotation.review_status !== "reviewed" || annotation.needs_review) continue;
     rows.push({
       id: pageId,
-      company: page.company,
       website: page.website,
-      split: page.split,
       url: page.url,
       htmlPath: page.html_path,
       scrapedAt: page.scraped_at,
@@ -71,11 +77,34 @@ async function readBody(request) {
   return JSON.parse(body || "{}");
 }
 
+async function readUploadedHtml(request) {
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of request) {
+    size += chunk.length;
+    if (size > MAX_UPLOAD_BYTES) {
+      const error = new Error("HTML file exceeds the 10 MB limit");
+      error.status = 413;
+      throw error;
+    }
+    chunks.push(chunk);
+  }
+  if (!size) {
+    const error = new Error("HTML file is empty");
+    error.status = 400;
+    throw error;
+  }
+  return Buffer.concat(chunks, size).toString("utf8");
+}
+
+async function runInference(html, options = {}) {
+  const started = performance.now();
+  const payload = await extract(html, options);
+  return { inferenceMs: Number((performance.now() - started).toFixed(1)), payload };
+}
+
 async function createApp() {
   const samples = await loadSamples();
-  if (!samples.length) {
-    throw new Error(`No reviewed samples found in ${dataDir}. Set ANNOTATION_DATA_DIR to the raw dataset directory.`);
-  }
   const byId = new Map(samples.map((page) => [page.id, page]));
   const assets = new Map([
     ["/", ["index.html", "text/html; charset=utf-8"]],
@@ -117,19 +146,20 @@ async function createApp() {
         const page = byId.get(input.pageId);
         if (!page) return json(response, 404, { error: "unknown page" });
         const html = await readFile(join(dataDir, page.htmlPath), "utf8");
-        const started = performance.now();
-        const result = await extract(html, { scrapedAt: page.scrapedAt });
-        const inferenceMs = performance.now() - started;
-        json(response, 200, {
-          pageId: page.id,
-          inferenceMs: Number(inferenceMs.toFixed(1)),
-          payload: result,
-        });
+        json(response, 200, { pageId: page.id, ...await runInference(html, { scrapedAt: page.scrapedAt }) });
+        return;
+      }
+      if (request.method === "POST" && url.pathname === "/api/run-upload") {
+        if (!/^text\/html(?:;|$)/i.test(request.headers["content-type"] ?? "")) {
+          return json(response, 415, { error: "upload must be an HTML file" });
+        }
+        const html = await readUploadedHtml(request);
+        json(response, 200, await runInference(html));
         return;
       }
       json(response, 404, { error: "not found" });
     } catch (error) {
-      json(response, 500, { error: error.message });
+      json(response, error.status ?? 500, { error: error.message });
     }
   });
 }

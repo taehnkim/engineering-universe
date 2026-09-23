@@ -58,10 +58,13 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
     const home = await fetch(base);
     assert.equal(home.status, 200);
     const homeHtml = await home.text();
-    assert.match(homeHtml, /DOM extractor smoke test/);
-    assert.match(homeHtml, /This small model finds article text, titles, authors, and dates in raw HTML/);
+    assert.match(homeHtml, /DOM Extractor Neural Model/);
+    assert.match(homeHtml, /This model reads a web page's HTML and picks out the article/);
+    assert.match(homeHtml, /id="html-upload"/);
+    assert.match(homeHtml, /id="info-tooltip"/);
     assert.match(homeHtml, /id="payload-dialog"/);
     assert.doesNotMatch(homeHtml, /fields exact/);
+    assert.doesNotMatch(homeHtml, /annotation samples/);
 
     const listed = await (await fetch(`${base}/api/pages`)).json();
     assert.deepEqual(listed.pages.map((page) => page.id), [pageId]);
@@ -85,6 +88,27 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
     assert.equal(result.payload.authors_confidence, null);
     assert.ok(result.inferenceMs >= 0);
 
+    const uploadedResponse = await fetch(`${base}/api/run-upload`, {
+      method: "POST",
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+      body: html,
+    });
+    assert.equal(uploadedResponse.status, 200);
+    const uploaded = await uploadedResponse.json();
+    assert.equal(uploaded.payload.article_text, "Fixture article.\n\nSecond paragraph.");
+    assert.equal(uploaded.payload.title_text, "Fixture title");
+    assert.ok(uploaded.inferenceMs >= 0);
+    assert.equal((await fetch(`${base}/api/run-upload`, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: html,
+    })).status, 415);
+    assert.equal((await fetch(`${base}/api/run-upload`, {
+      method: "POST",
+      headers: { "Content-Type": "text/html" },
+      body: "",
+    })).status, 400);
+
     const raw = await fetch(`${base}/api/html/${pageId}`);
     assert.equal(raw.headers.get("content-type"), "text/plain; charset=utf-8");
     assert.equal(await raw.text(), html);
@@ -93,5 +117,40 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
   } finally {
     server.kill();
     await rm(fixture, { recursive: true, force: true });
+  }
+});
+
+test("upload works without a local annotation dataset", async () => {
+  const emptyDataDir = await mkdtemp(join(tmpdir(), "npm-test-empty-"));
+  const server = spawn(process.execPath, [join(appDir, "server.mjs")], {
+    cwd: appDir,
+    env: { ...process.env, ANNOTATION_DATA_DIR: emptyDataDir, PORT: "0" },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  try {
+    const base = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error("server startup timed out")), 10_000);
+      server.once("error", reject);
+      server.once("exit", (code) => reject(new Error(`server exited: ${code}`)));
+      server.stdout.on("data", (chunk) => {
+        const match = String(chunk).match(/http:\/\/127\.0\.0\.1:\d+\//);
+        if (match) {
+          clearTimeout(timeout);
+          resolve(match[0].slice(0, -1));
+        }
+      });
+    });
+    assert.deepEqual((await (await fetch(`${base}/api/pages`)).json()).pages, []);
+    const response = await fetch(`${base}/api/run-upload`, {
+      method: "POST",
+      headers: { "Content-Type": "text/html" },
+      body: "<html><body><h1>Standalone title</h1><article><p>Standalone article.</p></article></body></html>",
+    });
+    assert.equal(response.status, 200);
+    const result = await response.json();
+    assert.equal(result.payload.title_text, "Standalone title");
+  } finally {
+    server.kill();
+    await rm(emptyDataDir, { recursive: true, force: true });
   }
 });
