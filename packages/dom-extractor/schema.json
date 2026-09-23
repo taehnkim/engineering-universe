@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "article": { "$ref": "#/$defs/selectionOrNull" },
+    "title": { "$ref": "#/$defs/selectionOrNull" },
+    "authors": { "$ref": "#/$defs/selectionOrNull" },
+    "date": { "$ref": "#/$defs/selectionOrNull" },
+    "debug": {
+      "type": "object",
+      "properties": {
+        "candidateCount": { "type": "integer" },
+        "cleanupVersion": { "type": "string" },
+        "featureVersion": { "type": "string" },
+        "modelVersion": { "type": "string" },
+        "checkpointSha256": { "type": "string" },
+        "domBackend": { "type": "string" }
+      },
+      "required": [
+        "candidateCount",
+        "cleanupVersion",
+        "featureVersion",
+        "modelVersion",
+        "checkpointSha256",
+        "domBackend"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": ["article", "title", "authors", "date"],
+  "additionalProperties": false,
+  "$defs": {
+    "selectionOrNull": {
+      "anyOf": [
+        { "$ref": "#/$defs/selection" },
+        { "type": "null" }
+      ]
+    },
+    "selection": {
+      "type": "object",
+      "properties": {
+        "nodeId": { "type": "integer" },
+        "html": { "type": "string" },
+        "text": { "type": "string" },
+        "confidence": { "type": "number" }
+      },
+      "required": ["nodeId", "html", "text", "confidence"],
+      "additionalProperties": false
+    }
+  }
+}

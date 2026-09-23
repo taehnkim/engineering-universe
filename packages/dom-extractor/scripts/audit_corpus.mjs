@@ -21,13 +21,13 @@ for (const row of rows) {
   const html = await readFile(`${datasetDir}/${row.htmlPath}`, "utf8");
   let result;
   try {
-    result = await extract(html, { scrapedAt: "2026-09-22T00:00:00Z" });
+    result = await extract(html);
   } catch (error) {
     report.errors.push({ pageId: row.pageId, error: String(error) });
     continue;
   }
   report.pages += 1;
-  const mismatch = fields.filter((name) => result.predictions[name] !== row.python[name]);
+  const mismatch = fields.filter((name) => (result[name]?.nodeId ?? null) !== row.python[name]);
   if (mismatch.length) {
     report.predictionMismatchPages += 1;
     const site = report.sites[row.website] ??= { pages: 0, mismatches: 0 };
@@ -36,8 +36,8 @@ for (const row of rows) {
   }
   (report.sites[row.website] ??= { pages: 0, mismatches: 0 }).pages += 1;
   for (const name of fields) {
-    report.fields[name].sameAsPython += Number(result.predictions[name] === row.python[name]);
-    report.fields[name].jsCorrect += Number(result.predictions[name] === row.expected[name]);
+    report.fields[name].sameAsPython += Number((result[name]?.nodeId ?? null) === row.python[name]);
+    report.fields[name].jsCorrect += Number((result[name]?.nodeId ?? null) === row.expected[name]);
     report.fields[name].pythonCorrect += Number(row.python[name] === row.expected[name]);
     report.fields[name].textSameAsPython += Number(hash(result[name]?.text ?? null) === row.contentHashes[name].text);
     report.fields[name].normalizedTextSameAsPython += Number(hash(

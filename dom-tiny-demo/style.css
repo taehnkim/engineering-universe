@@ -10,6 +10,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .shell { width: min(1220px, calc(100% - 32px)); margin: 0 auto; padding: 38px 0 64px; }
 .hero { display: flex; justify-content: space-between; align-items: end; gap: 28px; margin-bottom: 28px; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
+.debug-option { display: inline-flex; align-items: center; gap: 7px; color: #aebbd0; font-size: 13px; cursor: pointer; }
+.debug-option input { accent-color: #79aefb; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 h1 { font-size: clamp(29px, 3.5vw, 44px); line-height: 1.1; letter-spacing: -.035em; margin: 0 0 12px; }
 .lede { color: #aebbd0; margin: 0; line-height: 1.5; max-width: 720px; }
@@ -70,6 +72,10 @@ dialog::backdrop { background: #050b14c9; }
 .dialog-output { margin: 0; padding: 20px 22px 24px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.65; font: inherit; font-size: 15px; }
 .dialog-output.html-source { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; }
 .dialog-output.json-source { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; white-space: pre; overflow: auto; }
+.json-source .json-key { color: #9ac5ff; }
+.json-source .json-string { color: #a9dfa9; }
+.json-source .json-number { color: #f5c28b; }
+.json-source .json-literal { color: #d4afff; }
 @media (max-width: 720px) {
   .hero, .page-head { align-items: stretch; flex-direction: column; }
   .hero-actions { align-self: flex-start; }

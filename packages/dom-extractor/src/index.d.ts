@@ -13,41 +13,35 @@ export interface Selection {
 }
 
 export interface ExtractionOptions {
-  /** When the HTML was fetched. Defaults to the current time. */
-  scrapedAt?: string | Date;
+  /** Include preprocessing and model metadata in the result. Defaults to false. */
+  debug?: boolean;
 }
 
-export type ExtractionResult = Record<Field, Selection | null> & {
-  article_text: string | null;
-  article_html: string | null;
-  article_confidence: number | null;
-  title_text: string | null;
-  title_html: string | null;
-  title_confidence: number | null;
-  authors_text: string | null;
-  authors_html: string | null;
-  authors_confidence: number | null;
-  date_text: string | null;
-  date_html: string | null;
-  date_confidence: number | null;
-  scrapedAt: string;
-  publishedAt: string | null;
-  predictions: Record<Field, number | null>;
-  diagnostics: {
-    candidateCount: number;
-    cleanupVersion: "chrome-v2";
-    featureVersion: string;
-    modelVersion: string;
-    checkpointSha256: string;
-    domBackend: "javascript";
-  };
-};
+export interface DebugInfo {
+  candidateCount: number;
+  cleanupVersion: string;
+  featureVersion: string;
+  modelVersion: string;
+  checkpointSha256: string;
+  domBackend: string;
+}
+
+export type ExtractionResult = Record<Field, Selection | null>;
+export type DebugExtractionResult = ExtractionResult & { debug: DebugInfo };
 
 export const fields: readonly Field[];
 export function extract(
   html: string,
-  options?: ExtractionOptions,
+  options: ExtractionOptions & { debug: true },
+): Promise<DebugExtractionResult>;
+export function extract(
+  html: string,
+  options?: { debug?: false },
 ): Promise<ExtractionResult>;
+export function extract(
+  html: string,
+  options: ExtractionOptions,
+): Promise<ExtractionResult | DebugExtractionResult>;
 export function extractField(html: string, field: Field, options?: ExtractionOptions): Promise<Selection | null>;
 export function extractRelativePublicationDate(text?: string | null): string | null;
 export function resolveRelativeDate(

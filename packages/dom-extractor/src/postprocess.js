@@ -61,10 +61,3 @@ export function resolveRelativeDate(relativeDate, scrapedAt) {
   }
   return published.toISOString();
 }
-
-export function derivePublishedAt(absoluteDate) {
-  if (absoluteDate && !extractRelativePublicationDate(absoluteDate)) {
-    return absoluteDate.trim() || null;
-  }
-  return null;
-}

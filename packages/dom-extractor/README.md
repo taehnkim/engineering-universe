@@ -19,7 +19,7 @@ npm pack
 To consume the package locally from another Node.js project:
 
 ```bash
-npm install /path/to/eng-universe/packages/dom-extractor/eng-universe-dom-extractor-0.2.0.tgz
+npm install /path/to/eng-universe/packages/dom-extractor/eng-universe-dom-extractor-0.3.0.tgz
 ```
 
 After publication:
@@ -35,45 +35,38 @@ import { readFile } from "node:fs/promises";
 import { extract } from "@eng-universe/dom-extractor";
 
 const html = await readFile("article.html", "utf8");
-const result = await extract(html, {
-  scrapedAt: "2026-09-21T12:00:00Z",
-});
+const result = await extract(html);
 
 console.log(result.title?.text);
 console.log(result.authors?.text);
-console.log(result.article_text); // paragraphs retain newlines
-console.log(result.article_html); // selected wrapper and its markup
-console.log(result.article_confidence); // uncalibrated model score share
-console.log(result.date_text);
-console.log(result.publishedAt);
-
-// Each non-missing field also includes the selected wrapper.
+console.log(result.article?.text); // paragraphs retain newlines
 console.log(result.article?.html);
 console.log(result.article?.nodeId);
+console.log(result.article?.confidence); // uncalibrated model score share
 
-// Useful when inspecting preprocessing and model behavior.
-console.log(result.predictions);
-console.log(result.diagnostics);
+// Request model metadata only when needed.
+const inspected = await extract(html, { debug: true });
+console.log(inspected.debug?.candidateCount);
 ```
 
 No other program is launched by `extract()`. The `npm test` suite installs the
 packed artifact into a temporary project and calls it with Python and Go absent
 from `PATH`.
 
-The four extracted fields are `article`, `title`, `authors`, and `date`. Each
-field has top-level `<field>_text`, `<field>_html`, and `<field>_confidence`
-values. The existing `result.article`-style selection is also available;
-when present it has `{ nodeId, html, text, confidence }`. Missing fields are
-`null`. Article text retains paragraph boundaries. Confidence is a softmax
+The default result has exactly four keys: `article`, `title`, `authors`, and
+`date`. Each field is `{ nodeId, html, text, confidence }` or `null` when the
+model selects missing. Pass `{ debug: true }` to add a `debug` object with the
+candidate count and model versions. The full contract is in `schema.json`.
+Article text retains paragraph boundaries. Confidence is a softmax
 share of the final node's base-model logit across candidates and the missing
 option. It is **not calibrated** to correctness; the author-boundary ranker can
 move the selected author node after base scoring.
 
-`scrapedAt` defaults to the current time. Pass the actual page-fetch timestamp
-when possible. The date output represents absolute publication dates only;
-`publishedAt` is the selected date text when absolute, otherwise `null`.
-The legacy `summary` and `relative_date` labels remain in local annotation
-files for history, but they are not model outputs.
+The date selection contains the selected node's text and markup, not a
+normalized publication timestamp. The separate `resolveRelativeDate()` utility
+can resolve a relative date when given a scrape timestamp. The legacy
+`summary` and `relative_date` labels remain in local annotation files for
+history, but they are not model outputs.
 
 To extract only one field:
 
@@ -93,8 +86,7 @@ node examples/run-sample.mjs
 ```
 
 See `examples/sample.html` for the input and `examples/sample-output.json` for
-the expected result. This sample uses a fixed `scrapedAt` value, so its output
-is repeatable.
+the expected result.
 
 ## Update the bundled model
 
@@ -116,9 +108,9 @@ used only for training and this export step, never for consumer inference.
 ## Size and parity
 
 This standalone package is **not under 100 KB installed**. Its measured npm
-tarball is about 135 KB and its unpacked size is about 333 KB. The minified
-JavaScript is 283,069 bytes (102,024 bytes gzipped); weights are 29,612 bytes
-(27,643 bytes gzipped). It has no runtime npm dependencies. The HTML parser
+tarball is about 135 KB and its unpacked size is about 334 KB. The minified
+JavaScript is 282,791 bytes (101,930 bytes gzipped); weights are 29,612 bytes
+(27,625 bytes gzipped). It has no runtime npm dependencies. The HTML parser
 and DOM behavior dominate the size. Packaging only the weights would be
 smaller, but could not accept raw HTML.
 

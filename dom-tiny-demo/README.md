@@ -12,7 +12,7 @@ consumer project:
 cd packages/dom-extractor
 npm ci
 npm pack
-cd ../../npm-test
+cd ../../dom-tiny-demo
 npm install --offline
 ```
 
@@ -38,10 +38,15 @@ Article text preserves paragraph breaks. Confidence is an uncalibrated model
 score, not a measured probability of correctness. The HTML tab shows escaped
 markup from the npm runtime; it may differ byte-for-byte from Python's
 serialization even if both select the same node. **Payload** opens the complete
-JSON object returned by the installed package. **Raw HTML** opens the input
-as plain text, and **Source** opens the original URL for a saved sample. Hover
-or focus the candidate count and model version to see what they mean. The app
-never changes the annotation files.
+JSON object returned by the installed package, with JSON syntax highlighting.
+**Raw HTML** opens the input as plain text, and **Source** opens the original
+URL for a saved sample. When debug is enabled, hover or focus the candidate
+count and model version to see what they mean. The app never changes the
+annotation files.
+
+The demo uses the package's default response: `article`, `title`, `authors`, and
+`date` (each `null` when missing). Select **Include debug** before a run to add
+the optional `debug` field and show candidate count and model version.
 
 `PORT` can override port 8770. The sample list in `server.mjs` is intentionally
 fixed to ten reviewed pages. This directory is a throwaway consumer test, not

@@ -1,7 +1,6 @@
 import model from "./model.generated.js";
 import { DOM_CLEANUP_VERSION, parsePage, selectedContent } from "./dom.js";
 import { predict } from "./scoring.js";
-import { derivePublishedAt, normalizeScrapedAt } from "./postprocess.js";
 
 export const fields = Object.freeze([...model.fields]);
 
@@ -29,27 +28,17 @@ export async function extract(html, options = {}) {
       confidence: selectedConfidence(field, id, page, scores),
     }];
   }));
-  const flat = Object.fromEntries(fields.flatMap((field) => [
-    [`${field}_text`, selections[field]?.text ?? null],
-    [`${field}_html`, selections[field]?.html ?? null],
-    [`${field}_confidence`, selections[field]?.confidence ?? null],
-  ]));
-  const scrapedAt = normalizeScrapedAt(options.scrapedAt ?? new Date());
-  return {
-    ...selections,
-    ...flat,
-    scrapedAt,
-    publishedAt: derivePublishedAt(selections.date?.text ?? null),
-    predictions,
-    diagnostics: {
+  if (options.debug === true) {
+    selections.debug = {
       candidateCount: page.candidates.length,
       cleanupVersion: DOM_CLEANUP_VERSION,
       featureVersion: model.featureVersion,
       modelVersion: model.modelVersion,
       checkpointSha256: model.checkpointSha256,
       domBackend: "javascript",
-    },
-  };
+    };
+  }
+  return selections;
 }
 
 export async function extractField(html, field, options = {}) {

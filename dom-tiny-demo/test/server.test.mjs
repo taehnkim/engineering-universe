@@ -10,7 +10,7 @@ import { extract } from "@eng-universe/dom-extractor";
 const appDir = dirname(dirname(fileURLToPath(import.meta.url)));
 
 test("the vanilla UI server lists a reviewed page and runs the installed model", async () => {
-  const fixture = await mkdtemp(join(tmpdir(), "npm-test-dataset-"));
+  const fixture = await mkdtemp(join(tmpdir(), "dom-tiny-demo-dataset-"));
   const pageId = "anthropic-engineering-001";
   const html = "<html><body><h1>Fixture title</h1><article><p>Fixture article.</p><p>Second paragraph.</p></article></body></html>";
   await Promise.all([
@@ -61,6 +61,7 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
     assert.match(homeHtml, /DOM Extractor Neural Model/);
     assert.match(homeHtml, /This model reads a web page's HTML and picks out the article/);
     assert.match(homeHtml, /id="html-upload"/);
+    assert.match(homeHtml, /id="include-debug"/);
     assert.match(homeHtml, /id="info-tooltip"/);
     assert.match(homeHtml, /id="payload-dialog"/);
     assert.doesNotMatch(homeHtml, /fields exact/);
@@ -75,18 +76,28 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
     });
     assert.equal(response.status, 200);
     const result = await response.json();
-    assert.deepEqual(result.payload, await extract(html, { scrapedAt: "2026-09-22T12:00:00Z" }));
+    assert.deepEqual(result.payload, await extract(html));
     assert.equal(result.comparisons, undefined);
-    assert.equal(typeof result.payload.predictions.title, "number");
-    assert.equal(result.payload.article_text, "Fixture article.\n\nSecond paragraph.");
-    assert.match(result.payload.article_html, /<p>Fixture article\.<\/p>/);
-    assert.equal(typeof result.payload.article_confidence, "number");
-    assert.ok(result.payload.article_confidence >= 0 && result.payload.article_confidence <= 1);
-    assert.equal(result.payload.title_text, "Fixture title");
-    assert.equal(result.payload.authors_text, null);
-    assert.equal(result.payload.authors_html, null);
-    assert.equal(result.payload.authors_confidence, null);
+    assert.deepEqual(Object.keys(result.payload), ["article", "title", "authors", "date"]);
+    assert.equal(typeof result.payload.title.nodeId, "number");
+    assert.equal(result.payload.article.text, "Fixture article.\n\nSecond paragraph.");
+    assert.match(result.payload.article.html, /<p>Fixture article\.<\/p>/);
+    assert.equal(typeof result.payload.article.confidence, "number");
+    assert.ok(result.payload.article.confidence >= 0 && result.payload.article.confidence <= 1);
+    assert.equal(result.payload.title.text, "Fixture title");
+    assert.equal(result.payload.authors, null);
+    assert.equal(result.payload.debug, undefined);
     assert.ok(result.inferenceMs >= 0);
+
+    const debugResponse = await fetch(`${base}/api/run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pageId, debug: true }),
+    });
+    assert.equal(debugResponse.status, 200);
+    const debugResult = await debugResponse.json();
+    assert.deepEqual(debugResult.payload, await extract(html, { debug: true }));
+    assert.ok(debugResult.payload.debug.candidateCount > 0);
 
     const uploadedResponse = await fetch(`${base}/api/run-upload`, {
       method: "POST",
@@ -95,9 +106,17 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
     });
     assert.equal(uploadedResponse.status, 200);
     const uploaded = await uploadedResponse.json();
-    assert.equal(uploaded.payload.article_text, "Fixture article.\n\nSecond paragraph.");
-    assert.equal(uploaded.payload.title_text, "Fixture title");
+    assert.equal(uploaded.payload.article.text, "Fixture article.\n\nSecond paragraph.");
+    assert.equal(uploaded.payload.title.text, "Fixture title");
+    assert.equal(uploaded.payload.debug, undefined);
     assert.ok(uploaded.inferenceMs >= 0);
+    const debugUpload = await fetch(`${base}/api/run-upload?debug=1`, {
+      method: "POST",
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+      body: html,
+    });
+    assert.equal(debugUpload.status, 200);
+    assert.ok((await debugUpload.json()).payload.debug.candidateCount > 0);
     assert.equal((await fetch(`${base}/api/run-upload`, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
@@ -121,7 +140,7 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
 });
 
 test("upload works without a local annotation dataset", async () => {
-  const emptyDataDir = await mkdtemp(join(tmpdir(), "npm-test-empty-"));
+  const emptyDataDir = await mkdtemp(join(tmpdir(), "dom-tiny-demo-empty-"));
   const server = spawn(process.execPath, [join(appDir, "server.mjs")], {
     cwd: appDir,
     env: { ...process.env, ANNOTATION_DATA_DIR: emptyDataDir, PORT: "0" },
@@ -148,7 +167,7 @@ test("upload works without a local annotation dataset", async () => {
     });
     assert.equal(response.status, 200);
     const result = await response.json();
-    assert.equal(result.payload.title_text, "Standalone title");
+    assert.equal(result.payload.title.text, "Standalone title");
   } finally {
     server.kill();
     await rm(emptyDataDir, { recursive: true, force: true });

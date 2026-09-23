@@ -21,22 +21,25 @@ test("an installed package extracts HTML with no Python or Go on PATH", () => {
     });
     const installed = join(directory, "node_modules", "@eng-universe", "dom-extractor");
     assert.ok(readdirSync(join(installed, "dist")).includes("model.weights.bin"));
+    const schema = JSON.parse(readFileSync(join(installed, "schema.json"), "utf8"));
+    assert.deepEqual(schema.required, ["article", "title", "authors", "date"]);
     const metadata = JSON.parse(readFileSync(join(installed, "package.json"), "utf8"));
     assert.equal(Object.keys(metadata.dependencies ?? {}).length, 0);
 
     const consumer = join(directory, "consumer.mjs");
     writeFileSync(consumer, `import { extract } from "@eng-universe/dom-extractor";
-const result = await extract('<html><body><h1>Standalone test</h1><article><p>Real article text.</p></article></body></html>');
-console.log(JSON.stringify(result));\n`);
+const html = '<html><body><h1>Standalone test</h1><article><p>Real article text.</p></article></body></html>';
+console.log(JSON.stringify({ result: await extract(html), withDebug: await extract(html, { debug: true }) }));\n`);
     const output = execFileSync(process.execPath, [consumer], {
       cwd: directory,
       env: { ...process.env, PATH: "" },
       encoding: "utf8",
     });
-    const result = JSON.parse(output);
+    const { result, withDebug } = JSON.parse(output);
     assert.equal(result.title?.text, "Standalone test");
     assert.equal(result.article?.text, "Real article text.");
-    assert.equal(result.diagnostics.domBackend, "javascript");
+    assert.deepEqual(Object.keys(result), ["article", "title", "authors", "date"]);
+    assert.equal(withDebug.debug.domBackend, "javascript");
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

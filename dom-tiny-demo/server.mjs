@@ -62,7 +62,6 @@ async function loadSamples() {
       website: page.website,
       url: page.url,
       htmlPath: page.html_path,
-      scrapedAt: page.scraped_at,
     });
   }
   return rows;
@@ -97,9 +96,9 @@ async function readUploadedHtml(request) {
   return Buffer.concat(chunks, size).toString("utf8");
 }
 
-async function runInference(html, options = {}) {
+async function runInference(html, debug = false) {
   const started = performance.now();
-  const payload = await extract(html, options);
+  const payload = await extract(html, { debug });
   return { inferenceMs: Number((performance.now() - started).toFixed(1)), payload };
 }
 
@@ -126,7 +125,7 @@ async function createApp() {
         return;
       }
       if (request.method === "GET" && url.pathname === "/api/pages") {
-        json(response, 200, { pages: samples.map(({ htmlPath, scrapedAt, ...page }) => page) });
+        json(response, 200, { pages: samples.map(({ htmlPath, ...page }) => page) });
         return;
       }
       if (request.method === "GET" && url.pathname.startsWith("/api/html/")) {
@@ -146,7 +145,7 @@ async function createApp() {
         const page = byId.get(input.pageId);
         if (!page) return json(response, 404, { error: "unknown page" });
         const html = await readFile(join(dataDir, page.htmlPath), "utf8");
-        json(response, 200, { pageId: page.id, ...await runInference(html, { scrapedAt: page.scrapedAt }) });
+        json(response, 200, { pageId: page.id, ...await runInference(html, input.debug === true) });
         return;
       }
       if (request.method === "POST" && url.pathname === "/api/run-upload") {
@@ -154,7 +153,7 @@ async function createApp() {
           return json(response, 415, { error: "upload must be an HTML file" });
         }
         const html = await readUploadedHtml(request);
-        json(response, 200, await runInference(html));
+        json(response, 200, await runInference(html, url.searchParams.get("debug") === "1"));
         return;
       }
       json(response, 404, { error: "not found" });
@@ -166,5 +165,5 @@ async function createApp() {
 
 const server = await createApp();
 server.listen(port, "127.0.0.1", () => {
-  console.log(`npm-test ready at http://127.0.0.1:${server.address().port}/ (${dataDir})`);
+  console.log(`dom-tiny-demo ready at http://127.0.0.1:${server.address().port}/ (${dataDir})`);
 });

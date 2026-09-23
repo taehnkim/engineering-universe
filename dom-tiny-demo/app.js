@@ -3,6 +3,7 @@ const pagesElement = document.querySelector("#pages");
 const runAllButton = document.querySelector("#run-all");
 const uploadButton = document.querySelector("#upload-button");
 const uploadInput = document.querySelector("#html-upload");
+const includeDebugInput = document.querySelector("#include-debug");
 const statusElement = document.querySelector("#status");
 const totalsElement = document.querySelector("#totals");
 const progressElement = document.querySelector("#progress");
@@ -132,7 +133,7 @@ function showField(pageId, field, result) {
   openSelection = result.payload[field];
   fieldDialogTitle.textContent = `${pageId} · ${field}`;
   fieldDialogMeta.replaceChildren(
-    `Selected node ${result.payload.predictions[field] ?? "missing"} · `,
+    `Selected node ${openSelection?.nodeId ?? "missing"} · `,
     element("span", confidenceClass(openSelection?.confidence), confidenceLabel(openSelection?.confidence)),
   );
   showFormat("text");
@@ -141,7 +142,20 @@ function showField(pageId, field, result) {
 
 function showPayload(pageId, result) {
   payloadDialogMeta.textContent = pageId;
-  payloadDialogOutput.textContent = JSON.stringify(result.payload, null, 2);
+  payloadDialogOutput.replaceChildren();
+  const source = JSON.stringify(result.payload, null, 2);
+  const token = /"(?:\\.|[^"\\])*"|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|\b(?:true|false|null)\b/g;
+  let cursor = 0;
+  for (const match of source.matchAll(token)) {
+    payloadDialogOutput.append(document.createTextNode(source.slice(cursor, match.index)));
+    const value = match[0];
+    const kind = value.startsWith('"')
+      ? (source.slice(match.index + value.length).trimStart().startsWith(":") ? "key" : "string")
+      : /^(?:true|false|null)$/.test(value) ? "literal" : "number";
+    payloadDialogOutput.append(element("span", `json-${kind}`, value));
+    cursor = match.index + value.length;
+  }
+  payloadDialogOutput.append(document.createTextNode(source.slice(cursor)));
   payloadDialog.showModal();
 }
 
@@ -165,12 +179,15 @@ function renderResult(pageId, result) {
     return;
   }
   const summary = element("div", "result-summary");
-  summary.append(`${result.inferenceMs.toFixed(1)} ms · `);
-  summary.append(infoTerm(`${result.payload.diagnostics.candidateCount} candidates`,
-    "HTML elements the model considered for this page."));
-  summary.append(" · ");
-  summary.append(infoTerm(result.payload.diagnostics.modelVersion,
-    "The trained model and author-refinement version used for this run."));
+  summary.append(`${result.inferenceMs.toFixed(1)} ms`);
+  if (result.payload.debug) {
+    summary.append(" · ");
+    summary.append(infoTerm(`${result.payload.debug.candidateCount} candidates`,
+      "HTML elements the model considered for this page."));
+    summary.append(" · ");
+    summary.append(infoTerm(result.payload.debug.modelVersion,
+      "The trained model and author-refinement version used for this run."));
+  }
   output.append(summary);
   const grid = element("div", "fields");
   for (const field of FIELDS) {
@@ -180,7 +197,7 @@ function renderResult(pageId, result) {
     top.append(element("span", "", field));
     top.append(element("span", confidenceClass(selection?.confidence), confidenceLabel(selection?.confidence)));
     card.append(top);
-    card.append(element("div", "nodes", `node ${result.payload.predictions[field] ?? "missing"}`));
+    card.append(element("div", "nodes", `node ${selection?.nodeId ?? "missing"}`));
     const preview = snippet(selection?.text);
     card.append(element("p", `snippet${preview ? "" : " muted"}`,
       preview || "No content selected"));
@@ -216,9 +233,9 @@ async function runPage(page) {
       ? await fetch("/api/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pageId: page.id }),
+        body: JSON.stringify({ pageId: page.id, debug: includeDebugInput.checked }),
       })
-      : await fetch("/api/run-upload", {
+      : await fetch(`/api/run-upload${includeDebugInput.checked ? "?debug=1" : ""}`, {
         method: "POST",
         headers: { "Content-Type": "text/html; charset=utf-8" },
         body: page.uploadedHtml,
