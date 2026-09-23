@@ -33,7 +33,9 @@ in the browser until the page is closed. Use a page's **Run** button or **Run al
 to repeat inference.
 The progress panel reports median and average inference latency per page. Each
 field card shows the selected node, a snippet, and the model's confidence score.
-Click a card to inspect its full extracted **Text** or selected-node **HTML**.
+Click a card to inspect its full extracted **Text**, selected-node **HTML**,
+or **Rendered HTML** in a sandboxed frame. The rendered preview blocks scripts
+and external resources, and does not load the source site's styles.
 Article text preserves paragraph breaks. Confidence is an uncalibrated model
 score, not a measured probability of correctness. The HTML tab shows escaped
 markup from the npm runtime; it may differ byte-for-byte from Python's

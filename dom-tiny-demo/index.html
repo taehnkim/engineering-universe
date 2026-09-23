@@ -55,9 +55,11 @@
     <div class="dialog-tabs" role="group" aria-label="Output format">
       <button id="field-dialog-show-text" class="selected" type="button" aria-pressed="true">Text</button>
       <button id="field-dialog-show-html" type="button" aria-pressed="false">HTML</button>
+      <button id="field-dialog-show-rendered" type="button" aria-pressed="false">Rendered HTML</button>
     </div>
     <p id="field-dialog-note" class="dialog-note"></p>
     <pre id="field-dialog-output" class="dialog-output"></pre>
+    <iframe id="field-dialog-rendered" class="rendered-frame" title="Rendered selected HTML" sandbox="allow-same-origin" referrerpolicy="no-referrer" tabindex="-1" hidden></iframe>
   </dialog>
   <div id="info-tooltip" class="info-tooltip" role="tooltip" hidden></div>
 </body>

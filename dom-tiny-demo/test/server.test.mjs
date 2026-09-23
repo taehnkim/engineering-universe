@@ -64,6 +64,8 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
     assert.match(homeHtml, /id="include-debug"/);
     assert.match(homeHtml, /id="info-tooltip"/);
     assert.match(homeHtml, /id="payload-dialog"/);
+    assert.match(homeHtml, /id="field-dialog-show-rendered"/);
+    assert.match(homeHtml, /id="field-dialog-rendered"[^>]*sandbox="allow-same-origin"/);
     assert.doesNotMatch(homeHtml, /fields exact/);
     assert.doesNotMatch(homeHtml, /annotation samples/);
 

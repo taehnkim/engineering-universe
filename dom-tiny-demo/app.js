@@ -14,6 +14,8 @@ const fieldDialogNote = document.querySelector("#field-dialog-note");
 const fieldDialogOutput = document.querySelector("#field-dialog-output");
 const textButton = document.querySelector("#field-dialog-show-text");
 const htmlButton = document.querySelector("#field-dialog-show-html");
+const renderedButton = document.querySelector("#field-dialog-show-rendered");
+const renderedFrame = document.querySelector("#field-dialog-rendered");
 const payloadDialog = document.querySelector("#payload-dialog");
 const payloadDialogMeta = document.querySelector("#payload-dialog-meta");
 const payloadDialogOutput = document.querySelector("#payload-dialog-output");
@@ -117,13 +119,24 @@ window.addEventListener("resize", hideTooltip);
 
 function showFormat(format) {
   const isText = format === "text";
-  textButton.classList.toggle("selected", isText);
-  htmlButton.classList.toggle("selected", !isText);
-  textButton.setAttribute("aria-pressed", String(isText));
-  htmlButton.setAttribute("aria-pressed", String(!isText));
+  const isRendered = format === "rendered";
+  for (const [button, buttonFormat] of [[textButton, "text"], [htmlButton, "html"], [renderedButton, "rendered"]]) {
+    const selected = format === buttonFormat;
+    button.classList.toggle("selected", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  }
+  fieldDialogOutput.hidden = isRendered;
+  renderedFrame.hidden = !isRendered;
+  if (isRendered) {
+    const html = openSelection?.html ?? "<p>No content selected.</p>";
+    renderedFrame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; connect-src 'none'; img-src 'none'; media-src 'none'; style-src 'unsafe-inline'; font-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'"><style>body{margin:18px;overflow-wrap:anywhere}a,button,input,form{pointer-events:none}</style></head><body>${html}</body></html>`;
+    fieldDialogNote.textContent = "Browser-rendered markup in an isolated frame. Scripts and external resources are blocked; site styles are not loaded.";
+    return;
+  }
+  renderedFrame.srcdoc = "";
   const value = openSelection?.[format];
   fieldDialogOutput.textContent = value ?? "No content selected.";
-  fieldDialogOutput.classList.toggle("html-source", !isText);
+  fieldDialogOutput.classList.toggle("html-source", format === "html");
   fieldDialogNote.textContent = isText
     ? "Full extracted text. Article paragraphs retain their line breaks."
     : "Selected-node markup, shown as text. npm and Python can serialize the same node differently.";
@@ -161,10 +174,12 @@ function showPayload(pageId, result) {
 
 textButton.addEventListener("click", () => showFormat("text"));
 htmlButton.addEventListener("click", () => showFormat("html"));
+renderedButton.addEventListener("click", () => showFormat("rendered"));
 document.querySelector("#field-dialog-close").addEventListener("click", () => fieldDialog.close());
 fieldDialog.addEventListener("click", (event) => {
   if (event.target === fieldDialog) fieldDialog.close();
 });
+fieldDialog.addEventListener("close", () => { renderedFrame.srcdoc = ""; });
 document.querySelector("#payload-dialog-close").addEventListener("click", () => payloadDialog.close());
 payloadDialog.addEventListener("click", (event) => {
   if (event.target === payloadDialog) payloadDialog.close();

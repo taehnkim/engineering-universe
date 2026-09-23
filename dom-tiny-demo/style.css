@@ -73,6 +73,8 @@ dialog::backdrop { background: #050b14c9; }
 .dialog-note { color: #9eacc0; font-size: 12px; line-height: 1.4; margin: 12px 22px 0; }
 .dialog-output { margin: 0; padding: 20px 22px 24px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.65; font: inherit; font-size: 15px; }
 .dialog-output.html-source { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; }
+.rendered-frame { display: block; width: 100%; height: min(58vh, 640px); border: 0; background: #fff; }
+.rendered-frame[hidden] { display: none; }
 .dialog-output.json-source { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; white-space: pre; overflow: auto; }
 .json-source .json-key { color: #9ac5ff; }
 .json-source .json-string { color: #a9dfa9; }
