@@ -1,6 +1,5 @@
 from eng_universe.extraction.dom import annotation_html, html_sha256, parse_html
 
-
 HTML = """<!doctype html><html><head><title>Hidden</title><style>x{}</style></head>
 <body><main><h1>Headline</h1><script>bad()</script><p>Hello <a href='/'>world</a></p></main></body></html>"""
 
@@ -99,3 +98,13 @@ def test_annotation_html_uses_cleaned_dom_with_original_node_ids() -> None:
     assert "Menu" not in rendered
     assert "<img" not in rendered
     assert f'data-eu-node-id="{raw_title_id}"' in rendered
+
+
+def test_annotation_html_reuses_cleaned_dom_without_mutating_it() -> None:
+    html = "<html><body><nav>Menu</nav><main><h1>Title</h1><p>Body</p></main></body></html>"
+    raw = parse_html(html)
+    cleaned = parse_html(html, strip_chrome=True)
+    before = str(cleaned.dom)
+
+    assert annotation_html(cleaned) == annotation_html(raw)
+    assert str(cleaned.dom) == before

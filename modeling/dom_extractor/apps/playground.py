@@ -115,6 +115,7 @@ def _evaluation_cache_token(
     dataset_dir: Path,
     checkpoint: Path,
     author_boundary_checkpoint: Path | None = None,
+    dom_backend: str = "python",
 ) -> str:
     checkpoint_stat = checkpoint.stat() if checkpoint.exists() else None
     boundary_stat = (
@@ -129,6 +130,7 @@ def _evaluation_cache_token(
     identity = ":".join(
         (
             "eval-cache-v3-title-guard",
+            dom_backend,
             str(checkpoint.resolve()),
             str(checkpoint_stat.st_size if checkpoint_stat else 0),
             str(checkpoint_stat.st_mtime_ns if checkpoint_stat else 0),
@@ -176,7 +178,9 @@ def _evaluate_record(
     model: DOMExtractor | Any,
 ) -> dict[str, object]:
     html = (dataset_dir / record.html_path).read_text(encoding="utf-8")
-    page = parse_html(html, strip_chrome=True)
+    page = parse_html(
+        html, strip_chrome=True, backend=getattr(model, "dom_backend", "python")
+    )
     annotation = load_annotation(dataset_dir / "annotations" / f"{record.page_id}.json")
     inference_started = time.perf_counter()
     predict_page = getattr(model, "predict_page", None)
@@ -306,7 +310,9 @@ def _evaluate_records(
 
 def _infer_html(html: str, model: DOMExtractor | Any) -> dict[str, object]:
     started = time.perf_counter()
-    page = parse_html(html, strip_chrome=True)
+    page = parse_html(
+        html, strip_chrome=True, backend=getattr(model, "dom_backend", "python")
+    )
     timings: list[dict[str, str | float]] = [
         {
             "step": "HTML parsing + cleanup",
@@ -372,6 +378,7 @@ def create_app(
     extractor: DOMExtractor | Any | None = None,
     evaluation_workers: int = 10,
     author_boundary_checkpoint: Path | None = None,
+    dom_backend: str = "python",
 ) -> FastAPI:
     if evaluation_workers < 1:
         raise ValueError("evaluation_workers must be at least 1")
@@ -385,11 +392,15 @@ def create_app(
     if extractor is not None and author_boundary_checkpoint is not None:
         raise ValueError("pass either an extractor or an author boundary checkpoint")
     model = extractor or DOMExtractor(
-        checkpoint, author_boundary_checkpoint=author_boundary_checkpoint
+        checkpoint,
+        author_boundary_checkpoint=author_boundary_checkpoint,
+        dom_backend=dom_backend,
     )
     checkpoint_display = str(checkpoint) + (
         f" + {author_boundary_checkpoint}" if author_boundary_checkpoint else ""
     )
+    if getattr(model, "dom_backend", "python") == "go":
+        checkpoint_display += " · Go DOM (experimental)"
     evaluation_lock = asyncio.Lock()
     evaluation_jobs: dict[str, dict[str, object]] = {}
     evaluation_jobs_lock = threading.Lock()
@@ -471,7 +482,11 @@ def create_app(
             "page_count": len(reviewed),
             "evaluation_workers": evaluation_workers,
             "cache_token": _evaluation_cache_token(
-                reviewed, dataset_dir, checkpoint, author_boundary_checkpoint
+                reviewed,
+                dataset_dir,
+                checkpoint,
+                author_boundary_checkpoint,
+                getattr(model, "dom_backend", "python"),
             ),
             "sites": [
                 {"website": website, "pages": pages}
@@ -545,7 +560,13 @@ def create_app(
             "url": record.url,
             "split": record.split,
             "website": record.website,
-            "document_html": annotation_html(parse_html(html)),
+            "document_html": annotation_html(
+                parse_html(
+                    html,
+                    strip_chrome=True,
+                    backend=getattr(model, "dom_backend", "python"),
+                )
+            ),
             "checkpoint": checkpoint_display,
             "reference_source": source,
         }
@@ -626,6 +647,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8767)
     parser.add_argument(
+        "--dom-backend",
+        choices=("python", "go"),
+        default="python",
+        help="DOM parser adapter; Go is experimental and requires ENG_UNIVERSE_GO_DOM_LIBRARY.",
+    )
+    parser.add_argument(
         "--author-boundary-checkpoint",
         type=Path,
         help="Author boundary ranker trained for a custom --checkpoint.",
@@ -649,6 +676,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             args.checkpoint,
             evaluation_workers=args.eval_workers,
             author_boundary_checkpoint=args.author_boundary_checkpoint,
+            dom_backend=args.dom_backend,
         ),
         host=args.host,
         port=args.port,

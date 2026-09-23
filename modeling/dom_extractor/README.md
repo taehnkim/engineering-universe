@@ -113,6 +113,41 @@ prepared data and checkpoint record the `chrome-v2` cleanup version.
 Inference rejects an older checkpoint instead of silently using different DOM
 preprocessing. Training and inference always apply the same cleanup.
 
+### Experimental Go DOM preparation
+
+The playground normally uses the checkpoint-compatible Python parser. It now
+reuses the cleaned DOM for its preview, avoiding a second raw-HTML parse. A Go
+module can parse and clean HTML and build a preview in one native pass, but it
+is **opt-in**: the Go HTML5 parser and Python's `html.parser` do not always
+construct identical trees, so changing the default could change predictions
+and break saved node-ID labels. Training and labeling continue to use Python.
+
+Build and try the Go adapter on a separate playground port:
+
+```bash
+cd modeling/dom_extractor/go_dom
+go build -buildmode=c-shared -o /tmp/eng-universe-domprep.dylib ./cmd/shared
+cd ../../..
+export ENG_UNIVERSE_GO_DOM_LIBRARY=/tmp/eng-universe-domprep.dylib
+uv run --group modeling python -m modeling.dom_extractor.apps.playground \
+  --dataset-dir data/learned_extraction/raw --dom-backend go --port 8770
+```
+
+Use `.so` for the library filename on Linux. To audit parity against all
+human-reviewed pages (read-only):
+
+```bash
+uv run --group modeling python -m modeling.dom_extractor.commands.audit_go_dom \
+  --dataset-dir data/learned_extraction/raw --output /tmp/go-dom-audit.json
+```
+
+The adapter returns cleaned HTML and original node IDs to Python. Python still
+builds model features and runs author refinement from its reconstructed DOM.
+The Go code preallocates its node-ID slice, but it does not yet replace the
+feature encoder with fixed-width native vectors. A full native encoder must
+first reproduce the Python feature matrices exactly; merely changing the
+transfer format would not remove Python's DOM traversal.
+
 Feature schema `semantic-v3` gives each candidate five shared tag embeddings:
 its own tag, parent, grandparent, previous sibling, and next sibling. It has two
 independent semantic channels, so verbose attributes cannot displace useful
