@@ -1,3 +1,4 @@
+from eng_universe.extraction.dom import parse_html
 from eng_universe.extraction.inference import DOMExtractor
 
 
@@ -13,7 +14,11 @@ class StubExtractor(DOMExtractor):
                 "text": "Body",
             },
             "title": {"node_id": 2, "html": "<h1>Title</h1>", "text": "Title"},
-            "authors": {"node_id": 3, "html": "<p>Ada and Grace</p>", "text": "Ada and Grace"},
+            "authors": {
+                "node_id": 3,
+                "html": "<p>Ada and Grace</p>",
+                "text": "Ada and Grace",
+            },
             "date": None,
             "summary": {"node_id": 4, "html": "<p>Deck</p>", "text": "Deck"},
             "relative_date": {
@@ -32,3 +37,22 @@ def test_extract_document_returns_text_and_resolves_relative_date() -> None:
     assert document.relative_date == "2 days ago"
     assert document.scraped_at == "2026-09-19T12:00:00Z"
     assert document.published_at == "2026-09-17T12:00:00Z"
+
+
+def test_profiled_prediction_matches_normal_prediction() -> None:
+    html = "<html><body><article><h1>Title</h1><p>By: Ada</p><p>Body</p></article></body></html>"
+    page = parse_html(html, strip_chrome=True)
+    extractor = DOMExtractor()
+
+    normal = extractor.predict_page(page)
+    profiled, timings = extractor.predict_page_profiled(page)
+
+    assert profiled == normal
+    assert [stage["step"] for stage in timings[:5]] == [
+        "Feature extraction",
+        "Tensor setup",
+        "Embeddings",
+        "Neural scoring",
+        "Select nodes",
+    ]
+    assert all(stage["ms"] >= 0 for stage in timings)

@@ -306,7 +306,12 @@ Omitting `--checkpoint` now loads the bundled base and refiner by default.
 Supplying `--checkpoint` runs that custom base alone unless you also supply its
 matching `--author-boundary-checkpoint`. The same rule applies to held-out
 evaluation and the terminal smoke test. Open `http://127.0.0.1:8767/evals` to
-inspect the default model. The ranker uses
+inspect the default model. A playground RUN shows a per-stage server-side timing
+chart below Predicted content. The total includes HTML parsing and cleanup,
+feature extraction, embeddings, neural scoring, optional author refinement,
+selected-content extraction, and preview DOM construction. It excludes file
+reading, network transfer, and browser rendering; compare warm runs for latency.
+The ranker uses
 train pages for fitting, validation websites to choose its checkpoint and
 change margin, and the test split only for a final check. On the current data,
 author exact-node accuracy changed from 104/200 (52%) to 136/200 (68%) on

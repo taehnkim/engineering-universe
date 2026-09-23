@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+
 import torch
 from torch import nn
 
@@ -52,12 +54,65 @@ class DOMNodeSelector(nn.Module):
         numeric: torch.Tensor,
         candidate_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
+        features = self._embed_features(
+            tag_ids,
+            parent_tag_ids,
+            grandparent_tag_ids,
+            previous_tag_ids,
+            next_tag_ids,
+            attribute_token_ids,
+            text_shape_token_ids,
+            numeric,
+        )
+        return self._score_features(features, candidate_mask)
+
+    def forward_profiled(
+        self,
+        tag_ids: torch.Tensor,
+        parent_tag_ids: torch.Tensor,
+        grandparent_tag_ids: torch.Tensor,
+        previous_tag_ids: torch.Tensor,
+        next_tag_ids: torch.Tensor,
+        attribute_token_ids: torch.Tensor,
+        text_shape_token_ids: torch.Tensor,
+        numeric: torch.Tensor,
+        candidate_mask: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, float, float]:
+        """Return scores and wall times for embedding and neural scoring."""
+
+        started = time.perf_counter()
+        features = self._embed_features(
+            tag_ids,
+            parent_tag_ids,
+            grandparent_tag_ids,
+            previous_tag_ids,
+            next_tag_ids,
+            attribute_token_ids,
+            text_shape_token_ids,
+            numeric,
+        )
+        embedded = time.perf_counter()
+        scores = self._score_features(features, candidate_mask)
+        scored = time.perf_counter()
+        return scores, (embedded - started) * 1_000, (scored - embedded) * 1_000
+
+    def _embed_features(
+        self,
+        tag_ids: torch.Tensor,
+        parent_tag_ids: torch.Tensor,
+        grandparent_tag_ids: torch.Tensor,
+        previous_tag_ids: torch.Tensor,
+        next_tag_ids: torch.Tensor,
+        attribute_token_ids: torch.Tensor,
+        text_shape_token_ids: torch.Tensor,
+        numeric: torch.Tensor,
+    ) -> torch.Tensor:
         def semantic_average(token_ids: torch.Tensor) -> torch.Tensor:
             mask = token_ids.ne(0).unsqueeze(-1)
             total = (self.semantic_embedding(token_ids) * mask).sum(dim=-2)
             return total / mask.sum(dim=-2).clamp_min(1)
 
-        features = torch.cat(
+        return torch.cat(
             (
                 self.tag_embedding(tag_ids),
                 self.tag_embedding(parent_tag_ids),
@@ -70,6 +125,10 @@ class DOMNodeSelector(nn.Module):
             ),
             dim=-1,
         )
+
+    def _score_features(
+        self, features: torch.Tensor, candidate_mask: torch.Tensor | None
+    ) -> torch.Tensor:
         candidate_scores = self.network(features)
         if candidate_mask is not None:
             candidate_scores = candidate_scores.masked_fill(

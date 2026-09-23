@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Literal
@@ -110,23 +111,61 @@ class DOMExtractor:
     def predict_page(self, page: ParsedPage) -> dict[Field, int | None]:
         """Predict node IDs from an already cleaned and parsed page."""
 
+        return self._predict_page(page, None)
+
+    def predict_page_profiled(
+        self, page: ParsedPage
+    ) -> tuple[dict[Field, int | None], list[dict[str, str | float]]]:
+        """Predict with per-stage wall times for interactive diagnostics."""
+
+        timings: list[dict[str, str | float]] = []
+        return self._predict_page(page, timings), timings
+
+    def _predict_page(
+        self, page: ParsedPage, timings: list[dict[str, str | float]] | None
+    ) -> dict[Field, int | None]:
+        started = time.perf_counter() if timings is not None else 0.0
+
         features = featurize_page(
             page, self.vocabulary, self.semantic_vocabulary, self.normalizer
         )
+        if timings is not None:
+            timings.append(
+                {
+                    "step": "Feature extraction",
+                    "ms": (time.perf_counter() - started) * 1_000,
+                }
+            )
         if not page.candidates:
             return {field: None for field in FIELDS}
-        with torch.inference_mode():
-            scores = self.model(
-                torch.from_numpy(features.tag_ids).unsqueeze(0),
-                torch.from_numpy(features.parent_tag_ids).unsqueeze(0),
-                torch.from_numpy(features.grandparent_tag_ids).unsqueeze(0),
-                torch.from_numpy(features.previous_tag_ids).unsqueeze(0),
-                torch.from_numpy(features.next_tag_ids).unsqueeze(0),
-                torch.from_numpy(features.attribute_token_ids).unsqueeze(0),
-                torch.from_numpy(features.text_shape_token_ids).unsqueeze(0),
-                torch.from_numpy(features.numeric).unsqueeze(0),
-                torch.ones((1, len(page.candidates)), dtype=torch.bool),
+        started = time.perf_counter() if timings is not None else 0.0
+        inputs = (
+            torch.from_numpy(features.tag_ids).unsqueeze(0),
+            torch.from_numpy(features.parent_tag_ids).unsqueeze(0),
+            torch.from_numpy(features.grandparent_tag_ids).unsqueeze(0),
+            torch.from_numpy(features.previous_tag_ids).unsqueeze(0),
+            torch.from_numpy(features.next_tag_ids).unsqueeze(0),
+            torch.from_numpy(features.attribute_token_ids).unsqueeze(0),
+            torch.from_numpy(features.text_shape_token_ids).unsqueeze(0),
+            torch.from_numpy(features.numeric).unsqueeze(0),
+            torch.ones((1, len(page.candidates)), dtype=torch.bool),
+        )
+        if timings is not None:
+            timings.append(
+                {"step": "Tensor setup", "ms": (time.perf_counter() - started) * 1_000}
             )
+        with torch.inference_mode():
+            if timings is None:
+                scores = self.model(*inputs)
+            else:
+                scores, embedding_ms, scoring_ms = self.model.forward_profiled(*inputs)
+                timings.extend(
+                    (
+                        {"step": "Embeddings", "ms": embedding_ms},
+                        {"step": "Neural scoring", "ms": scoring_ms},
+                    )
+                )
+        started = time.perf_counter() if timings is not None else 0.0
         predictions: dict[Field, int | None] = {}
         for field_index, selected_field in enumerate(FIELDS):
             selected_index = int(scores[0, :, field_index].argmax())
@@ -135,14 +174,26 @@ class DOMExtractor:
                 if selected_index == len(page.candidates)
                 else int(features.node_ids[selected_index])
             )
+        if timings is not None:
+            timings.append(
+                {"step": "Select nodes", "ms": (time.perf_counter() - started) * 1_000}
+            )
         selected_author = predictions[Field.AUTHORS]
         if self.author_boundary is not None and selected_author is not None:
+            started = time.perf_counter() if timings is not None else 0.0
             predictions[Field.AUTHORS] = self.author_boundary.refine(
                 page,
                 selected_author,
                 scores[0, :-1, AUTHOR_FIELD_INDEX].numpy(),
                 features.numeric,
             )
+            if timings is not None:
+                timings.append(
+                    {
+                        "step": "Author refinement",
+                        "ms": (time.perf_counter() - started) * 1_000,
+                    }
+                )
         return predictions
 
     def extract(

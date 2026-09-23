@@ -130,6 +130,15 @@ def test_playground_runs_inference_and_returns_visualizable_nodes(
     assert upload_result["results"]["title"]["text"] == "Title"
     assert upload_result["reference_source"] is None
     assert f'data-eu-node-id="{title_id}"' in upload_result["document_html"]
+    assert [stage["step"] for stage in result["timings"]] == [
+        "HTML parsing + cleanup",
+        "Model prediction",
+        "Extract selected content",
+        "Build preview DOM",
+    ]
+    assert all(stage["ms"] >= 0 for stage in result["timings"])
+    assert result["latency_ms"] >= sum(stage["ms"] for stage in result["timings"])
+    assert upload_result["timings"]
     assert client.get("/playground/upload").status_code == 200
     assert client.post("/api/playground/upload/run", content=b"").status_code == 400
 
@@ -140,6 +149,8 @@ def test_playground_ui_has_run_and_prediction_focus_controls() -> None:
     assert "el.scrollIntoView({behavior:'instant',block:'center'" in SHELL
     assert 'data-playground-prediction="true"' in SHELL
     assert '<span id="latency" class="latency"></span>' in SHELL
+    assert 'id="timings" class="timings" hidden' in SHELL
+    assert "function drawTimings()" in SHELL
     assert "$('latency').textContent=`${result.latency_ms.toFixed(1)} ms`" in SHELL
     assert 'class="source-link"' in SHELL
     assert "Run the checkpoint, then choose a field" not in SHELL
