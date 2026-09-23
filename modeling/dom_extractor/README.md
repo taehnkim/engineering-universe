@@ -208,6 +208,10 @@ uv run --group modeling python -m modeling.dom_extractor.apps.playground \
 Choose a page and click **RUN**. The playground executes the checkpoint, shows
 the predicted node for every field, compares it with the available human or Jev
 reference, and jumps the rendered page to the selected prediction.
+If a predicted title is an empty heading (for example, an image-only site
+logo), inference chooses the highest-scoring heading that contains text. This
+title-only fallback leaves the checkpoint and predictions for other fields
+unchanged.
 
 Open `/evals` on the same server for the whole-corpus dashboard. It runs the
 checkpoint against every human-reviewed page across train, validation, and

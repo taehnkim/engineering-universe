@@ -128,7 +128,7 @@ def _evaluation_cache_token(
     ]
     identity = ":".join(
         (
-            "eval-cache-v2",
+            "eval-cache-v3-title-guard",
             str(checkpoint.resolve()),
             str(checkpoint_stat.st_size if checkpoint_stat else 0),
             str(checkpoint_stat.st_mtime_ns if checkpoint_stat else 0),

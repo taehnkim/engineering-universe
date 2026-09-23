@@ -174,6 +174,27 @@ class DOMExtractor:
                 if selected_index == len(page.candidates)
                 else int(features.node_ids[selected_index])
             )
+        selected_title = predictions[Field.TITLE]
+        if selected_title is not None and not page.candidate(selected_title).get_text(
+            " ", strip=True
+        ):
+            # An image-only site logo can be an empty <h1> after media cleanup.
+            # Keep the model's scores, but require a populated heading for title.
+            title_index = FIELDS.index(Field.TITLE)
+            headings = [
+                index
+                for index, candidate in enumerate(page.candidates)
+                if (
+                    candidate.element.name == "h1"
+                    or "headline" in str(candidate.element.get("itemprop", "")).lower()
+                )
+                and candidate.element.get_text(" ", strip=True)
+            ]
+            if headings:
+                best_heading = max(
+                    headings, key=lambda index: float(scores[0, index, title_index])
+                )
+                predictions[Field.TITLE] = int(features.node_ids[best_heading])
         if timings is not None:
             timings.append(
                 {"step": "Select nodes", "ms": (time.perf_counter() - started) * 1_000}
