@@ -23,16 +23,18 @@ Point the app at a `data/learned_extraction/raw` directory containing
 ANNOTATION_DATA_DIR=/absolute/path/to/eng-universe/data/learned_extraction/raw npm start
 ```
 
-Open [http://127.0.0.1:8770/](http://127.0.0.1:8770/). Click a page's **Run**
-button or **Run all 10**. The results compare each predicted node ID with the
-human-reviewed annotation and show a short content snippet plus the model's
-confidence score. Click any result card to inspect its full extracted **Text**
-or selected-node **HTML** in a popup. Article text preserves paragraph breaks.
-Confidence is an uncalibrated model score, not a measured probability of
-correctness. The HTML tab shows escaped markup from the npm runtime; it may
-differ byte-for-byte from Python's serialization even if both select the same
-node. The page-level **HTML** link opens the saved raw input as plain text;
-**Source** opens the original URL. The app never changes the annotation files.
+Open [http://127.0.0.1:8770/](http://127.0.0.1:8770/). The app runs all ten
+pages on load. Use a page's **Run** button or **Run all 10** to repeat inference.
+The progress panel reports median and average inference latency per page. Each
+field card shows the selected node, a snippet, and the model's confidence score.
+Click a card to inspect its full extracted **Text** or selected-node **HTML**.
+Article text preserves paragraph breaks. Confidence is an uncalibrated model
+score, not a measured probability of correctness. The HTML tab shows escaped
+markup from the npm runtime; it may differ byte-for-byte from Python's
+serialization even if both select the same node. **Payload** opens the complete
+JSON object returned by the installed package. **Raw HTML** opens the saved
+input as plain text, and **Source** opens the original URL. The app never
+changes the annotation files.
 
 `PORT` can override port 8770. The sample list in `server.mjs` is intentionally
 fixed to ten reviewed pages. This directory is a throwaway consumer test, not

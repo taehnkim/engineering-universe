@@ -3,7 +3,7 @@ import { readFile, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
-import { extract, fields } from "@eng-universe/dom-extractor";
+import { extract } from "@eng-universe/dom-extractor";
 
 const appDir = dirname(fileURLToPath(import.meta.url));
 const defaultDataDir = resolve(appDir, "../data/learned_extraction/raw");
@@ -57,7 +57,6 @@ async function loadSamples() {
       url: page.url,
       htmlPath: page.html_path,
       scrapedAt: page.scraped_at,
-      labels: annotation.labels,
     });
   }
   return rows;
@@ -70,11 +69,6 @@ async function readBody(request) {
     if (body.length > 4096) throw new Error("request body too large");
   }
   return JSON.parse(body || "{}");
-}
-
-function snippet(value) {
-  const text = (value ?? "").replace(/\s+/g, " ").trim();
-  return text.length > 240 ? `${text.slice(0, 239)}…` : text;
 }
 
 async function createApp() {
@@ -103,7 +97,7 @@ async function createApp() {
         return;
       }
       if (request.method === "GET" && url.pathname === "/api/pages") {
-        json(response, 200, { pages: samples.map(({ htmlPath, labels, scrapedAt, ...page }) => page) });
+        json(response, 200, { pages: samples.map(({ htmlPath, scrapedAt, ...page }) => page) });
         return;
       }
       if (request.method === "GET" && url.pathname.startsWith("/api/html/")) {
@@ -126,23 +120,10 @@ async function createApp() {
         const started = performance.now();
         const result = await extract(html, { scrapedAt: page.scrapedAt });
         const inferenceMs = performance.now() - started;
-        const comparisons = Object.fromEntries(fields.map((field) => [field, {
-          predicted: result.predictions[field],
-          expected: page.labels[field] ?? null,
-          exact: result.predictions[field] === (page.labels[field] ?? null),
-          text: result[`${field}_text`],
-          html: result[`${field}_html`],
-          confidence: result[`${field}_confidence`],
-          snippet: snippet(result[`${field}_text`]),
-        }]));
         json(response, 200, {
           pageId: page.id,
           inferenceMs: Number(inferenceMs.toFixed(1)),
-          candidateCount: result.diagnostics.candidateCount,
-          modelVersion: result.diagnostics.modelVersion,
-          checkpointSha256: result.diagnostics.checkpointSha256,
-          exactCount: Object.values(comparisons).filter((entry) => entry.exact).length,
-          comparisons,
+          payload: result,
         });
         return;
       }

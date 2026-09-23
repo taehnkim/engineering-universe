@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { extract } from "@eng-universe/dom-extractor";
 
 const appDir = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -56,7 +57,11 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
     });
     const home = await fetch(base);
     assert.equal(home.status, 200);
-    assert.match(await home.text(), /DOM extractor smoke test/);
+    const homeHtml = await home.text();
+    assert.match(homeHtml, /DOM extractor smoke test/);
+    assert.match(homeHtml, /This small model finds article text, titles, authors, and dates in raw HTML/);
+    assert.match(homeHtml, /id="payload-dialog"/);
+    assert.doesNotMatch(homeHtml, /fields exact/);
 
     const listed = await (await fetch(`${base}/api/pages`)).json();
     assert.deepEqual(listed.pages.map((page) => page.id), [pageId]);
@@ -67,16 +72,17 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
     });
     assert.equal(response.status, 200);
     const result = await response.json();
-    assert.equal(Object.keys(result.comparisons).length, 4);
-    assert.equal(typeof result.comparisons.title.predicted, "number");
-    assert.equal(result.comparisons.article.text, "Fixture article.\n\nSecond paragraph.");
-    assert.match(result.comparisons.article.html, /<p>Fixture article\.<\/p>/);
-    assert.equal(typeof result.comparisons.article.confidence, "number");
-    assert.ok(result.comparisons.article.confidence >= 0 && result.comparisons.article.confidence <= 1);
-    assert.equal(result.comparisons.title.text, "Fixture title");
-    assert.equal(result.comparisons.authors.text, null);
-    assert.equal(result.comparisons.authors.html, null);
-    assert.equal(result.comparisons.authors.confidence, null);
+    assert.deepEqual(result.payload, await extract(html, { scrapedAt: "2026-09-22T12:00:00Z" }));
+    assert.equal(result.comparisons, undefined);
+    assert.equal(typeof result.payload.predictions.title, "number");
+    assert.equal(result.payload.article_text, "Fixture article.\n\nSecond paragraph.");
+    assert.match(result.payload.article_html, /<p>Fixture article\.<\/p>/);
+    assert.equal(typeof result.payload.article_confidence, "number");
+    assert.ok(result.payload.article_confidence >= 0 && result.payload.article_confidence <= 1);
+    assert.equal(result.payload.title_text, "Fixture title");
+    assert.equal(result.payload.authors_text, null);
+    assert.equal(result.payload.authors_html, null);
+    assert.equal(result.payload.authors_confidence, null);
     assert.ok(result.inferenceMs >= 0);
 
     const raw = await fetch(`${base}/api/html/${pageId}`);

@@ -11,11 +11,14 @@ const fieldDialogNote = document.querySelector("#field-dialog-note");
 const fieldDialogOutput = document.querySelector("#field-dialog-output");
 const textButton = document.querySelector("#field-dialog-show-text");
 const htmlButton = document.querySelector("#field-dialog-show-html");
+const payloadDialog = document.querySelector("#payload-dialog");
+const payloadDialogMeta = document.querySelector("#payload-dialog-meta");
+const payloadDialogOutput = document.querySelector("#payload-dialog-output");
 const cards = new Map();
 const results = new Map();
 let pages = [];
 let runningAll = false;
-let openComparison = null;
+let openSelection = null;
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -26,16 +29,32 @@ function element(tag, className, text) {
 
 function updateTotals() {
   const completed = results.size;
-  const exact = [...results.values()].reduce((count, result) => count + (result?.exactCount ?? 0), 0);
-  const total = [...results.values()].reduce((count, result) => count + (result ? FIELDS.length : 0), 0);
-  totalsElement.textContent = `${completed} / ${pages.length} pages · ${exact} / ${total} fields exact`;
+  const timings = [...results.values()]
+    .filter((result) => Number.isFinite(result?.inferenceMs))
+    .map((result) => result.inferenceMs)
+    .sort((a, b) => a - b);
+  totalsElement.textContent = `${completed} / ${pages.length} pages`;
   progressElement.max = Math.max(1, pages.length);
   progressElement.value = completed;
-  if (!runningAll) statusElement.textContent = completed ? "Results ready" : "Choose a page or run all";
+  if (runningAll) return;
+  if (!timings.length) {
+    statusElement.textContent = completed ? "No successful inference runs" : "Starting inference…";
+    return;
+  }
+  const middle = Math.floor(timings.length / 2);
+  const median = timings.length % 2 ? timings[middle] : (timings[middle - 1] + timings[middle]) / 2;
+  const average = timings.reduce((sum, value) => sum + value, 0) / timings.length;
+  const label = completed === pages.length ? "All pages complete" : `${completed} pages complete`;
+  statusElement.textContent = `${label} · median ${median.toFixed(1)} ms / avg ${average.toFixed(1)} ms per page`;
 }
 
 function confidenceLabel(value) {
   return value == null ? "confidence unavailable" : `${(value * 100).toFixed(1)}% confidence`;
+}
+
+function snippet(value) {
+  const text = (value ?? "").replace(/\s+/g, " ").trim();
+  return text.length > 240 ? `${text.slice(0, 239)}…` : text;
 }
 
 function showFormat(format) {
@@ -44,7 +63,7 @@ function showFormat(format) {
   htmlButton.classList.toggle("selected", !isText);
   textButton.setAttribute("aria-pressed", String(isText));
   htmlButton.setAttribute("aria-pressed", String(!isText));
-  const value = openComparison?.[format];
+  const value = openSelection?.[format];
   fieldDialogOutput.textContent = value ?? "No content selected.";
   fieldDialogOutput.classList.toggle("html-source", !isText);
   fieldDialogNote.textContent = isText
@@ -52,12 +71,18 @@ function showFormat(format) {
     : "Selected-node markup, shown as text. npm and Python can serialize the same node differently.";
 }
 
-function showField(pageId, field, comparison) {
-  openComparison = comparison;
+function showField(pageId, field, result) {
+  openSelection = result.payload[field];
   fieldDialogTitle.textContent = `${pageId} · ${field}`;
-  fieldDialogMeta.textContent = `Predicted node ${comparison.predicted ?? "missing"} · human node ${comparison.expected ?? "missing"} · ${confidenceLabel(comparison.confidence)}`;
+  fieldDialogMeta.textContent = `Selected node ${result.payload.predictions[field] ?? "missing"} · ${confidenceLabel(openSelection?.confidence)}`;
   showFormat("text");
   fieldDialog.showModal();
+}
+
+function showPayload(pageId, result) {
+  payloadDialogMeta.textContent = pageId;
+  payloadDialogOutput.textContent = JSON.stringify(result.payload, null, 2);
+  payloadDialog.showModal();
 }
 
 textButton.addEventListener("click", () => showFormat("text"));
@@ -65,6 +90,10 @@ htmlButton.addEventListener("click", () => showFormat("html"));
 document.querySelector("#field-dialog-close").addEventListener("click", () => fieldDialog.close());
 fieldDialog.addEventListener("click", (event) => {
   if (event.target === fieldDialog) fieldDialog.close();
+});
+document.querySelector("#payload-dialog-close").addEventListener("click", () => payloadDialog.close());
+payloadDialog.addEventListener("click", (event) => {
+  if (event.target === payloadDialog) payloadDialog.close();
 });
 
 function renderResult(pageId, result) {
@@ -75,34 +104,31 @@ function renderResult(pageId, result) {
     return;
   }
   const summary = element("div", "result-summary");
-  summary.append(element("strong", "", `${result.exactCount}/${FIELDS.length} exact`));
-  summary.append(` · ${result.inferenceMs.toFixed(1)} ms · ${result.candidateCount} candidates · ${result.modelVersion}`);
+  summary.append(`${result.inferenceMs.toFixed(1)} ms · ${result.payload.diagnostics.candidateCount} candidates · ${result.payload.diagnostics.modelVersion}`);
   output.append(summary);
   const grid = element("div", "fields");
   for (const field of FIELDS) {
-    const comparison = result.comparisons[field];
-    const card = element("div", `field ${comparison.exact ? "exact" : "different"}`);
+    const selection = result.payload[field];
+    const card = element("div", "field");
     const top = element("div", "field-top");
     top.append(element("span", "", field));
-    top.append(element("span", "verdict", comparison.exact ? "✓ exact" : "✕ different"));
+    top.append(element("span", "confidence", confidenceLabel(selection?.confidence)));
     card.append(top);
-    card.append(element("div", "confidence", confidenceLabel(comparison.confidence)));
-    const predicted = comparison.predicted ?? "missing";
-    const expected = comparison.expected ?? "missing";
-    card.append(element("div", "nodes", `predicted ${predicted} · human ${expected}`));
-    card.append(element("p", `snippet${comparison.snippet ? "" : " muted"}`,
-      comparison.snippet || "No content selected"));
+    card.append(element("div", "nodes", `node ${result.payload.predictions[field] ?? "missing"}`));
+    const preview = snippet(selection?.text);
+    card.append(element("p", `snippet${preview ? "" : " muted"}`,
+      preview || "No content selected"));
     card.classList.add("openable");
     card.tabIndex = 0;
     card.setAttribute("role", "button");
     card.setAttribute("aria-haspopup", "dialog");
     card.setAttribute("aria-label", `Inspect predicted ${field} text and HTML for ${pageId}`);
     card.title = `Inspect full ${field} text and HTML`;
-    card.addEventListener("click", () => showField(pageId, field, comparison));
+    card.addEventListener("click", () => showField(pageId, field, result));
     card.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        showField(pageId, field, comparison);
+        showField(pageId, field, result);
       }
     });
     grid.append(card);
@@ -111,9 +137,12 @@ function renderResult(pageId, result) {
 }
 
 async function runPage(page) {
-  const { button, output } = cards.get(page.id);
+  const { button, payloadButton, output } = cards.get(page.id);
   button.disabled = true;
+  payloadButton.disabled = true;
   button.textContent = "Running…";
+  results.delete(page.id);
+  updateTotals();
   output.hidden = false;
   output.replaceChildren(element("div", "muted", "Running inference…"));
   try {
@@ -125,6 +154,7 @@ async function runPage(page) {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error ?? `HTTP ${response.status}`);
     results.set(page.id, result);
+    payloadButton.disabled = false;
     renderResult(page.id, result);
   } catch (error) {
     results.set(page.id, null);
@@ -147,7 +177,15 @@ function renderPages() {
     main.append(element("div", "meta", `${page.website} · ${page.split}`));
     head.append(main);
     const actions = element("div", "actions");
-    const rawLink = element("a", "", "HTML");
+    const payloadButton = element("button", "", "Payload");
+    payloadButton.type = "button";
+    payloadButton.disabled = true;
+    payloadButton.addEventListener("click", () => {
+      const result = results.get(page.id);
+      if (result) showPayload(page.id, result);
+    });
+    actions.append(payloadButton);
+    const rawLink = element("a", "", "Raw HTML");
     rawLink.href = `/api/html/${encodeURIComponent(page.id)}`;
     rawLink.target = "_blank";
     rawLink.rel = "noopener noreferrer";
@@ -169,15 +207,21 @@ function renderPages() {
     output.hidden = true;
     card.append(output);
     pagesElement.append(card);
-    cards.set(page.id, { button, output });
+    cards.set(page.id, { button, payloadButton, output });
   }
 }
 
-runAllButton.addEventListener("click", async () => {
+async function runAll() {
   if (runningAll) return;
   runningAll = true;
   runAllButton.disabled = true;
-  for (const { button } of cards.values()) button.disabled = true;
+  results.clear();
+  for (const { button, payloadButton, output } of cards.values()) {
+    button.disabled = true;
+    payloadButton.disabled = true;
+    output.hidden = true;
+  }
+  updateTotals();
   try {
     for (const [index, page] of pages.entries()) {
       statusElement.textContent = `Running ${index + 1} of ${pages.length}: ${page.id}`;
@@ -187,9 +231,11 @@ runAllButton.addEventListener("click", async () => {
     runningAll = false;
     runAllButton.disabled = false;
     for (const { button } of cards.values()) button.disabled = false;
-    statusElement.textContent = "All pages complete";
+    updateTotals();
   }
-});
+}
+
+runAllButton.addEventListener("click", runAll);
 
 try {
   const response = await fetch("/api/pages");
@@ -199,6 +245,7 @@ try {
   updateTotals();
   runAllButton.textContent = `Run all ${pages.length}`;
   runAllButton.disabled = pages.length === 0;
+  if (pages.length) void runAll();
 } catch (error) {
   statusElement.textContent = error.message;
   statusElement.classList.add("error");
