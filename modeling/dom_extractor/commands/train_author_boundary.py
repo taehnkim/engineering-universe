@@ -13,11 +13,13 @@ from pathlib import Path
 
 import numpy as np
 import torch
+from bs4 import Tag
 from torch import nn
 
 from eng_universe.extraction.author_boundary import (
     AUTHOR_FIELD_INDEX,
     BOUNDARY_VERSION,
+    WORD_RE,
     AuthorBoundaryRanker,
     BoundaryFeatures,
     boundary_features,
@@ -25,7 +27,7 @@ from eng_universe.extraction.author_boundary import (
 )
 from eng_universe.extraction.contract import Field
 from eng_universe.extraction.dom import ParsedPage
-from eng_universe.extraction.features import featurize_page
+from eng_universe.extraction.features import DATE_LIKE_RE, featurize_page
 from eng_universe.extraction.inference import DOMExtractor
 from modeling.dom_extractor.dataset import iter_labeled_pages
 
@@ -40,6 +42,36 @@ class Sample:
     expected: int | None
     baseline: int | None
     candidates: BoundaryFeatures | None
+    website: str = ""
+    hard_parent_ids: tuple[int, ...] = ()
+
+
+def hard_parent_ids(
+    page: ParsedPage, expected: int | None, candidates: BoundaryFeatures | None
+) -> tuple[int, ...]:
+    """Find broader local ancestors with text beyond the labeled byline."""
+
+    if expected is None or candidates is None:
+        return ()
+    gold = page.candidate(expected)
+    gold_text = gold.get_text(" ", strip=True)
+    gold_words = Counter(WORD_RE.findall(gold_text.casefold()))
+    candidate_ids = set(candidates.node_ids)
+    parents: list[int] = []
+    parent = gold.parent
+    while isinstance(parent, Tag) and len(parents) < 3:
+        node_id = page.id_by_element_identity.get(id(parent))
+        if node_id in candidate_ids:
+            parent_text = parent.get_text(" ", strip=True)
+            parent_words = Counter(WORD_RE.findall(parent_text.casefold()))
+            extra_words = sum((parent_words - gold_words).values())
+            extra_date = bool(DATE_LIKE_RE.search(parent_text)) and not bool(
+                DATE_LIKE_RE.search(gold_text)
+            )
+            if extra_words >= 2 or extra_date:
+                parents.append(node_id)
+        parent = parent.parent
+    return tuple(parents)
 
 
 def _baseline_author(
@@ -125,6 +157,8 @@ def collect_samples(
                 expected,
                 baseline,
                 candidates,
+                item.record.website,
+                hard_parent_ids(item.page, expected, candidates),
             )
         )
         if index % 100 == 0:
@@ -165,6 +199,9 @@ def _train_epoch(
     std: np.ndarray,
     optimizer: torch.optim.Optimizer,
     rng: random.Random,
+    *,
+    hard_parent_weight: float = 0.0,
+    hard_parent_margin: float = 0.25,
 ) -> float:
     ranker.train()
     order = samples.copy()
@@ -177,17 +214,40 @@ def _train_epoch(
         batch = torch.zeros((len(group), max_candidates, matrices[0].shape[1]))
         mask = torch.zeros((len(group), max_candidates), dtype=torch.bool)
         targets = torch.empty(len(group), dtype=torch.long)
+        parent_mask = torch.zeros((len(group), max_candidates), dtype=torch.bool)
         for i, (sample, matrix) in enumerate(zip(group, matrices, strict=True)):
             batch[i, : len(matrix)] = matrix
             mask[i, : len(matrix)] = True
             targets[i] = sample.candidates.node_ids.index(sample.expected)
+            if hard_parent_weight:
+                for node_id in sample.hard_parent_ids:
+                    parent_mask[i, sample.candidates.node_ids.index(node_id)] = True
         scores = ranker(batch).masked_fill(~mask, -1e9)
         loss = nn.functional.cross_entropy(scores, targets)
+        if hard_parent_weight:
+            loss = loss + hard_parent_weight * parent_margin_loss(
+                scores, targets, parent_mask, hard_parent_margin
+            )
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         losses.append(float(loss.detach()))
     return sum(losses) / max(1, len(losses))
+
+
+def parent_margin_loss(
+    scores: torch.Tensor,
+    targets: torch.Tensor,
+    parent_mask: torch.Tensor,
+    margin: float,
+) -> torch.Tensor:
+    """Penalize broader parents that outrank the full labeled byline."""
+
+    if not bool(parent_mask.any()):
+        return scores.sum() * 0.0
+    gold_scores = scores.gather(1, targets[:, None])
+    losses = nn.functional.softplus(scores - gold_scores + margin)
+    return losses[parent_mask].mean()
 
 
 def _validation_loss(
