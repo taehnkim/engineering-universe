@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DOM extractor · npm smoke test</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Installed npm package · annotation samples</p>
+        <h1>DOM extractor smoke test</h1>
+        <p class="lede">Run the bundled model against ten saved HTML pages. Compare each selected node with its human-reviewed label.</p>
+      </div>
+      <button id="run-all" class="primary" type="button" disabled>Run all 10</button>
+    </header>
+
+    <section class="overview" aria-label="Run progress">
+      <div class="overview-line">
+        <strong id="status">Loading pages…</strong>
+        <span id="totals">0 / 0 pages · 0 / 0 fields exact</span>
+      </div>
+      <progress id="progress" value="0" max="10"></progress>
+    </section>
+
+    <section id="pages" class="pages" aria-label="Test pages"></section>
+    <p class="footnote">This page reads a fixed set of reviewed annotations. It does not modify the dataset. “HTML” opens the saved input as plain text.</p>
+  </main>
+</body>
+</html>
