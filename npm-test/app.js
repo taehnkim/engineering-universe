@@ -4,6 +4,10 @@ const runAllButton = document.querySelector("#run-all");
 const statusElement = document.querySelector("#status");
 const totalsElement = document.querySelector("#totals");
 const progressElement = document.querySelector("#progress");
+const articleDialog = document.querySelector("#article-dialog");
+const articleDialogTitle = document.querySelector("#article-dialog-title");
+const articleDialogMeta = document.querySelector("#article-dialog-meta");
+const articleDialogText = document.querySelector("#article-dialog-text");
 const cards = new Map();
 const results = new Map();
 let pages = [];
@@ -25,6 +29,21 @@ function updateTotals() {
   progressElement.value = completed;
   if (!runningAll) statusElement.textContent = completed ? "Results ready" : "Choose a page or run all";
 }
+
+function showArticle(pageId, result) {
+  const text = result.articleText;
+  articleDialogTitle.textContent = pageId;
+  articleDialogMeta.textContent = text
+    ? `Predicted node ${result.comparisons.article.predicted} · ${text.length.toLocaleString()} characters`
+    : "The model did not select an article node";
+  articleDialogText.textContent = text || "No article content selected.";
+  articleDialog.showModal();
+}
+
+document.querySelector("#article-dialog-close").addEventListener("click", () => articleDialog.close());
+articleDialog.addEventListener("click", (event) => {
+  if (event.target === articleDialog) articleDialog.close();
+});
 
 function renderResult(pageId, result) {
   const { output } = cards.get(pageId);
@@ -50,6 +69,21 @@ function renderResult(pageId, result) {
     card.append(element("div", "nodes", `predicted ${predicted} · human ${expected}`));
     card.append(element("p", `snippet${comparison.snippet ? "" : " muted"}`,
       comparison.snippet || "No content selected"));
+    if (field === "article") {
+      card.classList.add("openable");
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-haspopup", "dialog");
+      card.setAttribute("aria-label", `Open full predicted article text for ${pageId}`);
+      card.title = "Click to read the full predicted article text";
+      card.addEventListener("click", () => showArticle(pageId, result));
+      card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          showArticle(pageId, result);
+        }
+      });
+    }
     grid.append(card);
   }
   output.append(grid);

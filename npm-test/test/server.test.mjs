@@ -69,6 +69,7 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
     const result = await response.json();
     assert.equal(Object.keys(result.comparisons).length, 6);
     assert.equal(typeof result.comparisons.title.predicted, "number");
+    assert.equal(result.articleText, "Fixture article.");
     assert.ok(result.inferenceMs >= 0);
 
     const raw = await fetch(`${base}/api/html/${pageId}`);

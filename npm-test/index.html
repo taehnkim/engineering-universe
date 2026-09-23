@@ -29,5 +29,17 @@
     <section id="pages" class="pages" aria-label="Test pages"></section>
     <p class="footnote">This page reads a fixed set of reviewed annotations. It does not modify the dataset. “HTML” opens the saved input as plain text.</p>
   </main>
+
+  <dialog id="article-dialog" aria-labelledby="article-dialog-title">
+    <div class="dialog-head">
+      <div>
+        <p class="eyebrow">Predicted article · full text</p>
+        <h2 id="article-dialog-title">Article</h2>
+        <p id="article-dialog-meta" class="meta"></p>
+      </div>
+      <button id="article-dialog-close" type="button" aria-label="Close full article">Close</button>
+    </div>
+    <div id="article-dialog-text" class="dialog-text"></div>
+  </dialog>
 </body>
 </html>

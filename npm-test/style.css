@@ -42,6 +42,9 @@ progress::-moz-progress-bar { background: #50a6ff; }
 .field { min-width: 0; border: 1px solid #344961; background: #111b29; padding: 10px 12px; border-radius: 8px; }
 .field.exact { border-left: 3px solid #47b987; }
 .field.different { border-left: 3px solid #f28176; }
+.field.openable { cursor: pointer; }
+.field.openable:hover { background: #1c3049; border-color: #79aefb; }
+.field.openable:focus-visible { outline: 3px solid #b6d0ff; outline-offset: 2px; }
 .field-top { display: flex; justify-content: space-between; gap: 8px; font-weight: 750; }
 .field.exact .verdict { color: #80e0af; }
 .field.different .verdict { color: #ffaaa2; }
@@ -50,6 +53,12 @@ progress::-moz-progress-bar { background: #50a6ff; }
 .muted { color: #8192a9; }
 .error { color: #ffaaa2; }
 .footnote { color: #8798af; line-height: 1.5; font-size: 12px; margin-top: 22px; }
+dialog { width: min(860px, calc(100vw - 28px)); max-height: min(88vh, 1000px); padding: 0; border: 1px solid #5f7da2; border-radius: 14px; color: #e8edf6; background: #111c2b; box-shadow: 0 28px 80px #000a; }
+dialog::backdrop { background: #050b14c9; }
+.dialog-head { position: sticky; top: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 19px 22px; border-bottom: 1px solid #344961; background: #18283c; }
+.dialog-head h2 { margin: 0 0 5px; font-size: 20px; overflow-wrap: anywhere; }
+.dialog-head .eyebrow { margin-bottom: 7px; }
+.dialog-text { padding: 24px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.65; font-size: 15px; }
 @media (max-width: 720px) {
   .hero, .page-head { align-items: stretch; flex-direction: column; }
   .hero button { align-self: flex-start; }

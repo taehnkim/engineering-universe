@@ -25,7 +25,8 @@ ANNOTATION_DATA_DIR=/absolute/path/to/eng-universe/data/learned_extraction/raw n
 
 Open [http://127.0.0.1:8770/](http://127.0.0.1:8770/). Click a page's **Run**
 button or **Run all 10**. The results compare each predicted node ID with the
-human-reviewed annotation and show a short content snippet. **HTML** opens the
+human-reviewed annotation and show a short content snippet. Click the **article**
+result card to read the full extracted article text in a popup. **HTML** opens the
 saved raw input as plain text; **Source** opens the original URL. The app never
 changes the annotation files.
 

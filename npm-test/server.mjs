@@ -139,6 +139,7 @@ async function createApp() {
           modelVersion: result.diagnostics.modelVersion,
           checkpointSha256: result.diagnostics.checkpointSha256,
           exactCount: Object.values(comparisons).filter((entry) => entry.exact).length,
+          articleText: result.article?.text ?? null,
           comparisons,
         });
         return;
