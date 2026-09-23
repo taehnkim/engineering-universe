@@ -392,6 +392,26 @@ process memory, latency, and an HTML failure inspector. Exact-node accuracy is
 strict: a semantically correct parent or child wrapper still counts as wrong,
 so inspect word errors and failure HTML when diagnosing broad selections.
 
+To compare a candidate with the bundled model on the same reviewed pages, run:
+
+```bash
+uv run --group modeling python -m modeling.dom_extractor.commands.compare_checkpoints \
+  --dataset-dir data/learned_extraction/raw \
+  --reference-base eng_universe/extraction/checkpoints/best.pt \
+  --reference-author eng_universe/extraction/checkpoints/author_boundary.pt \
+  --candidate-base path/to/candidate-base.pt \
+  --candidate-author path/to/candidate-author.pt \
+  --output data/learned_extraction/comparison.json
+```
+
+The report lists exact-node and present-only counts, fixed and broken pages,
+and results by split, site, and field. Its author-focused promotion gate fails
+if a validation or test site loses accuracy in any field, or if present-author
+selection does not improve on validation and the held-out test site. This is a
+regression check, not an automatic checkpoint promotion or an unbiased score
+for train pages. PR 20's parent-penalty experiment failed this gate and was
+not bundled.
+
 ## Inference
 
 ```python
