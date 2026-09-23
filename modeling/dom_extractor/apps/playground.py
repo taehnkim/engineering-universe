@@ -20,29 +20,34 @@ from fastapi.responses import HTMLResponse
 
 from eng_universe.extraction.contract import FIELDS, Field, load_annotation
 from eng_universe.extraction.dom import annotation_html, parse_html
-from eng_universe.extraction.inference import DOMExtractor
+from eng_universe.extraction.inference import (
+    DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT,
+    DEFAULT_CHECKPOINT,
+    DOMExtractor,
+)
 from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 SHELL = r"""<!doctype html>
 <html><head><meta charset="utf-8"><title>DOM inference playground</title>
 <style>
-body{margin:0;font:14px system-ui;background:#111827;color:#e5e7eb}header{display:flex;gap:8px;padding:10px;background:#1f2937;align-items:center;position:sticky;top:0;z-index:3}[hidden]{display:none!important}.control-group{display:contents}button,select,input[type=file]{padding:7px;border-radius:5px;border:1px solid #4b5563;background:#111827;color:#e5e7eb}input[type=file]{max-width:340px}button:disabled{opacity:.55}.run{background:#16a34a;border-color:#22c55e;font-weight:700}.source-link{color:#f8fafc;font-weight:650;text-decoration:underline;text-underline-offset:2px}main{display:grid;grid-template-columns:1fr 390px;height:calc(100vh - 55px)}iframe{width:100%;height:100%;border:0;background:white}aside{padding:12px;overflow:auto}.inference-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.inference-heading h2{margin:8px 0}.latency{color:#a7f3d0;font:12px ui-monospace}.model{padding:9px;border:1px solid #166534;background:#052e16;border-radius:6px;line-height:1.5}.field{margin:8px 0;padding:9px;border:1px solid #374151;border-radius:6px;cursor:pointer}.field:hover{border-color:#64748b}.field:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}.field.active{border-color:#3b82f6;background:#172554}.field.exact{border-color:#166534}.field.different{border-color:#b45309}.field.active.exact{border-color:#3b82f6}.field.active.different{border-color:#3b82f6}.field-header{display:flex;align-items:center;justify-content:space-between;gap:8px}.field-name{font-weight:700}.value{font-family:ui-monospace;word-break:break-all;margin-top:6px}.reference{color:#aebbd1;font-size:12px;margin-top:4px}.badge{border-radius:999px;padding:2px 7px;font-size:11px}.exact .badge{background:#14532d;color:#bbf7d0}.different .badge{background:#78350f;color:#fde68a}.preview{white-space:pre-wrap;max-height:300px;overflow:auto;background:#030712;padding:8px}.muted{color:#94a3b8}.error{color:#fca5a5}
+body{margin:0;font:14px system-ui;background:#111827;color:#e5e7eb}header{display:flex;gap:8px;padding:10px;background:#1f2937;align-items:center;position:sticky;top:0;z-index:3}[hidden]{display:none!important}.control-group{display:contents}button,select,input[type=file]{padding:7px;border-radius:5px;border:1px solid #4b5563;background:#111827;color:#e5e7eb}input[type=file]{max-width:340px}button:disabled{opacity:.55}.run{background:#16a34a;border-color:#22c55e;font-weight:700}.source-link{color:#f8fafc;font-weight:650;text-decoration:underline;text-underline-offset:2px}main{display:grid;grid-template-columns:1fr 390px;height:calc(100vh - 55px)}iframe{width:100%;height:100%;border:0;background:white}aside{padding:12px;overflow:auto}.inference-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.inference-heading h2{margin:8px 0}.latency{color:#a7f3d0;font:12px ui-monospace}.model{padding:9px;border:1px solid #166534;background:#052e16;border-radius:6px;line-height:1.5}.field{margin:8px 0;padding:9px;border:1px solid #374151;border-radius:6px;cursor:pointer}.field:hover{border-color:#64748b}.field:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}.field.active{border-color:#3b82f6;background:#172554}.field.exact{border-color:#166534}.field.different{border-color:#b45309}.field.active.exact{border-color:#3b82f6}.field.active.different{border-color:#3b82f6}.field-header{display:flex;align-items:center;justify-content:space-between;gap:8px}.field-name{font-weight:700}.value{font-family:ui-monospace;word-break:break-all;margin-top:6px}.reference{color:#aebbd1;font-size:12px;margin-top:4px}.badge{border-radius:999px;padding:2px 7px;font-size:11px}.exact .badge{background:#14532d;color:#bbf7d0}.different .badge{background:#78350f;color:#fde68a}.preview{white-space:pre-wrap;max-height:300px;overflow:auto;background:#030712;padding:8px}.timings{margin-top:14px}.timings h3{font-size:14px;margin:0 0 8px}.timing-row{display:grid;grid-template-columns:130px minmax(0,1fr) 62px;align-items:center;gap:8px;margin:5px 0;font-size:12px}.timing-track{height:8px;background:#273449;border-radius:4px;overflow:hidden}.timing-bar{height:100%;min-width:2px;background:#60a5fa;border-radius:4px}.timing-ms{text-align:right;font:12px ui-monospace;color:#cbd5e1}.timing-note{font-size:11px;color:#94a3b8;margin:8px 0 0}.muted{color:#94a3b8}.error{color:#fca5a5}
 </style></head><body>
 <header><a class="source-link" href="/evals">← Evals</a><span id="page-controls" class="control-group"><select id="split"><option value="all">All splits</option><option value="train">Train</option><option value="validation">Validation</option><option value="test">Test</option></select><select id="pages"></select></span><span id="upload-controls" class="control-group" hidden><input id="html-file" type="file" accept=".html,.htm,text/html"></span><button id="run" class="run">RUN</button><a id="source" class="source-link" target="_blank" rel="noopener">Open source</a><span id="status"></span></header>
-<main><iframe id="page" sandbox="allow-same-origin"></iframe><aside><div class="inference-heading"><h2>Inference</h2><span id="latency" class="latency"></span></div><div id="model" class="model"></div><div id="fields"></div><h3>Predicted content</h3><div id="preview" class="preview">Choose a page and click RUN.</div></aside></main>
+<main><iframe id="page" sandbox="allow-same-origin"></iframe><aside><div class="inference-heading"><h2>Inference</h2><span id="latency" class="latency"></span></div><div id="model" class="model"></div><div id="fields"></div><h3>Predicted content</h3><div id="preview" class="preview">Choose a page and click RUN.</div><section id="timings" class="timings" hidden><h3>Inference breakdown</h3><div id="timing-rows"></div><p class="timing-note">Server-side timing; excludes file read, network, and browser rendering.</p></section></aside></main>
 <script>
 const names=['article','title','authors','date','summary','relative_date'];const requestedPage=new URLSearchParams(location.search).get('page'),uploadMode=location.pathname.endsWith('/upload'),maxUploadBytes=20*1024*1024;let active='article',payload=null,result=null,allPages=[];
 const $=id=>document.getElementById(id);const esc=s=>(s??'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function selectedElement(){const d=$('page').contentDocument,id=result?.predictions?.[active];return !d||id==null?null:d.querySelector(`[data-eu-node-id="${id}"]`)}
 function focusPrediction(scroll=false){const d=$('page').contentDocument;if(!d)return;d.querySelectorAll('[data-playground-prediction]').forEach(el=>delete el.dataset.playgroundPrediction);const el=selectedElement();if(!el)return;el.dataset.playgroundPrediction='true';if(scroll)el.scrollIntoView({behavior:'instant',block:'center',inline:'nearest'})}
 function preview(){const item=result?.results?.[active];$('preview').textContent=!result?'Click RUN to generate predictions.':item?item.text.slice(0,5000):'Model predicted missing.'}
+function drawTimings(){const stages=result?.timings||[];$('timings').hidden=!stages.length;if(!stages.length){$('timing-rows').innerHTML='';return}const total=Math.max(result.latency_ms,0.001);$('timing-rows').innerHTML=stages.map(stage=>`<div class="timing-row"><span>${esc(stage.step)}</span><div class="timing-track"><div class="timing-bar" style="width:${Math.min(100,Math.max(0,stage.ms/total*100)).toFixed(1)}%"></div></div><span class="timing-ms">${stage.ms.toFixed(1)} ms</span></div>`).join('')}
 function activateField(name){active=name;draw();focusPrediction(true);preview()}
 function draw(){if(!result){$('fields').innerHTML='<p class="muted">No inference result yet.</p>';return}const reference=result.reference_labels,hasReference=result.reference_source!==null;$('fields').innerHTML=names.map(n=>{const predicted=result.predictions[n],expected=reference?.[n],exact=hasReference&&predicted===expected,status=hasReference?(exact?'exact':'different'):'';return `<div class="field ${status} ${active===n?'active':''}" data-field="${n}" role="button" tabindex="0" aria-pressed="${active===n}"><div class="field-header"><span class="field-name">${n}</span>${hasReference?`<span class="badge">${exact?'exact':'different'}</span>`:''}</div><div class="value">predicted: ${predicted===null?'missing':'node '+predicted}</div>${hasReference?`<div class="reference">${esc(result.reference_source)}: ${expected===null?'missing':'node '+expected}</div>`:''}</div>`}).join('');document.querySelectorAll('[data-field]').forEach(card=>{card.onclick=()=>activateField(card.dataset.field);card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activateField(card.dataset.field)}}})}
 function wire(){const d=$('page').contentDocument,style=d.createElement('style');style.textContent='[data-playground-prediction="true"]{outline:4px solid #2563eb!important;outline-offset:3px!important;background-color:rgba(37,99,235,.08)!important}';d.head.appendChild(style);focusPrediction(true);preview()}
-async function load(id){$('run').disabled=true;result=null;active='article';$('latency').textContent='';payload=await fetch(`/api/pages/${id}`).then(r=>r.json());$('source').href=payload.url;$('status').textContent=`${payload.split} · ${payload.website}`;const frame=$('page');frame.onload=wire;frame.srcdoc=payload.document_html;$('model').innerHTML=`<strong>${esc(payload.checkpoint)}</strong><br><span class="muted">${esc(payload.reference_source||'No reference label')}</span>`;draw();preview();$('run').disabled=false}
-async function loadUpload(){const file=$('html-file').files[0];result=null;active='article';$('latency').textContent='';$('page').srcdoc='';if(!file){payload=null;$('run').disabled=true;$('status').textContent='Choose a raw HTML file.';draw();preview();return}if(file.size>maxUploadBytes){payload=null;$('run').disabled=true;$('status').innerHTML='<span class="error">HTML file exceeds the 20 MB limit.</span>';draw();preview();return}payload={filename:file.name,raw_html:await file.text()};$('status').textContent=`${file.name} · ready`;$('run').disabled=false;draw();preview()}
-async function run(){const button=$('run');button.disabled=true;button.textContent='RUNNING…';$('latency').textContent='Running…';$('status').textContent='Running checkpoint…';try{const response=uploadMode?await fetch('/api/playground/upload/run',{method:'POST',headers:{'Content-Type':'text/html; charset=utf-8'},body:payload.raw_html}):await fetch(`/api/pages/${payload.page_id}/run`,{method:'POST'});if(!response.ok)throw new Error(await response.text());result=await response.json();active='article';draw();$('latency').textContent=`${result.latency_ms.toFixed(1)} ms`;if(uploadMode){const frame=$('page');frame.onload=wire;frame.srcdoc=result.document_html;$('status').textContent=`${payload.filename} · prediction complete`}else{focusPrediction(true);preview();$('status').textContent=result.reference_source?`${result.matches}/${result.reference_count} exact`:''}}catch(error){$('latency').textContent='';$('status').innerHTML=`<span class="error">${esc(error.message)}</span>`}finally{button.disabled=false;button.textContent='RUN'}}
+async function load(id){$('run').disabled=true;result=null;active='article';$('latency').textContent='';drawTimings();payload=await fetch(`/api/pages/${id}`).then(r=>r.json());$('source').href=payload.url;$('status').textContent=`${payload.split} · ${payload.website}`;const frame=$('page');frame.onload=wire;frame.srcdoc=payload.document_html;$('model').innerHTML=`<strong>${esc(payload.checkpoint)}</strong><br><span class="muted">${esc(payload.reference_source||'No reference label')}</span>`;draw();preview();$('run').disabled=false}
+async function loadUpload(){const file=$('html-file').files[0];result=null;active='article';$('latency').textContent='';drawTimings();$('page').srcdoc='';if(!file){payload=null;$('run').disabled=true;$('status').textContent='Choose a raw HTML file.';draw();preview();return}if(file.size>maxUploadBytes){payload=null;$('run').disabled=true;$('status').innerHTML='<span class="error">HTML file exceeds the 20 MB limit.</span>';draw();preview();return}payload={filename:file.name,raw_html:await file.text()};$('status').textContent=`${file.name} · ready`;$('run').disabled=false;draw();preview()}
+async function run(){const button=$('run');button.disabled=true;button.textContent='RUNNING…';$('latency').textContent='Running…';$('status').textContent='Running checkpoint…';try{const response=uploadMode?await fetch('/api/playground/upload/run',{method:'POST',headers:{'Content-Type':'text/html; charset=utf-8'},body:payload.raw_html}):await fetch(`/api/pages/${payload.page_id}/run`,{method:'POST'});if(!response.ok)throw new Error(await response.text());result=await response.json();active='article';draw();drawTimings();$('latency').textContent=`${result.latency_ms.toFixed(1)} ms`;if(uploadMode){const frame=$('page');frame.onload=wire;frame.srcdoc=result.document_html;$('status').textContent=`${payload.filename} · prediction complete`}else{focusPrediction(true);preview();$('status').textContent=result.reference_source?`${result.matches}/${result.reference_count} exact`:''}}catch(error){$('latency').textContent='';$('status').innerHTML=`<span class="error">${esc(error.message)}</span>`}finally{button.disabled=false;button.textContent='RUN'}}
 function filterPages(){const split=$('split').value,pages=allPages.filter(page=>split==='all'||page.split===split),previous=$('pages').value||requestedPage;$('pages').innerHTML=pages.map(page=>`<option value="${esc(page.page_id)}">${esc(page.page_id)} [${page.split}]</option>`).join('');if(pages.length){$('pages').value=pages.some(page=>page.page_id===previous)?previous:pages[0].page_id;load($('pages').value)}}
 async function start(){$('run').onclick=run;if(uploadMode){$('page-controls').hidden=true;$('upload-controls').hidden=false;$('source').hidden=true;$('run').disabled=true;$('preview').textContent='Choose an HTML file and click RUN.';const options=await fetch('/api/evals/options').then(response=>response.json());$('model').innerHTML=`<strong>${esc(options.checkpoint)}</strong><br><span class="muted">Uploaded HTML · no reference label</span>`;$('html-file').onchange=loadUpload;$('status').textContent='Choose a raw HTML file.';draw();return}allPages=await fetch('/api/pages').then(r=>r.json());$('pages').onchange=()=>load($('pages').value);$('split').onchange=filterPages;filterPages()}start();
 </script></body></html>"""
@@ -109,18 +114,31 @@ def _evaluation_cache_token(
     records: Sequence[PageRecord],
     dataset_dir: Path,
     checkpoint: Path,
+    author_boundary_checkpoint: Path | None = None,
 ) -> str:
     checkpoint_stat = checkpoint.stat() if checkpoint.exists() else None
+    boundary_stat = (
+        author_boundary_checkpoint.stat()
+        if author_boundary_checkpoint is not None
+        else None
+    )
     annotation_mtimes = [
         (dataset_dir / "annotations" / f"{record.page_id}.json").stat().st_mtime_ns
         for record in records
     ]
     identity = ":".join(
         (
-            "eval-cache-v2",
+            "eval-cache-v3-title-guard",
             str(checkpoint.resolve()),
             str(checkpoint_stat.st_size if checkpoint_stat else 0),
             str(checkpoint_stat.st_mtime_ns if checkpoint_stat else 0),
+            str(
+                author_boundary_checkpoint.resolve()
+                if author_boundary_checkpoint
+                else ""
+            ),
+            str(boundary_stat.st_size if boundary_stat else 0),
+            str(boundary_stat.st_mtime_ns if boundary_stat else 0),
             str(len(records)),
             str(max(annotation_mtimes, default=0)),
         )
@@ -257,7 +275,12 @@ def _evaluate_records(
         for website, counts in sorted(site_field_counts.items())
     ]
     return {
-        "checkpoint": str(checkpoint),
+        "checkpoint": str(checkpoint)
+        + (
+            f" + {model.author_boundary_checkpoint}"
+            if getattr(model, "author_boundary_checkpoint", None) is not None
+            else ""
+        ),
         "scope": "all human-reviewed pages across train, validation, and test",
         "evaluated_at": datetime.now(UTC).isoformat(),
         "page_count": len(page_rows),
@@ -282,13 +305,31 @@ def _evaluate_records(
 
 
 def _infer_html(html: str, model: DOMExtractor | Any) -> dict[str, object]:
-    page = parse_html(html, strip_chrome=True)
     started = time.perf_counter()
-    predict_page = getattr(model, "predict_page", None)
-    predicted = (
-        predict_page(page) if callable(predict_page) else model.predict_ids(html)
-    )
-    latency_ms = (time.perf_counter() - started) * 1_000
+    page = parse_html(html, strip_chrome=True)
+    timings: list[dict[str, str | float]] = [
+        {
+            "step": "HTML parsing + cleanup",
+            "ms": (time.perf_counter() - started) * 1_000,
+        }
+    ]
+    prediction_started = time.perf_counter()
+    predict_page_profiled = getattr(model, "predict_page_profiled", None)
+    if callable(predict_page_profiled):
+        predicted, model_timings = predict_page_profiled(page)
+        timings.extend(model_timings)
+    else:
+        predict_page = getattr(model, "predict_page", None)
+        predicted = (
+            predict_page(page) if callable(predict_page) else model.predict_ids(html)
+        )
+        timings.append(
+            {
+                "step": "Model prediction",
+                "ms": (time.perf_counter() - prediction_started) * 1_000,
+            }
+        )
+    content_started = time.perf_counter()
     predictions = {field.value: predicted[field] for field in FIELDS}
     results = {
         field.value: (
@@ -301,27 +342,54 @@ def _infer_html(html: str, model: DOMExtractor | Any) -> dict[str, object]:
         )
         for field in FIELDS
     }
+    timings.append(
+        {
+            "step": "Extract selected content",
+            "ms": (time.perf_counter() - content_started) * 1_000,
+        }
+    )
+    preview_started = time.perf_counter()
+    document_html = annotation_html(page)
+    timings.append(
+        {
+            "step": "Build preview DOM",
+            "ms": (time.perf_counter() - preview_started) * 1_000,
+        }
+    )
     return {
-        "latency_ms": latency_ms,
+        "latency_ms": (time.perf_counter() - started) * 1_000,
+        "timings": timings,
         "predictions": predictions,
         "results": results,
-        "document_html": annotation_html(page),
+        "document_html": document_html,
     }
 
 
 def create_app(
     dataset_dir: Path,
-    checkpoint: Path,
+    checkpoint: Path | None = None,
     *,
     extractor: DOMExtractor | Any | None = None,
     evaluation_workers: int = 10,
+    author_boundary_checkpoint: Path | None = None,
 ) -> FastAPI:
     if evaluation_workers < 1:
         raise ValueError("evaluation_workers must be at least 1")
+    if checkpoint is None:
+        checkpoint = DEFAULT_CHECKPOINT
+        if author_boundary_checkpoint is None and extractor is None:
+            author_boundary_checkpoint = DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT
     app = FastAPI(title="DOM inference playground")
     manifest = DatasetManifest.load(dataset_dir / "manifest.json")
     records = {record.page_id: record for record in manifest.pages}
-    model = extractor or DOMExtractor(checkpoint)
+    if extractor is not None and author_boundary_checkpoint is not None:
+        raise ValueError("pass either an extractor or an author boundary checkpoint")
+    model = extractor or DOMExtractor(
+        checkpoint, author_boundary_checkpoint=author_boundary_checkpoint
+    )
+    checkpoint_display = str(checkpoint) + (
+        f" + {author_boundary_checkpoint}" if author_boundary_checkpoint else ""
+    )
     evaluation_lock = asyncio.Lock()
     evaluation_jobs: dict[str, dict[str, object]] = {}
     evaluation_jobs_lock = threading.Lock()
@@ -399,10 +467,12 @@ def create_app(
         for record in reviewed:
             site_pages[record.website] += 1
         return {
-            "checkpoint": str(checkpoint),
+            "checkpoint": checkpoint_display,
             "page_count": len(reviewed),
             "evaluation_workers": evaluation_workers,
-            "cache_token": _evaluation_cache_token(reviewed, dataset_dir, checkpoint),
+            "cache_token": _evaluation_cache_token(
+                reviewed, dataset_dir, checkpoint, author_boundary_checkpoint
+            ),
             "sites": [
                 {"website": website, "pages": pages}
                 for website, pages in sorted(site_pages.items())
@@ -476,7 +546,7 @@ def create_app(
             "split": record.split,
             "website": record.website,
             "document_html": annotation_html(parse_html(html)),
-            "checkpoint": str(checkpoint),
+            "checkpoint": checkpoint_display,
             "reference_source": source,
         }
 
@@ -551,10 +621,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--checkpoint",
         type=Path,
-        default=Path("data/learned_extraction/model/best.pt"),
+        help="Custom base checkpoint; omitting this uses the bundled two-model default.",
     )
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8767)
+    parser.add_argument(
+        "--author-boundary-checkpoint",
+        type=Path,
+        help="Author boundary ranker trained for a custom --checkpoint.",
+    )
     parser.add_argument(
         "--eval-workers",
         type=int,
@@ -573,6 +648,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             args.dataset_dir,
             args.checkpoint,
             evaluation_workers=args.eval_workers,
+            author_boundary_checkpoint=args.author_boundary_checkpoint,
         ),
         host=args.host,
         port=args.port,

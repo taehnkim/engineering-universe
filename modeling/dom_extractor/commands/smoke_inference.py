@@ -1,26 +1,27 @@
-#!/usr/bin/env python3
 """Run the learned DOM extractor against a small cross-website sample."""
 
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import re
 import sys
 import textwrap
 import time
-from typing import Sequence
+from collections.abc import Sequence
+from pathlib import Path
 
 from bs4 import BeautifulSoup
 
 from eng_universe.extraction import DOMExtractor
 from eng_universe.extraction.contract import FIELDS as EXTRACTION_FIELDS
+from eng_universe.extraction.inference import (
+    DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT,
+    DEFAULT_CHECKPOINT,
+)
 from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_DATASET_DIR = PROJECT_ROOT / "data" / "learned_extraction" / "raw"
-DEFAULT_CHECKPOINT = PROJECT_ROOT / "data" / "learned_extraction" / "model" / "best.pt"
 FIELDS = tuple(field.value for field in EXTRACTION_FIELDS)
 SPACE_RE = re.compile(r"\s+")
 
@@ -53,7 +54,9 @@ class Terminal:
         return str(resolved)
 
 
-def _cross_website_sample(records: Sequence[PageRecord], limit: int) -> list[PageRecord]:
+def _cross_website_sample(
+    records: Sequence[PageRecord], limit: int
+) -> list[PageRecord]:
     """Select one article per website before taking additional pages."""
 
     articles = sorted(
@@ -95,6 +98,8 @@ def run(
     fields: Sequence[str],
     snippet_width: int,
     terminal: Terminal,
+    *,
+    author_boundary_checkpoint: Path | None = None,
 ) -> int:
     manifest_path = dataset_dir / "manifest.json"
     if not checkpoint.exists():
@@ -112,13 +117,17 @@ def run(
 
     print(terminal.heading("DOM extraction inference smoke test"))
     print(terminal.muted(f"Checkpoint: {checkpoint}"))
+    if author_boundary_checkpoint is not None:
+        print(terminal.muted(f"Author boundary: {author_boundary_checkpoint}"))
     print(terminal.muted(f"Inputs: {len(pages)} rendered HTML pages\n"))
 
     selected_count = 0
     missing_count = 0
     inference_latencies: list[float] = []
     total_started = time.perf_counter()
-    extractor = DOMExtractor(checkpoint)
+    extractor = DOMExtractor(
+        checkpoint, author_boundary_checkpoint=author_boundary_checkpoint
+    )
 
     for index, record in enumerate(pages, start=1):
         html_path = dataset_dir / record.html_path
@@ -128,8 +137,14 @@ def run(
         elapsed_ms = (time.perf_counter() - started) * 1000
         inference_latencies.append(elapsed_ms)
 
-        print(terminal.heading(f"[{index:02d}/{len(pages):02d}] {record.company} — {record.website}"))
-        print(terminal.muted(f"         {record.page_id} · inference={elapsed_ms:.1f} ms"))
+        print(
+            terminal.heading(
+                f"[{index:02d}/{len(pages):02d}] {record.company} — {record.website}"
+            )
+        )
+        print(
+            terminal.muted(f"         {record.page_id} · inference={elapsed_ms:.1f} ms")
+        )
         print(f"         input: {terminal.file_link(html_path)}")
         for field in fields:
             result = results[field]
@@ -160,7 +175,8 @@ def run(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset-dir", type=Path, default=DEFAULT_DATASET_DIR)
-    parser.add_argument("--checkpoint", type=Path, default=DEFAULT_CHECKPOINT)
+    parser.add_argument("--checkpoint", type=Path)
+    parser.add_argument("--author-boundary-checkpoint", type=Path)
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument(
         "--field",
@@ -181,13 +197,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.snippet_width < 30:
         raise SystemExit("--snippet-width must be at least 30")
     use_color = sys.stdout.isatty() and not args.no_color
+    checkpoint = args.checkpoint or DEFAULT_CHECKPOINT
+    author_boundary_checkpoint = args.author_boundary_checkpoint
+    if args.checkpoint is None and author_boundary_checkpoint is None:
+        author_boundary_checkpoint = DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT
     return run(
         args.dataset_dir,
-        args.checkpoint,
+        checkpoint,
         args.limit,
         args.fields or FIELDS,
         args.snippet_width,
         Terminal(use_color),
+        author_boundary_checkpoint=author_boundary_checkpoint,
     )
 
 

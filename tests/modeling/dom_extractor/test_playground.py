@@ -8,7 +8,16 @@ from fastapi.testclient import TestClient
 
 from eng_universe.extraction.contract import FIELDS, Field
 from eng_universe.extraction.dom import html_sha256, parse_html
-from modeling.dom_extractor.apps.playground import EVALS_SHELL, SHELL, create_app
+from eng_universe.extraction.inference import (
+    DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT,
+    DEFAULT_CHECKPOINT,
+)
+from modeling.dom_extractor.apps.playground import (
+    EVALS_SHELL,
+    SHELL,
+    build_parser,
+    create_app,
+)
 from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
 
@@ -28,6 +37,16 @@ class FakeExtractor:
             )
             for field in FIELDS
         }
+
+
+def test_playground_uses_bundled_two_model_default(tmp_path: Path) -> None:
+    DatasetManifest(1, ()).save(tmp_path / "manifest.json")
+    assert build_parser().parse_args([]).checkpoint is None
+
+    client = TestClient(create_app(tmp_path))
+    checkpoint = client.get("/api/evals/options").json()["checkpoint"]
+    assert str(DEFAULT_CHECKPOINT) in checkpoint
+    assert str(DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT) in checkpoint
 
 
 def test_playground_runs_inference_and_returns_visualizable_nodes(
@@ -111,6 +130,15 @@ def test_playground_runs_inference_and_returns_visualizable_nodes(
     assert upload_result["results"]["title"]["text"] == "Title"
     assert upload_result["reference_source"] is None
     assert f'data-eu-node-id="{title_id}"' in upload_result["document_html"]
+    assert [stage["step"] for stage in result["timings"]] == [
+        "HTML parsing + cleanup",
+        "Model prediction",
+        "Extract selected content",
+        "Build preview DOM",
+    ]
+    assert all(stage["ms"] >= 0 for stage in result["timings"])
+    assert result["latency_ms"] >= sum(stage["ms"] for stage in result["timings"])
+    assert upload_result["timings"]
     assert client.get("/playground/upload").status_code == 200
     assert client.post("/api/playground/upload/run", content=b"").status_code == 400
 
@@ -121,6 +149,8 @@ def test_playground_ui_has_run_and_prediction_focus_controls() -> None:
     assert "el.scrollIntoView({behavior:'instant',block:'center'" in SHELL
     assert 'data-playground-prediction="true"' in SHELL
     assert '<span id="latency" class="latency"></span>' in SHELL
+    assert 'id="timings" class="timings" hidden' in SHELL
+    assert "function drawTimings()" in SHELL
     assert "$('latency').textContent=`${result.latency_ms.toFixed(1)} ms`" in SHELL
     assert 'class="source-link"' in SHELL
     assert "Run the checkpoint, then choose a field" not in SHELL

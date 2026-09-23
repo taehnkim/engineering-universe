@@ -33,6 +33,9 @@ eng-universe = "eng_universe.cli:main"
 where = ["."]
 include = ["eng_universe*"]
 
+[tool.setuptools.package-data]
+"eng_universe.extraction" = ["checkpoints/*.pt"]
+
 [dependency-groups]
 dev = [
     { include-group = "modeling" },

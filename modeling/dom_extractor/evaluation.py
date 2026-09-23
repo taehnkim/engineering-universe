@@ -21,7 +21,11 @@ import torch
 from eng_universe.extraction.contract import FIELDS, Field
 from eng_universe.extraction.dom import ParsedPage
 from eng_universe.extraction.features import FEATURE_VERSION
-from eng_universe.extraction.inference import DOMExtractor
+from eng_universe.extraction.inference import (
+    DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT,
+    DEFAULT_CHECKPOINT,
+    DOMExtractor,
+)
 from modeling.dom_extractor.dataset import iter_labeled_pages
 
 WORD_RE = re.compile(r"\w+", re.UNICODE)
@@ -90,8 +94,11 @@ def evaluate(
     output_dir: Path,
     *,
     include_jev_drafts: bool = False,
+    author_boundary_checkpoint: Path | None = None,
 ) -> dict[str, object]:
-    extractor = DOMExtractor(checkpoint)
+    extractor = DOMExtractor(
+        checkpoint, author_boundary_checkpoint=author_boundary_checkpoint
+    )
     counts = {field: _empty_counts() for field in FIELDS}
     website_counts: dict[str, dict[Field, dict[str, float]]] = defaultdict(
         lambda: {field: _empty_counts() for field in FIELDS}
@@ -151,6 +158,11 @@ def evaluate(
         path.stat().st_size for path in Path(__file__).parent.glob("*.py")
     )
     checkpoint_size = checkpoint.stat().st_size
+    author_boundary_size = (
+        author_boundary_checkpoint.stat().st_size
+        if author_boundary_checkpoint is not None
+        else 0
+    )
     runtime_size = sum(
         _tree_size(Path(module.__file__).parent)
         for module in (torch, np, bs4)
@@ -178,9 +190,12 @@ def evaluate(
         },
         "size_and_speed": {
             "checkpoint_bytes": checkpoint_size,
+            "author_boundary_checkpoint_bytes": author_boundary_size,
             "application_source_bytes": source_size,
             "runtime_packages_bytes": runtime_size,
-            "estimated_deployment_bytes": source_size + checkpoint_size + runtime_size,
+            "estimated_deployment_bytes": (
+                source_size + checkpoint_size + author_boundary_size + runtime_size
+            ),
             "mean_page_latency_ms": statistics.mean(latencies) if latencies else None,
             "p95_page_latency_ms": sorted(latencies)[int(0.95 * (len(latencies) - 1))]
             if latencies
@@ -212,21 +227,31 @@ def evaluate(
 def main(argv: Sequence[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset-dir", type=Path, required=True)
-    parser.add_argument("--checkpoint", type=Path, required=True)
+    parser.add_argument(
+        "--checkpoint",
+        type=Path,
+        help="Custom base checkpoint; omitting this uses the bundled two-model default.",
+    )
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--author-boundary-checkpoint", type=Path)
     parser.add_argument(
         "--include-jev-drafts",
         action="store_true",
         help="Evaluate against Jev-backed test drafts as pseudo-ground-truth.",
     )
     args = parser.parse_args(argv)
+    checkpoint = args.checkpoint or DEFAULT_CHECKPOINT
+    author_boundary_checkpoint = args.author_boundary_checkpoint
+    if args.checkpoint is None and author_boundary_checkpoint is None:
+        author_boundary_checkpoint = DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT
     print(
         json.dumps(
             evaluate(
                 args.dataset_dir,
-                args.checkpoint,
+                checkpoint,
                 args.output_dir,
                 include_jev_drafts=args.include_jev_drafts,
+                author_boundary_checkpoint=author_boundary_checkpoint,
             ),
             indent=2,
         )
