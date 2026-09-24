@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import copy
 import hashlib
 import re
-from typing import Iterator
+from collections.abc import Iterator
+from dataclasses import dataclass
 
 from bs4 import BeautifulSoup, Tag
-
 
 PARSER = "html.parser"
 DOM_CLEANUP_VERSION = "chrome-v2"
@@ -74,6 +74,8 @@ class ParsedPage:
     candidates: tuple[Candidate, ...]
     node_by_id: dict[int, Tag]
     id_by_element_identity: dict[int, int]
+    chrome_stripped: bool
+    preview_html: str | None = None
 
     def candidate(self, node_id: int) -> Tag:
         try:
@@ -174,7 +176,12 @@ def _strip_page_chrome(dom: BeautifulSoup) -> None:
             element.decompose()
 
 
-def parse_html(html: str, *, strip_chrome: bool = False) -> ParsedPage:
+def parse_html(
+    html: str,
+    *,
+    strip_chrome: bool = False,
+    backend: str = "python",
+) -> ParsedPage:
     """Parse HTML and assign stable candidate IDs in document pre-order.
 
     The original HTML string is retained byte-for-byte (after its caller has
@@ -183,6 +190,41 @@ def parse_html(html: str, *, strip_chrome: bool = False) -> ParsedPage:
     keeps each surviving element's original ID.
     """
 
+    if backend == "go":
+        if not strip_chrome:
+            raise ValueError("Go DOM preparation requires strip_chrome=True")
+        from eng_universe.extraction.go_dom import prepare_html
+
+        prepared = prepare_html(html)
+        dom = BeautifulSoup(str(prepared["clean_html"]), PARSER)
+        candidates = tuple(
+            Candidate(
+                node_id=int(element.attrs.pop(_ORIGINAL_NODE_ID)), element=element
+            )
+            for element in _candidate_elements(dom)
+            if element.has_attr(_ORIGINAL_NODE_ID)
+        )
+        ids = [candidate.node_id for candidate in candidates]
+        if ids != prepared["node_ids"]:
+            raise ValueError(
+                "Go DOM candidate IDs changed during Python reconstruction"
+            )
+        return ParsedPage(
+            original_html=html,
+            html_hash=html_sha256(html),
+            dom=dom,
+            candidates=candidates,
+            node_by_id={
+                candidate.node_id: candidate.element for candidate in candidates
+            },
+            id_by_element_identity={
+                id(candidate.element): candidate.node_id for candidate in candidates
+            },
+            chrome_stripped=True,
+            preview_html=str(prepared["preview_html"]),
+        )
+    if backend != "python":
+        raise ValueError(f"unknown DOM backend: {backend}")
     dom = BeautifulSoup(html, PARSER)
     original_candidates = tuple(
         Candidate(node_id=node_id, element=element)
@@ -210,15 +252,23 @@ def parse_html(html: str, *, strip_chrome: bool = False) -> ParsedPage:
         id_by_element_identity={
             id(candidate.element): candidate.node_id for candidate in candidates
         },
+        chrome_stripped=strip_chrome,
     )
 
 
 def annotation_html(page: ParsedPage) -> str:
     """Return the cleaned DOM with stable candidate IDs attached for the UI."""
 
-    copy = parse_html(page.original_html, strip_chrome=True)
-    for candidate in copy.candidates:
-        candidate.element["data-eu-node-id"] = str(candidate.node_id)
-    for script in copy.dom.find_all("script"):
-        script.decompose()
-    return str(copy.dom)
+    if page.preview_html is not None:
+        return page.preview_html
+    cleaned = (
+        page
+        if page.chrome_stripped
+        else parse_html(page.original_html, strip_chrome=True)
+    )
+    preview = copy.deepcopy(cleaned.dom)
+    for element, candidate in zip(
+        preview.find_all(True), cleaned.candidates, strict=True
+    ):
+        element["data-eu-node-id"] = str(candidate.node_id)
+    return str(preview)

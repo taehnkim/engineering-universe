@@ -54,7 +54,11 @@ class DOMExtractor:
         checkpoint_path: str | Path | None = None,
         *,
         author_boundary_checkpoint: str | Path | None = None,
+        dom_backend: str = "python",
     ) -> None:
+        if dom_backend not in {"python", "go"}:
+            raise ValueError(f"unknown DOM backend: {dom_backend}")
+        self.dom_backend = dom_backend
         if checkpoint_path is None:
             checkpoint_path = DEFAULT_CHECKPOINT
             if author_boundary_checkpoint is None:
@@ -105,7 +109,7 @@ class DOMExtractor:
         )
 
     def predict_ids(self, html: str) -> dict[Field, int | None]:
-        page = parse_html(html, strip_chrome=True)
+        page = parse_html(html, strip_chrome=True, backend=self.dom_backend)
         return self.predict_page(page)
 
     def predict_page(self, page: ParsedPage) -> dict[Field, int | None]:
@@ -220,12 +224,12 @@ class DOMExtractor:
     def extract(
         self, html: str, field: FieldName = "article"
     ) -> dict[str, str | int] | None:
-        page = parse_html(html, strip_chrome=True)
+        page = parse_html(html, strip_chrome=True, backend=self.dom_backend)
         selected_id = self.predict_page(page)[Field(field)]
         return None if selected_id is None else page.selected_content(selected_id)
 
     def extract_all(self, html: str) -> dict[str, dict[str, str | int] | None]:
-        page = parse_html(html, strip_chrome=True)
+        page = parse_html(html, strip_chrome=True, backend=self.dom_backend)
         return {
             field.value: (None if node_id is None else page.selected_content(node_id))
             for field, node_id in self.predict_page(page).items()
