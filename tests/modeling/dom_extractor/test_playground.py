@@ -144,6 +144,9 @@ def test_playground_runs_inference_and_returns_visualizable_nodes(
 
 
 def test_playground_ui_has_run_and_prediction_focus_controls() -> None:
+    assert "const names=['article','title','authors','date'];" in SHELL
+    assert "allPages=[],loadVersion=0" in SHELL
+    assert "await run(version)" in SHELL
     assert 'id="run" class="run">RUN</button>' in SHELL
     assert "function focusPrediction(scroll=false)" in SHELL
     assert "el.scrollIntoView({behavior:'instant',block:'center'" in SHELL
