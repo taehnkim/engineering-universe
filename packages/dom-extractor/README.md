@@ -57,7 +57,10 @@ The default result has exactly four keys: `article`, `title`, `authors`, and
 `date`. Each field is `{ nodeId, html, text, confidence }` or `null` when the
 model selects missing. Pass `{ debug: true }` to add a `debug` object with the
 candidate count and model versions. The full contract is in `schema.json`.
-Article text retains paragraph boundaries. Confidence is a softmax
+Article text retains paragraph boundaries. Recognized HTML tables and repeated
+CSS-grid comparison rows become labeled bullet lists in `text`; `html` keeps the
+selected markup unchanged. Ambiguous layouts keep their original text order.
+Confidence is a softmax
 share of the final node's base-model logit across candidates and the missing
 option. It is **not calibrated** to correctness; the author-boundary ranker can
 move the selected author node after base scoring.
