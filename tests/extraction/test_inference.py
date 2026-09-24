@@ -17,31 +17,27 @@ class StubExtractor(DOMExtractor):
                 "node_id": 1,
                 "html": "<article>Body</article>",
                 "text": "Body",
+                "confidence": 0.7,
             },
-            "title": {"node_id": 2, "html": "<h1>Title</h1>", "text": "Title"},
+            "title": {"node_id": 2, "html": "<h1>Title</h1>", "text": "Title", "confidence": 0.8},
             "authors": {
                 "node_id": 3,
                 "html": "<p>Ada and Grace</p>",
                 "text": "Ada and Grace",
+                "confidence": 0.9,
             },
             "date": None,
-            "summary": {"node_id": 4, "html": "<p>Deck</p>", "text": "Deck"},
-            "relative_date": {
-                "node_id": 5,
-                "html": "<time>2 days ago</time>",
-                "text": "2 days ago",
-            },
         }
 
 
-def test_extract_document_returns_text_and_resolves_relative_date() -> None:
+def test_extract_document_returns_html_text_and_confidence() -> None:
     document = StubExtractor().extract_document("<html></html>", "2026-09-19T12:00:00Z")
 
-    assert document.authors == "Ada and Grace"
-    assert document.summary == "Deck"
-    assert document.relative_date == "2 days ago"
+    assert document.authors_text == "Ada and Grace"
+    assert document.authors_html == "<p>Ada and Grace</p>"
+    assert document.authors_confidence == 0.9
     assert document.scraped_at == "2026-09-19T12:00:00Z"
-    assert document.published_at == "2026-09-17T12:00:00Z"
+    assert document.published_at is None
 
 
 def test_profiled_prediction_matches_normal_prediction() -> None:

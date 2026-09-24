@@ -3,12 +3,13 @@ import { readFile, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
-import { extract, fields } from "@eng-universe/dom-extractor";
+import { extract } from "@eng-universe/dom-extractor";
 
 const appDir = dirname(fileURLToPath(import.meta.url));
 const defaultDataDir = resolve(appDir, "../data/learned_extraction/raw");
 const dataDir = resolve(process.env.ANNOTATION_DATA_DIR ?? defaultDataDir);
 const port = Number(process.env.PORT ?? 8770);
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 const SAMPLE_IDS = [
   "anthropic-engineering-001",
   "airbnb-tech-001",
@@ -34,7 +35,14 @@ function json(response, status, value) {
 }
 
 async function loadSamples() {
-  const manifest = JSON.parse(await readFile(join(dataDir, "manifest.json"), "utf8"));
+  let manifestText;
+  try {
+    manifestText = await readFile(join(dataDir, "manifest.json"), "utf8");
+  } catch (error) {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  }
+  const manifest = JSON.parse(manifestText);
   const byId = new Map(manifest.pages.map((page) => [page.page_id, page]));
   const rows = [];
   for (const pageId of SAMPLE_IDS) {
@@ -51,13 +59,9 @@ async function loadSamples() {
     if (annotation.review_status !== "reviewed" || annotation.needs_review) continue;
     rows.push({
       id: pageId,
-      company: page.company,
       website: page.website,
-      split: page.split,
       url: page.url,
       htmlPath: page.html_path,
-      scrapedAt: page.scraped_at,
-      labels: annotation.labels,
     });
   }
   return rows;
@@ -72,16 +76,34 @@ async function readBody(request) {
   return JSON.parse(body || "{}");
 }
 
-function snippet(value) {
-  const text = (value ?? "").replace(/\s+/g, " ").trim();
-  return text.length > 240 ? `${text.slice(0, 239)}…` : text;
+async function readUploadedHtml(request) {
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of request) {
+    size += chunk.length;
+    if (size > MAX_UPLOAD_BYTES) {
+      const error = new Error("HTML file exceeds the 10 MB limit");
+      error.status = 413;
+      throw error;
+    }
+    chunks.push(chunk);
+  }
+  if (!size) {
+    const error = new Error("HTML file is empty");
+    error.status = 400;
+    throw error;
+  }
+  return Buffer.concat(chunks, size).toString("utf8");
+}
+
+async function runInference(html, debug = false) {
+  const started = performance.now();
+  const payload = await extract(html, { debug });
+  return { inferenceMs: Number((performance.now() - started).toFixed(1)), payload };
 }
 
 async function createApp() {
   const samples = await loadSamples();
-  if (!samples.length) {
-    throw new Error(`No reviewed samples found in ${dataDir}. Set ANNOTATION_DATA_DIR to the raw dataset directory.`);
-  }
   const byId = new Map(samples.map((page) => [page.id, page]));
   const assets = new Map([
     ["/", ["index.html", "text/html; charset=utf-8"]],
@@ -103,7 +125,7 @@ async function createApp() {
         return;
       }
       if (request.method === "GET" && url.pathname === "/api/pages") {
-        json(response, 200, { pages: samples.map(({ htmlPath, labels, scrapedAt, ...page }) => page) });
+        json(response, 200, { pages: samples.map(({ htmlPath, ...page }) => page) });
         return;
       }
       if (request.method === "GET" && url.pathname.startsWith("/api/html/")) {
@@ -123,35 +145,25 @@ async function createApp() {
         const page = byId.get(input.pageId);
         if (!page) return json(response, 404, { error: "unknown page" });
         const html = await readFile(join(dataDir, page.htmlPath), "utf8");
-        const started = performance.now();
-        const result = await extract(html, { scrapedAt: page.scrapedAt });
-        const inferenceMs = performance.now() - started;
-        const comparisons = Object.fromEntries(fields.map((field) => [field, {
-          predicted: result.predictions[field],
-          expected: page.labels[field] ?? null,
-          exact: result.predictions[field] === (page.labels[field] ?? null),
-          snippet: snippet(result[field]?.text),
-        }]));
-        json(response, 200, {
-          pageId: page.id,
-          inferenceMs: Number(inferenceMs.toFixed(1)),
-          candidateCount: result.diagnostics.candidateCount,
-          modelVersion: result.diagnostics.modelVersion,
-          checkpointSha256: result.diagnostics.checkpointSha256,
-          exactCount: Object.values(comparisons).filter((entry) => entry.exact).length,
-          articleText: result.article?.text ?? null,
-          comparisons,
-        });
+        json(response, 200, { pageId: page.id, ...await runInference(html, input.debug === true) });
+        return;
+      }
+      if (request.method === "POST" && url.pathname === "/api/run-upload") {
+        if (!/^text\/html(?:;|$)/i.test(request.headers["content-type"] ?? "")) {
+          return json(response, 415, { error: "upload must be an HTML file" });
+        }
+        const html = await readUploadedHtml(request);
+        json(response, 200, await runInference(html, url.searchParams.get("debug") === "1"));
         return;
       }
       json(response, 404, { error: "not found" });
     } catch (error) {
-      json(response, 500, { error: error.message });
+      json(response, error.status ?? 500, { error: error.message });
     }
   });
 }
 
 const server = await createApp();
 server.listen(port, "127.0.0.1", () => {
-  console.log(`npm-test ready at http://127.0.0.1:${server.address().port}/ (${dataDir})`);
+  console.log(`dom-tiny-demo ready at http://127.0.0.1:${server.address().port}/ (${dataDir})`);
 });

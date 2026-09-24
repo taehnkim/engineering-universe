@@ -24,8 +24,6 @@ FIELD_LOSS_WEIGHTS = {
     Field.TITLE: 1.0,
     Field.AUTHORS: 3.0,
     Field.DATE: 2.0,
-    Field.SUMMARY: 1.0,
-    Field.RELATIVE_DATE: 1.0,
 }
 
 

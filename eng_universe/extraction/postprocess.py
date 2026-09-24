@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import calendar
-from datetime import datetime, timedelta, timezone
 import re
-
+from datetime import UTC, datetime, timedelta
 
 NUMBER_WORDS = {
     "a": 1,
@@ -42,10 +41,10 @@ def _parse_datetime(value: str | datetime) -> datetime:
     if isinstance(value, datetime):
         parsed = value
     else:
-        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(value.strip())
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-    return parsed.astimezone(timezone.utc)
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
 
 
 def extract_relative_publication_date(text: str | None) -> str | None:
@@ -96,12 +95,14 @@ def resolve_relative_date(relative_date: str, scraped_at: str | datetime) -> str
 
 def derive_published_at(
     absolute_date: str | None,
-    relative_date: str | None,
-    scraped_at: str | datetime,
+    relative_date: str | None = None,
+    scraped_at: str | datetime | None = None,
 ) -> str | None:
-    """Prefer an absolute date; otherwise resolve a relative publication date."""
+    """Resolve legacy ingest dates; four-field extraction passes only absolute_date."""
 
     if absolute_date and not extract_relative_publication_date(absolute_date):
         return absolute_date.strip() or None
-    phrase = extract_relative_publication_date(relative_date or absolute_date)
-    return resolve_relative_date(phrase, scraped_at) if phrase else None
+    if scraped_at is not None:
+        phrase = extract_relative_publication_date(relative_date or absolute_date)
+        return resolve_relative_date(phrase, scraped_at) if phrase else None
+    return None

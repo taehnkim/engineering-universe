@@ -29,7 +29,7 @@ from eng_universe.extraction.postprocess import (
     normalize_scraped_at,
 )
 
-FieldName = Literal["article", "title", "authors", "date", "summary", "relative_date"]
+FieldName = Literal["article", "title", "authors", "date"]
 DEFAULT_CHECKPOINT = Path(__file__).parent / "checkpoints" / "best.pt"
 DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT = (
     Path(__file__).parent / "checkpoints" / "author_boundary.pt"
@@ -38,12 +38,18 @@ DEFAULT_AUTHOR_BOUNDARY_CHECKPOINT = (
 
 @dataclass(frozen=True, slots=True)
 class ExtractedDocument:
-    article: str | None
-    title: str | None
-    authors: str | None
-    date: str | None
-    summary: str | None
-    relative_date: str | None
+    article_text: str | None
+    article_html: str | None
+    article_confidence: float | None
+    title_text: str | None
+    title_html: str | None
+    title_confidence: float | None
+    authors_text: str | None
+    authors_html: str | None
+    authors_confidence: float | None
+    date_text: str | None
+    date_html: str | None
+    date_confidence: float | None
     scraped_at: str
     published_at: str | None
 
@@ -115,7 +121,15 @@ class DOMExtractor:
     def predict_page(self, page: ParsedPage) -> dict[Field, int | None]:
         """Predict node IDs from an already cleaned and parsed page."""
 
-        return self._predict_page(page, None)
+        return self._predict_page(page, None, None)
+
+    def predict_page_with_confidence(
+        self, page: ParsedPage
+    ) -> tuple[dict[Field, int | None], dict[Field, float]]:
+        """Return selected IDs and uncalibrated softmax scores for final nodes."""
+
+        confidence: dict[Field, float] = {}
+        return self._predict_page(page, None, confidence), confidence
 
     def predict_page_profiled(
         self, page: ParsedPage
@@ -123,10 +137,19 @@ class DOMExtractor:
         """Predict with per-stage wall times for interactive diagnostics."""
 
         timings: list[dict[str, str | float]] = []
-        return self._predict_page(page, timings), timings
+        return self._predict_page(page, timings, None), timings
+
+    def predict_page_profiled_with_confidence(
+        self, page: ParsedPage
+    ) -> tuple[dict[Field, int | None], dict[Field, float], list[dict[str, str | float]]]:
+        timings: list[dict[str, str | float]] = []
+        confidence: dict[Field, float] = {}
+        predictions = self._predict_page(page, timings, confidence)
+        return predictions, confidence, timings
 
     def _predict_page(
-        self, page: ParsedPage, timings: list[dict[str, str | float]] | None
+        self, page: ParsedPage, timings: list[dict[str, str | float]] | None,
+        confidence: dict[Field, float] | None,
     ) -> dict[Field, int | None]:
         started = time.perf_counter() if timings is not None else 0.0
 
@@ -141,6 +164,8 @@ class DOMExtractor:
                 }
             )
         if not page.candidates:
+            if confidence is not None:
+                confidence.update({field: 1.0 for field in FIELDS})
             return {field: None for field in FIELDS}
         started = time.perf_counter() if timings is not None else 0.0
         inputs = (
@@ -219,20 +244,32 @@ class DOMExtractor:
                         "ms": (time.perf_counter() - started) * 1_000,
                     }
                 )
+        if confidence is not None:
+            index_by_id = {candidate.node_id: index for index, candidate in enumerate(page.candidates)}
+            for field_index, field in enumerate(FIELDS):
+                selected_id = predictions[field]
+                selected_index = len(page.candidates) if selected_id is None else index_by_id[selected_id]
+                confidence[field] = float(torch.softmax(scores[0, :, field_index], dim=0)[selected_index])
         return predictions
 
     def extract(
         self, html: str, field: FieldName = "article"
-    ) -> dict[str, str | int] | None:
+    ) -> dict[str, str | int | float] | None:
         page = parse_html(html, strip_chrome=True, backend=self.dom_backend)
-        selected_id = self.predict_page(page)[Field(field)]
-        return None if selected_id is None else page.selected_content(selected_id)
+        predictions, confidence = self.predict_page_with_confidence(page)
+        selected_id = predictions[Field(field)]
+        return None if selected_id is None else {
+            **page.selected_content(selected_id), "confidence": confidence[Field(field)]
+        }
 
-    def extract_all(self, html: str) -> dict[str, dict[str, str | int] | None]:
+    def extract_all(self, html: str) -> dict[str, dict[str, str | int | float] | None]:
         page = parse_html(html, strip_chrome=True, backend=self.dom_backend)
+        predictions, confidence = self.predict_page_with_confidence(page)
         return {
-            field.value: (None if node_id is None else page.selected_content(node_id))
-            for field, node_id in self.predict_page(page).items()
+            field.value: (None if node_id is None else {
+                **page.selected_content(node_id), "confidence": confidence[field]
+            })
+            for field, node_id in predictions.items()
         }
 
     def extract_document(self, html: str, scraped_at: str) -> ExtractedDocument:
@@ -240,37 +277,28 @@ class DOMExtractor:
 
         selections = self.extract_all(html)
         values = {
-            field.value: (
-                None
-                if selections[field.value] is None
-                else str(selections[field.value]["text"])
+            f"{field.value}_{key}": (
+                None if selections[field.value] is None else selections[field.value][key]
             )
-            for field in FIELDS
+            for field in FIELDS for key in ("text", "html", "confidence")
         }
         normalized_scraped_at = normalize_scraped_at(scraped_at)
         return ExtractedDocument(
-            article=values["article"],
-            title=values["title"],
-            authors=values["authors"],
-            date=values["date"],
-            summary=values["summary"],
-            relative_date=values["relative_date"],
+            **values,
             scraped_at=normalized_scraped_at,
-            published_at=derive_published_at(
-                values["date"], values["relative_date"], normalized_scraped_at
-            ),
+            published_at=derive_published_at(values["date_text"]),
         )
 
     def extract_document_dict(
         self, html: str, scraped_at: str
-    ) -> dict[str, str | None]:
+    ) -> dict[str, str | float | None]:
         return asdict(self.extract_document(html, scraped_at))
 
 
 _DEFAULT_EXTRACTOR: DOMExtractor | None = None
 
 
-def extract(html: str, field: FieldName = "article") -> dict[str, str | int] | None:
+def extract(html: str, field: FieldName = "article") -> dict[str, str | int | float] | None:
     """Select a wrapper and return its original-DOM HTML and plain text.
 
     Use the bundled base checkpoint and author-boundary refiner by default.

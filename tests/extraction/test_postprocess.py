@@ -28,9 +28,8 @@ def test_month_subtraction_clamps_day() -> None:
 
 
 def test_derive_published_at_prefers_absolute_date() -> None:
-    assert derive_published_at(
-        "September 10, 2026", "2 days ago", "2026-09-19T12:30:00Z"
-    ) == "September 10, 2026"
+    assert derive_published_at("September 10, 2026") == "September 10, 2026"
+    assert derive_published_at("2 days ago") is None
 
 
 def test_invalid_relative_date_is_rejected() -> None:

@@ -87,6 +87,10 @@ def test_core_labeler_exposes_jev_confidence_and_keeps_labels_editable(
     )
     assert response.status_code == 200
     assert client.get("/api/pages/page").json()["labels"]["title"] == 2
+    stored = json.loads((tmp_path / "annotations/page.json").read_text())
+    assert stored["labels"]["summary"] is None
+    assert stored["labels"]["relative_date"] is None
+    assert "const names=['article','title','authors','date'];" in SHELL
 
     class FakeBot:
         def prepare(self, value: str) -> SimpleNamespace:
@@ -123,6 +127,7 @@ def test_core_labeler_exposes_jev_confidence_and_keeps_labels_editable(
     assert live_response.json()["metadata"]["confidence"] == 0.77
     audit = json.loads((tmp_path / "jev_annotations/page.json").read_text())
     assert audit["labels"]["article"] == 3
+    assert "summary" in audit["labels"]
     assert audit["metadata"]["article"]["latency_ms"] == 42.5
     assert audit["field_reruns"]["article"]["latency_ms"] == 42.5
     assert live_client.get("/api/pages/page").json()["labels"]["article"] == 2

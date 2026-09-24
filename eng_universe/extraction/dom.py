@@ -8,7 +8,7 @@ import re
 from collections.abc import Iterator
 from dataclasses import dataclass
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, NavigableString, Tag
 
 PARSER = "html.parser"
 DOM_CLEANUP_VERSION = "chrome-v2"
@@ -58,6 +58,147 @@ _HIDDEN_STYLE = re.compile(
     re.IGNORECASE,
 )
 _EMPTY_PRUNABLE_TAGS = frozenset({"div", "figure", "p", "section", "span"})
+_TEXT_BLOCKS = frozenset(
+    {
+        "article",
+        "blockquote",
+        "div",
+        "figcaption",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "header",
+        "li",
+        "main",
+        "ol",
+        "p",
+        "pre",
+        "section",
+        "table",
+        "td",
+        "th",
+        "ul",
+    }
+)
+
+
+def _cell_text(element: Tag) -> str:
+    return element.get_text(" ", strip=True)
+
+
+def _table_rows(element: Tag) -> list[list[Tag | None]] | None:
+    if element.name == "table":
+        rows = [
+            row for row in element.find_all("tr") if row.find_parent("table") is element
+        ]
+        first = rows[0].find_all(["th", "td"], recursive=False) if rows else []
+        bold_header = len(first) >= 2 and all(
+            (bold := cell.find(["b", "strong"])) is not None
+            and _cell_text(cell) == _cell_text(bold)
+            for cell in first
+        )
+        if not rows or not (
+            rows[0].parent.name == "thead"
+            or any(cell.name == "th" for cell in first)
+            or bold_header
+        ):
+            return None
+        cells: list[list[Tag | None]] = [
+            row.find_all(["th", "td"], recursive=False) for row in rows
+        ]
+        for row in cells:
+            for cell in row:
+                if (
+                    cell is None
+                    or cell.get("colspan", "1") != "1"
+                    or cell.get("rowspan", "1") != "1"
+                ):
+                    return None
+        return cells
+
+    # This is a common CSS-table shape, but not every CSS grid is a table.
+    if element.name != "div":
+        return None
+    rows = element.find_all(recursive=False)
+    if len(rows) < 3 or any(
+        row.name != "div" or "grid" not in row.get("class", []) for row in rows
+    ):
+        return None
+    cells = [row.find_all(recursive=False) for row in rows]
+    # Chrome-v2 can prune the empty top-left grid cell before text extraction.
+    if len(cells[0]) == len(cells[1]) - 1:
+        cells[0].insert(0, None)
+    if len(cells[0]) < 3 or (cells[0][0] is not None and _cell_text(cells[0][0])):
+        return None
+    return cells
+
+
+def _formatted_table(element: Tag) -> str | None:
+    cells = _table_rows(element)
+    if cells is None or len(cells) < 2:
+        return None
+    width = len(cells[0])
+    if not 2 <= width <= 16 or any(len(row) != width for row in cells):
+        return None
+    matrix = [
+        [_cell_text(cell) if cell is not None else "" for cell in row] for row in cells
+    ]
+    if any(not value for value in matrix[0][1:]) or any(
+        not value for row in matrix[1:] for value in row
+    ):
+        return None
+
+    headers = matrix[0]
+    lines = []
+    for row in matrix[1:]:
+        lines.append(f"- {row[0]}")
+        lines.extend(f"  - {headers[index]}: {row[index]}" for index in range(1, width))
+    caption = (
+        element.find("caption", recursive=False) if element.name == "table" else None
+    )
+    return (
+        f"{_cell_text(caption)}\n\n" + "\n".join(lines) if caption else "\n".join(lines)
+    )
+
+
+def readable_text(element: Tag) -> str:
+    """Keep block and paragraph boundaries while joining inline text."""
+
+    selected_table = _formatted_table(element)
+    if selected_table is not None:
+        return selected_table
+    parts: list[str] = []
+    tables: list[str] = []
+
+    def walk(node: Tag) -> None:
+        for child in node.children:
+            if isinstance(child, NavigableString):
+                value = re.sub(r"\s+", " ", str(child))
+                parts.append(value)
+            elif isinstance(child, Tag):
+                if child.name == "br":
+                    parts.append("\n")
+                    continue
+                table = _formatted_table(child)
+                if table is not None:
+                    parts.extend(("\n\n", f"\0{len(tables)}\0", "\n\n"))
+                    tables.append(table)
+                    continue
+                block = child.name in _TEXT_BLOCKS
+                if block:
+                    parts.append("\n\n")
+                walk(child)
+                if block:
+                    parts.append("\n\n")
+
+    walk(element)
+    text = "".join(parts)
+    text = re.sub(r"[ \t]*\n[ \t]*", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text).strip()
+    return re.sub(r"\0(\d+)\0", lambda match: tables[int(match.group(1))], text)
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,7 +229,7 @@ class ParsedPage:
         return {
             "node_id": node_id,
             "html": str(element),
-            "text": element.get_text(" ", strip=True),
+            "text": readable_text(element),
         }
 
 

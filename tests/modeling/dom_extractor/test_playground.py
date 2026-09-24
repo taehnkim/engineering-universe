@@ -144,6 +144,9 @@ def test_playground_runs_inference_and_returns_visualizable_nodes(
 
 
 def test_playground_ui_has_run_and_prediction_focus_controls() -> None:
+    assert "const names=['article','title','authors','date'];" in SHELL
+    assert "allPages=[],loadVersion=0" in SHELL
+    assert "await run(version)" in SHELL
     assert 'id="run" class="run">RUN</button>' in SHELL
     assert "function focusPrediction(scroll=false)" in SHELL
     assert "el.scrollIntoView({behavior:'instant',block:'center'" in SHELL
@@ -297,7 +300,7 @@ def test_evaluation_dashboard_has_requested_controls_and_links() -> None:
     assert "site.fields[name].accuracy" in EVALS_SHELL
     assert "value>=.8?'green':value>=.5?'orange':'red'" in EVALS_SHELL
     assert 'class="card kpi-${scoreClass(accuracy)}"' in EVALS_SHELL
-    assert "presentToggleFields=new Set(['authors','date','summary'])" in EVALS_SHELL
+    assert "presentToggleFields=new Set(['authors','date'])" in EVALS_SHELL
     assert 'data-present-field="${name}"' in EVALS_SHELL
     assert "item.present_accuracy" in EVALS_SHELL
     assert "expected node present" in EVALS_SHELL

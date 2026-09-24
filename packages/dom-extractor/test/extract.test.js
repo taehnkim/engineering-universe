@@ -23,19 +23,43 @@ const HTML = `<!doctype html><html><body>
   <footer>Footer links</footer>
 </body></html>`;
 
-test("extract returns every model field and diagnostics", async () => {
-  const result = await extract(HTML, { scrapedAt: "2026-09-21T12:00:00Z" });
+test("extract returns only the four selection fields by default", async () => {
+  const result = await extract(HTML);
 
-  assert.deepEqual(Object.keys(result.predictions), fields);
-  assert.equal(result.article?.text, "This is the article body. It has two paragraphs.");
+  assert.deepEqual(Object.keys(result), fields);
+  assert.equal(result.article?.text, "This is the article body.\n\nIt has two paragraphs.");
+  assert.ok(result.article.confidence >= 0 && result.article.confidence <= 1);
   assert.equal(result.title?.text, "A small DOM extraction test");
-  assert.equal(result.predictions.article, 8);
-  assert.equal(result.predictions.title, 5);
-  assert.equal(result.diagnostics.cleanupVersion, "chrome-v2");
-  assert.ok(result.diagnostics.candidateCount > 0);
+  assert.equal(result.article?.nodeId, 8);
+  assert.equal(result.title?.nodeId, 5);
   for (const field of fields) {
-    assert.ok(result[field] === null || typeof result[field].text === "string");
+    const selection = result[field];
+    assert.ok(selection === null || typeof selection.text === "string");
+    if (selection) assert.deepEqual(Object.keys(selection), ["nodeId", "html", "text", "confidence"]);
   }
+});
+
+test("debug metadata is present only when explicitly requested", async () => {
+  const result = await extract(HTML, { debug: true });
+  assert.deepEqual(Object.keys(result), [...fields, "debug"]);
+  assert.deepEqual(Object.keys(result.debug), [
+    "candidateCount", "cleanupVersion", "featureVersion", "modelVersion",
+    "checkpointSha256", "domBackend",
+  ]);
+  assert.equal(result.debug.cleanupVersion, "chrome-v2");
+  assert.ok(result.debug.candidateCount > 0);
+  const withoutDebug = await extract(HTML, { debug: false });
+  assert.deepEqual(Object.keys(withoutDebug), fields);
+  for (const field of fields) assert.deepEqual(result[field], withoutDebug[field]);
+});
+
+test("published JSON Schema matches the four-field contract", async () => {
+  const schema = JSON.parse(await readFile(new URL("../schema.json", import.meta.url), "utf8"));
+  assert.equal(schema.$schema, "https://json-schema.org/draft/2020-12/schema");
+  assert.deepEqual(schema.required, fields);
+  assert.deepEqual(Object.keys(schema.properties), [...fields, "debug"]);
+  assert.equal(schema.additionalProperties, false);
+  assert.deepEqual(schema.$defs.selectionOrNull.anyOf[1], { type: "null" });
 });
 
 test("extractField validates and returns a selection or missing", async () => {
@@ -61,7 +85,7 @@ test("the documented sample output stays current", async () => {
   );
 
   assert.deepEqual(
-    await extract(html, { scrapedAt: "2026-09-22T12:00:00Z" }),
+    await extract(html),
     expected,
   );
 });

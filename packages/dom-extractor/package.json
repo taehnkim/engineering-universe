@@ -1,6 +1,6 @@
 {
   "name": "@eng-universe/dom-extractor",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Extract article content and metadata from raw HTML with the Engineering Universe DOM model",
   "type": "module",
   "main": "./dist/index.js",
@@ -9,11 +9,13 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./schema.json": "./schema.json"
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "schema.json"
   ],
   "scripts": {
     "export:model": "uv run --project ../.. --group modeling python scripts/export_checkpoint.py",

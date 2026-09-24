@@ -117,6 +117,99 @@ export function elementText(element) {
   return parts.join(" ");
 }
 
+const TEXT_BLOCKS = new Set([
+  "article", "blockquote", "div", "figcaption", "h1", "h2", "h3", "h4", "h5", "h6",
+  "header", "li", "main", "ol", "p", "pre", "section", "table", "td", "th", "ul",
+]);
+
+function tableRows(element) {
+  if (element.localName === "table") {
+    const rows = [...element.querySelectorAll("tr")]
+      .filter((row) => row.closest("table") === element);
+    const firstCells = rows.length ? [...rows[0].children] : [];
+    const boldHeader = firstCells.length >= 2 && firstCells.every((cell) => {
+      const bold = cell.querySelector("b, strong");
+      return bold && elementText(cell) === elementText(bold);
+    });
+    if (!rows.length || !(
+      rows[0].parentElement?.localName === "thead" ||
+      firstCells.some((cell) => cell.localName === "th") || boldHeader
+    )) return null;
+    const cells = rows.map((row) => [...row.children]
+      .filter((cell) => cell.localName === "th" || cell.localName === "td"));
+    if (cells.some((row) => row.some((cell) =>
+      Number(cell.getAttribute("colspan") || 1) !== 1 ||
+      Number(cell.getAttribute("rowspan") || 1) !== 1))) return null;
+    return cells;
+  }
+
+  // A frequent CSS-table shape: a wrapper of repeated grid rows. Requiring a
+  // blank top-left cell avoids treating ordinary card grids as comparison tables.
+  if (element.localName !== "div") return null;
+  const rows = [...element.children];
+  if (rows.length < 3 || rows.some((row) =>
+    row.localName !== "div" || !row.classList.contains("grid"))) return null;
+  const cells = rows.map((row) => [...row.children]);
+  // Chrome-v2 prunes empty divs. The blank corner of a comparison grid can
+  // therefore disappear while its data rows keep their label column.
+  if (cells[0]?.length === cells[1]?.length - 1) cells[0].unshift(null);
+  if (cells[0]?.length < 3 || (cells[0][0] && elementText(cells[0][0]) !== "")) return null;
+  return cells;
+}
+
+function formattedTable(element) {
+  const cells = tableRows(element);
+  if (!cells || cells.length < 2) return null;
+  const width = cells[0].length;
+  if (width < 2 || width > 16 || cells.some((row) => row.length !== width)) return null;
+  const matrix = cells.map((row) => row.map((cell) => cell ? elementText(cell) : ""));
+  if (matrix[0].slice(1).some((value) => !value) ||
+      matrix.slice(1).some((row) => row.some((value) => !value))) return null;
+
+  const headers = matrix[0];
+  const lines = [];
+  for (const row of matrix.slice(1)) {
+    lines.push(`- ${row[0]}`);
+    for (let index = 1; index < width; index++) {
+      lines.push(`  - ${headers[index]}: ${row[index]}`);
+    }
+  }
+  const caption = element.localName === "table"
+    ? [...element.children].find((child) => child.localName === "caption")
+    : null;
+  return caption ? `${elementText(caption)}\n\n${lines.join("\n")}` : lines.join("\n");
+}
+
+export function readableText(element) {
+  const selectedTable = formattedTable(element);
+  if (selectedTable !== null) return selectedTable;
+  const parts = [];
+  const tables = [];
+  function walk(node) {
+    for (const child of node.childNodes) {
+      if (child.nodeType === 3) parts.push(child.nodeValue.replace(/\s+/g, " "));
+      else if (child.nodeType === 1) {
+        const name = child.localName.toLowerCase();
+        if (name === "br") { parts.push("\n"); continue; }
+        const table = formattedTable(child);
+        if (table !== null) {
+          parts.push("\n\n", `\u0000${tables.length}\u0000`, "\n\n");
+          tables.push(table);
+          continue;
+        }
+        const block = TEXT_BLOCKS.has(name);
+        if (block) parts.push("\n\n");
+        walk(child);
+        if (block) parts.push("\n\n");
+      }
+    }
+  }
+  walk(element);
+  return parts.join("").replace(/[ \t]*\n[ \t]*/g, "\n")
+    .replace(/\n{3,}/g, "\n\n").trim()
+    .replace(/\u0000(\d+)\u0000/g, (_, index) => tables[Number(index)]);
+}
+
 function stripPageChrome(document) {
   for (const element of allElements(document)) {
     if (CHROME_DROP_TAGS.has(tagName(element))) element.remove();
@@ -156,7 +249,7 @@ export function selectedContent(candidate) {
   return {
     nodeId: candidate.nodeId,
     html: candidate.element.outerHTML,
-    text: elementText(candidate.element),
+    text: readableText(candidate.element),
   };
 }
 

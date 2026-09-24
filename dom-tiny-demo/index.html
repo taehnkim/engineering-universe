@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DOM Extractor Neural Model</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <h1>DOM Extractor Neural Model</h1>
+        <p class="lede">This model reads a web page's HTML and picks out the article, headline, author names, and publication date.</p>
+      </div>
+      <div class="hero-actions">
+        <label class="debug-option"><input id="include-debug" type="checkbox"> Include debug</label>
+        <input id="html-upload" class="visually-hidden" type="file" accept=".html,.htm,text/html" tabindex="-1">
+        <button id="upload-button" type="button">Upload HTML</button>
+        <button id="run-all" class="primary" type="button" disabled>Run all 10</button>
+      </div>
+    </header>
+
+    <section class="overview" aria-label="Run progress">
+      <div class="overview-line">
+        <strong id="status">Loading pages…</strong>
+        <span id="totals">0 / 0 pages</span>
+      </div>
+      <progress id="progress" value="0" max="10"></progress>
+    </section>
+
+    <section id="pages" class="pages" aria-label="Test pages"></section>
+  </main>
+
+  <dialog id="payload-dialog" aria-labelledby="payload-dialog-title">
+    <div class="dialog-head">
+      <div>
+        <h2 id="payload-dialog-title">Model payload</h2>
+        <p id="payload-dialog-meta" class="meta"></p>
+      </div>
+      <button id="payload-dialog-close" type="button" aria-label="Close model payload">Close</button>
+    </div>
+    <pre id="payload-dialog-output" class="dialog-output json-source"></pre>
+  </dialog>
+
+  <dialog id="field-dialog" aria-labelledby="field-dialog-title">
+    <div class="dialog-head">
+      <div>
+        <h2 id="field-dialog-title">Field</h2>
+        <p id="field-dialog-meta" class="meta"></p>
+      </div>
+      <button id="field-dialog-close" type="button" aria-label="Close field output">Close</button>
+    </div>
+    <div class="dialog-tabs" role="group" aria-label="Output format">
+      <button id="field-dialog-show-text" class="selected" type="button" aria-pressed="true">Text</button>
+      <button id="field-dialog-show-html" type="button" aria-pressed="false">HTML</button>
+      <button id="field-dialog-show-rendered" type="button" aria-pressed="false">Rendered HTML</button>
+    </div>
+    <p id="field-dialog-note" class="dialog-note"></p>
+    <pre id="field-dialog-output" class="dialog-output"></pre>
+    <iframe id="field-dialog-rendered" class="rendered-frame" title="Rendered selected HTML" sandbox="allow-same-origin" referrerpolicy="no-referrer" tabindex="-1" hidden></iframe>
+  </dialog>
+  <div id="info-tooltip" class="info-tooltip" role="tooltip" hidden></div>
+</body>
+</html>

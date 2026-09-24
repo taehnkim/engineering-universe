@@ -77,7 +77,7 @@ def _load_cached(
             continue
         if result.get("html_hash") != record.html_hash:
             continue
-        if set(result.get("labels", {})) != {field.value for field in FIELDS}:
+        if not {field.value for field in FIELDS}.issubset(result.get("labels", {})):
             continue
         return result, path
     return None, None
