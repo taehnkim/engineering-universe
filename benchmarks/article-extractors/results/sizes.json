@@ -1,0 +1,24 @@
+{
+  "method": "Installed package files plus mandatory dependencies; no Node/Python interpreter or standard library. Generated Python bytecode excluded. Model includes bundled parser and weights.",
+  "libraries": {
+    "dom-extractor": {
+      "installedBytes": 337673,
+      "compressedTarballBytes": 137111,
+      "packages": 1
+    },
+    "readability": {
+      "installedBytes": 13934343,
+      "packages": 40
+    },
+    "extractus": {
+      "installedBytes": 5521416,
+      "packages": 22
+    },
+    "trafilatura": {
+      "installedBytes": 60962513
+    },
+    "newspaper": {
+      "installedBytes": 41333405
+    }
+  }
+}

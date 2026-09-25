@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import random
 from collections.abc import Iterable, Sequence
@@ -249,6 +250,7 @@ def train(
     batch_size: int = 8,
     learning_rate: float = 1e-3,
     seed: int = 17,
+    initial_checkpoint: Path | None = None,
 ) -> dict[str, object]:
     random.seed(seed)
     np.random.seed(seed)
@@ -300,6 +302,24 @@ def train(
     model = _new_model(
         tag_count, semantic_token_count, feature_count, device, len(fields)
     )
+    initial_sha256: str | None = None
+    if initial_checkpoint is not None:
+        initial = torch.load(initial_checkpoint, map_location="cpu", weights_only=False)
+        initial_sha256 = hashlib.sha256(initial_checkpoint.read_bytes()).hexdigest()
+        if preprocessing.get("preprocessing_source_sha256") != initial_sha256:
+            raise ValueError(
+                "prepared features were not built from the initial checkpoint"
+            )
+        if (
+            initial["tag_count"] != tag_count
+            or initial["semantic_token_count"] != semantic_token_count
+            or initial["numeric_feature_count"] != feature_count
+            or initial["fields"] != fields
+        ):
+            raise ValueError(
+                "initial checkpoint architecture does not match prepared data"
+            )
+        model.load_state_dict(initial["model_state"])
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     train_loader = _loader(train_paths, batch_size, shuffle=True)
     validation_loader = _loader(validation_paths, batch_size, shuffle=False)
@@ -328,12 +348,14 @@ def train(
                     "fields": fields,
                     "preprocessing": preprocessing,
                     "epoch": epoch,
+                    "initialized_from_sha256": initial_sha256,
                     "validation": validation_metrics,
                 },
                 output_dir / "best.pt",
             )
     metrics: dict[str, object] = {
         "seed": seed,
+        "initialized_from_sha256": initial_sha256,
         "device": str(device),
         "fields": fields,
         "training_pages": len(train_paths),
@@ -358,6 +380,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--learning-rate", type=float, default=1e-3)
     parser.add_argument("--seed", type=int, default=17)
+    parser.add_argument(
+        "--initial-checkpoint",
+        type=Path,
+        help="Initialize weights from the checkpoint used to prepare features.",
+    )
     return parser
 
 
@@ -371,6 +398,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         batch_size=args.batch_size,
         learning_rate=args.learning_rate,
         seed=args.seed,
+        initial_checkpoint=args.initial_checkpoint,
     )
     print(json.dumps(metrics, indent=2, sort_keys=True))
 

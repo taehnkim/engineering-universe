@@ -1,0 +1,285 @@
+{
+  "version": 1,
+  "description": "Frozen website-level split of 270 newly reviewed pages; original 659 pages keep their prior splits.",
+  "seed": "2026-09-25-reviewed-v1",
+  "sourceIdPrefix": "test-",
+  "expectedFinalPages": {
+    "train": 529,
+    "validation": 250,
+    "test": 150
+  },
+  "sites": {
+    "8thlight.com": {
+      "pages": 4,
+      "split": "validation"
+    },
+    "about.gitlab.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "advancedweb.hu": {
+      "pages": 4,
+      "split": "train"
+    },
+    "artsy.github.io": {
+      "pages": 4,
+      "split": "train"
+    },
+    "auth0.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "aws.amazon.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "bandcamptech.wordpress.com": {
+      "pages": 3,
+      "split": "validation"
+    },
+    "blog.arkency.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "blog.avenuecode.com": {
+      "pages": 3,
+      "split": "validation"
+    },
+    "blog.developer.bazaarvoice.com": {
+      "pages": 4,
+      "split": "validation"
+    },
+    "blog.janestreet.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "blog.jetbrains.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "blog.octo.com": {
+      "pages": 4,
+      "split": "validation"
+    },
+    "blog.sensible.io": {
+      "pages": 4,
+      "split": "test"
+    },
+    "blogs.nvidia.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "code.blender.org": {
+      "pages": 4,
+      "split": "train"
+    },
+    "code.flickr.net": {
+      "pages": 4,
+      "split": "test"
+    },
+    "deliveroo.engineering": {
+      "pages": 4,
+      "split": "test"
+    },
+    "devblog.kogan.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "devblogs.microsoft.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "developer.okta.com": {
+      "pages": 4,
+      "split": "validation"
+    },
+    "discord.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "dropbox.tech": {
+      "pages": 4,
+      "split": "train"
+    },
+    "eng.localytics.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "eng.wealthfront.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "engineering.cerner.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "engineering.clever.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "engineering.curalate.com": {
+      "pages": 4,
+      "split": "validation"
+    },
+    "engineering.hackerearth.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "engineering.indeedblog.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "engineering.remind.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "engineering.tumblr.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "evilmartians.com": {
+      "pages": 4,
+      "split": "validation"
+    },
+    "freeletics.engineering": {
+      "pages": 4,
+      "split": "test"
+    },
+    "gocardless.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "hashrocket.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "huggingface.co": {
+      "pages": 4,
+      "split": "train"
+    },
+    "multithreaded.stitchfix.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "nordicapis.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "novoda.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "postmarkapp.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "product.hubspot.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "redis.io": {
+      "pages": 4,
+      "split": "validation"
+    },
+    "stackoverflow.blog": {
+      "pages": 4,
+      "split": "validation"
+    },
+    "target.github.io": {
+      "pages": 4,
+      "split": "train"
+    },
+    "tech.findmypast.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "tech.gc.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "tech.small-improvements.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "tech.trivago.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "theguardian.engineering": {
+      "pages": 4,
+      "split": "test"
+    },
+    "vinted.engineering": {
+      "pages": 4,
+      "split": "test"
+    },
+    "webflowmarketingmain.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "www.canva.dev": {
+      "pages": 4,
+      "split": "test"
+    },
+    "www.confluent.io": {
+      "pages": 4,
+      "split": "validation"
+    },
+    "www.databricks.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "www.ebayinc.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "www.elastic.co": {
+      "pages": 4,
+      "split": "test"
+    },
+    "www.gosquared.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "www.haptik.ai": {
+      "pages": 4,
+      "split": "test"
+    },
+    "www.hostinger.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "www.maptiler.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "www.pubnub.com": {
+      "pages": 4,
+      "split": "validation"
+    },
+    "www.rea-group.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "www.rosehosting.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "www.surveymonkey.com": {
+      "pages": 4,
+      "split": "validation"
+    },
+    "www.twilio.com": {
+      "pages": 4,
+      "split": "train"
+    },
+    "yahooeng.tumblr.com": {
+      "pages": 4,
+      "split": "test"
+    },
+    "zapier.com": {
+      "pages": 4,
+      "split": "train"
+    }
+  }
+}

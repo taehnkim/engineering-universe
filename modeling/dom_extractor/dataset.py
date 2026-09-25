@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+import torch
 
 from eng_universe.extraction.contract import FIELDS, Annotation, load_annotation
 from eng_universe.extraction.dom import DOM_CLEANUP_VERSION, ParsedPage, parse_html
@@ -147,6 +149,7 @@ def prepare_dataset(
     output_dir: Path,
     *,
     include_jev_drafts: bool = False,
+    preprocessing_checkpoint: Path | None = None,
 ) -> dict[str, int]:
     by_split = {
         split: list(
@@ -160,7 +163,26 @@ def prepare_dataset(
     }
     if not by_split["train"]:
         raise ValueError("no reviewed training annotations found")
-    vocabulary, semantic_vocabulary, normalizer = fit_preprocessing(by_split["train"])
+    if preprocessing_checkpoint is None:
+        vocabulary, semantic_vocabulary, normalizer = fit_preprocessing(
+            by_split["train"]
+        )
+    else:
+        checkpoint = torch.load(
+            preprocessing_checkpoint, map_location="cpu", weights_only=False
+        )
+        source = checkpoint["preprocessing"]
+        if (
+            source.get("dom_cleanup") != DOM_CLEANUP_VERSION
+            or source.get("feature_version") != FEATURE_VERSION
+            or source.get("fields") != [field.value for field in FIELDS]
+        ):
+            raise ValueError("source checkpoint preprocessing is incompatible")
+        vocabulary = TagVocabulary.from_dict(source["vocabulary"])
+        semantic_vocabulary = SemanticVocabulary.from_dict(
+            source["semantic_vocabulary"]
+        )
+        normalizer = FeatureNormalizer.from_dict(source["normalizer"])
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "preprocessing.json").write_text(
         json.dumps(
@@ -176,6 +198,11 @@ def prepare_dataset(
                 "vocabulary": vocabulary.to_dict(),
                 "semantic_vocabulary": semantic_vocabulary.to_dict(),
                 "normalizer": normalizer.to_dict(),
+                "preprocessing_source_sha256": (
+                    hashlib.sha256(preprocessing_checkpoint.read_bytes()).hexdigest()
+                    if preprocessing_checkpoint is not None
+                    else None
+                ),
             },
             indent=2,
             sort_keys=True,
