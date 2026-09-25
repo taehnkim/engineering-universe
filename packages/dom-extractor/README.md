@@ -1,155 +1,102 @@
 # `@eng-universe/dom-extractor`
 
-Extract article content and metadata from raw HTML with the current Engineering
-Universe DOM checkpoint. This is a standalone Node.js package: the HTML parser,
-cleanup, feature encoder, model scorer, author-boundary refiner, and weights are
-included. It makes no network call and requires neither Python nor Go at runtime.
+A standalone Node.js package that selects article body, title, date, and byline
+nodes from a full web page. It bundles HTML processing and the trained model.
+Consumers do not need Python, Go, a service, or runtime npm dependencies.
 
 ## Install
 
-Build and test from this repository:
+```bash
+npm install @eng-universe/dom-extractor
+```
+
+For this repository's unpublished build:
 
 ```bash
 cd packages/dom-extractor
 npm ci
 npm test
 npm pack
+# Then install eng-universe-dom-extractor-0.4.0.tgz in your application.
 ```
 
-To consume the package locally from another Node.js project:
+## Extract one page
 
-```bash
-npm install /path/to/eng-universe/packages/dom-extractor/eng-universe-dom-extractor-0.3.0.tgz
-```
-
-After publication:
-
-```bash
-npm install @eng-universe/dom-extractor
-```
-
-## Use
-
-```javascript
+```js
 import { readFile } from "node:fs/promises";
-import { extract } from "@eng-universe/dom-extractor";
+import { extract, modelVersion, ExtractError } from "@eng-universe/dom-extractor";
 
 const html = await readFile("article.html", "utf8");
-const result = await extract(html, { version: "1.0.0" });
+const result = await extract(html);
+console.log(modelVersion, result.fields.title.text, result.fields.body.text);
 
-console.log(result.fields.title?.value);
-console.log(result.fields.authors?.value); // undefined when no author is found
-console.log(result.fields.article?.value); // paragraphs retain newlines
-console.log(result.fields.article?.id); // one-based original DOM node ID
-console.log(result.fields.article?.confidence); // rounded to 4 decimal places
-console.log(result.sourceUrl); // canonical / og:url, or null
-
-// Request only the fields and formats you need. HTML is opt-in.
-const inspected = await extract(html, {
-  version: "1.0.0",
-  fields: ["title", "article"],
-  formats: ["text", "html"],
-  debug: true,
-  sourceUrl: "https://example.com/post", // optional explicit source URL
-});
-console.log(inspected.fields.article?.html);
-console.log(inspected.debug?.candidateCount);
+try {
+  await extract("");
+} catch (error) {
+  if (error instanceof ExtractError) console.error(error.code, error.message);
+}
 ```
 
-No other program is launched by `extract()`. The `npm test` suite installs the
-packed artifact into a temporary project and calls it with Python and Go absent
-from `PATH`.
+Pass full-page HTML as a decoded string, for example `response.text()` or
+`readFile(path, "utf8")`. The response always has `modelVersion` and four
+fields: `title`, `body`, `date`, and `byline`. Each field has
+`{ text, confidence }`. Text is `null` if missing, empty, or below the
+internal confidence threshold of **0.5**. Confidence is an uncalibrated score,
+rounded to four decimal places. You can apply a stricter filter yourself.
 
-The versioned result has `type`, `schemaVersion`, `modelVersion`, `sourceUrl`,
-and `fields`. Its four selectable fields are `article`, `title`, `authors`, and
-`date`. A selected field has a one-based `id`, a `value` string for text, a CSS
-`selector`, and `confidence` rounded to four decimal places. `date` also has
-`raw` when text is requested. Any missing field, including `authors`, is `null`.
-Only `formats: ["text", "html"]` adds the selected node's `html`. Only
-`debug: true` adds diagnostic metadata. See `schema.v1.json`.
+The package does **not** parse dates or author names. It returns their selected
+node text as displayed, including punctuation and relative dates such as
+`3 days ago`. Normal body whitespace is collapsed while `<pre>` and inline
+preformatted whitespace is preserved.
 
-For existing callers, plain `extract(html)` still returns the original flat
-response. Each field is `{ nodeId, html, text, confidence }` or `null`, with
-optional `debug`. Its contract remains in `schema.json`. Set
-`version: "1.0.0"` for the new response; passing `fields`, `formats`, or
-`sourceUrl` also selects it. Set `version: "legacy"` explicitly if needed.
+## Extract many pages
 
-`sourceUrl` comes from an absolute canonical or Open Graph URL in the input
-HTML. Raw HTML does not reliably include its page URL: pass `sourceUrl` if the
-fetcher knows it. An explicit URL takes precedence; otherwise the value is
-`null` when neither metadata tag is usable. The package never guesses a URL.
+```js
+import { extractMany } from "@eng-universe/dom-extractor";
 
-Article text retains paragraph boundaries. Recognized HTML tables and repeated
-CSS-grid comparison rows become labeled bullet lists in `text`; `html` keeps the
-selected markup unchanged. Ambiguous layouts keep their original text order.
-Confidence is a softmax
-share of the final node's base-model logit across candidates and the missing
-option. It is **not calibrated** to correctness; the author-boundary ranker can
-move the selected author node after base scoring.
-
-The versioned date `value` uses a selected `<time datetime="YYYY-MM-DD">`
-attribute when available. It also normalizes clear ISO or written month/day/year
-dates, such as `May 25, 2026`; other dates remain the displayed `raw` text.
-It is not a universal date parser. The separate `resolveRelativeDate()` utility
-can resolve a relative date when given a scrape timestamp. The legacy
-`summary` and `relative_date` labels remain in local annotation files for
-history, but they are not model outputs.
-
-To extract only one field:
-
-```javascript
-import { extractField } from "@eng-universe/dom-extractor";
-
-const article = await extractField(html, "article");
-console.log(article?.text);
-
-const versionedTitle = await extractField(html, "title", { version: "1.0.0" });
-console.log(versionedTitle?.value);
+const { modelVersion, results } = await extractMany(htmlStrings);
+for (const item of results) {
+  if (item.status === "ok") console.log(item.result.fields.title.text);
+  else console.error(item.error.code, item.error.message);
+}
 ```
 
-## Run the included sample
+Results preserve input order. One bad page does not fail the batch. The package
+processes internally in chunks of 100; for very large jobs, call
+`extractMany` in chunks of about 100 pages yourself to bound memory.
+`modelVersion` appears once, at the batch root. A non-article page is not
+an error; fields can be `null` or low-confidence.
 
-The repository includes a small HTML input and its captured output:
+Inputs must be strings. Empty/whitespace input, input over 10 MB, or HTML with
+no usable DOM returns `emptyInput`, `inputTooLarge`, or `parseError`.
+Unexpected scoring failures return `inferenceError`; other failures return
+`internalError`. `extract()` throws `ExtractError`; `extractMany()`
+reports errors per item. An unknown `include` option rejects the whole call.
 
-```bash
-node examples/run-sample.mjs
+## Inspect a selection
+
+```js
+const result = await extract(html, { include: ["html", "source", "debug"] });
+console.log(result.fields.title.html); // exact selected source substring
+console.log(result.fields.title.source.selector); // unique selector in input HTML
+console.log(result.debug.rejected); // text of below-threshold candidates
 ```
 
-See `examples/sample.html` for the input and `examples/sample-output.json` for
-the expected result.
+`include` accepts only `html`, `source`, and `debug` (default `[]`).
+`html` is added only to accepted fields. `source` is added when a candidate
+exists, including rejected candidates. `debug` adds rejected candidate text
+at result level. Each option adds only its own data.
 
-## Update the bundled model
+The base scorer considers every cleaned DOM candidate on a page; there is no
+page-wide candidate cap. The author-boundary refiner compares at most 192
+nodes near its initial author candidate. The raw input must be a full page.
+The model can be wrong, so verify fields where accuracy matters.
 
-Train the Python model first. Then export both compatible checkpoints from this
-directory:
+See `schema.json` and `examples/sample.html` for the result contract.
 
-```bash
-npm run export:model -- \
-  --checkpoint ../../eng_universe/extraction/checkpoints/best.pt \
-  --author-boundary ../../eng_universe/extraction/checkpoints/author_boundary.pt
-npm test
-```
+## Model build and package size
 
-The exporter checks that the author-boundary checkpoint matches the base model.
-It writes `src/model.generated.js` and `src/model.weights.bin`. `npm run build`
-bundles the JavaScript and copies the binary weights into `dist/`. Python is
-used only for training and this export step, never for consumer inference.
-
-## Size and parity
-
-This standalone package is **not under 100 KB installed**. Its npm tarball is
-about 138 KB and its unpacked size is about 345 KB. The minified JavaScript is
-about 287 KB (104 KB gzipped); weights are about 30 KB (28 KB gzipped). It has
-no runtime npm dependencies. The HTML parser
-and DOM behavior dominate the size. Packaging only the weights would be
-smaller, but could not accept raw HTML.
-
-The development-only full-corpus parity audit is
-`node scripts/audit_corpus.mjs DATASET_DIR PYTHON_REFERENCE_JSON`; those local
-HTML files and labels are not part of the npm package.
-
-A sub-100 KB standalone runtime would need a substantially smaller HTML parser
-or a different model/runtime design. Either can change node IDs, so it should
-be a separate experiment with a full-corpus parity gate. A thin client for a
-remote inference service could also be under 100 KB, but would no longer be
-standalone.
+Python is used only to train and export model weights. `npm run build`
+bundles the JavaScript runtime and includes `src/model.weights.bin`; no
+external model file is fetched. Run `npm pack --dry-run` to measure the
+current installed and compressed sizes. The HTML parser is the main size cost.

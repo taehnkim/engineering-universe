@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { extract, fields } from "../src/index.js";
+import { extract } from "../src/index.js";
 
 function random(seed) {
   let state = seed >>> 0;
@@ -23,14 +23,11 @@ test("malformed and noisy HTML keeps the four-field API well formed", async () =
       atoms[Math.floor(next() * atoms.length)]);
     const html = `<html><body><nav>Chrome</nav><article>${chunks.join("")}</article></body></html>`;
     const result = await extract(html);
-    assert.deepEqual(Object.keys(result), fields);
-    for (const field of fields) {
-      const selection = result[field];
-      if (selection) {
-        assert.deepEqual(Object.keys(selection), ["nodeId", "html", "text", "confidence"]);
-        assert.ok(selection.confidence >= 0 && selection.confidence <= 1);
-        assert.ok(Number.isFinite(selection.confidence));
-      }
+    assert.deepEqual(Object.keys(result), ["modelVersion", "fields"]);
+    for (const selection of Object.values(result.fields)) {
+      assert.deepEqual(Object.keys(selection), ["text", "confidence"]);
+      assert.ok(selection.confidence >= 0 && selection.confidence <= 1);
+      assert.ok(Number.isFinite(selection.confidence));
     }
   }
 });

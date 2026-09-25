@@ -1,100 +1,53 @@
-export type Field = "article" | "title" | "authors" | "date";
-export type OutputFormat = "text" | "html";
+export type Include = "html" | "source" | "debug";
 
-/** The original flat response. Kept for existing extract(html) callers. */
-export interface Selection {
-  nodeId: number;
-  html: string;
-  text: string;
-  /** Uncalibrated softmax share for the final node. */
-  confidence: number;
+export interface ExtractOptions {
+  include?: readonly Include[];
 }
 
-export interface VersionedSelection {
-  /** Original DOM node ID, presented as a one-based integer. */
-  id: number | null;
-  /** Extracted text. Present when the text format is requested. */
-  value?: string;
-  /** Original displayed date when a datetime attribute supplies an ISO value. */
-  raw?: string;
-  /** Selected-node HTML. Present only when the html format is requested. */
+export interface ExtractedField {
+  /** Plain text from the selected node, or null below the internal threshold. */
+  text: string | null;
+  /** Uncalibrated candidate score, rounded to four decimal places. */
+  confidence: number;
+  /** Exact substring from input HTML. Present only with include: ["html"] and non-null text. */
   html?: string;
-  /** CSS path in the parsed source document; null for a missing author. */
-  selector: string | null;
-  /** Uncalibrated softmax share rounded to four decimal places. */
-  confidence: number;
+  /** Unique selector into the input document. Present only with include: ["source"]. */
+  source?: { selector: string };
 }
 
-export interface VersionedAuthorSelection extends VersionedSelection {
-  /** The selected author's byline as a string. A missing author is null. */
-  value: string;
+export interface ExtractedFields {
+  title: ExtractedField;
+  body: ExtractedField;
+  date: ExtractedField;
+  byline: ExtractedField;
 }
 
-export interface DebugInfo {
-  candidateCount: number;
-  cleanupVersion: string;
-  featureVersion: string;
+export interface ExtractionResult {
   modelVersion: string;
-  checkpointSha256: string;
-  domBackend: string;
+  fields: ExtractedFields;
+  debug?: { rejected: Partial<Record<keyof ExtractedFields, { text: string }>> };
 }
 
-export type ExtractionResult = Record<Field, Selection | null>;
-export type DebugExtractionResult = ExtractionResult & { debug: DebugInfo };
+export interface BatchItemResult {
+  status: "ok";
+  result: Omit<ExtractionResult, "modelVersion">;
+}
 
-export interface VersionedExtractionResult {
-  type: "article";
-  schemaVersion: "1.0.0";
+export interface BatchItemError {
+  status: "error";
+  error: { code: string; message: string };
+}
+
+export interface BatchResult {
   modelVersion: string;
-  sourceUrl: string | null;
-  fields: Partial<{
-    article: VersionedSelection | null;
-    title: VersionedSelection | null;
-    authors: VersionedAuthorSelection | null;
-    date: VersionedSelection | null;
-  }>;
-  debug?: DebugInfo;
+  results: (BatchItemResult | BatchItemError)[];
 }
 
-export interface ExtractionOptions {
-  debug?: boolean;
-  version?: "legacy" | "1.0.0";
-  fields?: readonly Field[];
-  formats?: readonly OutputFormat[];
-  /** Explicit page URL. Overrides canonical and Open Graph URLs in the HTML. */
-  sourceUrl?: string | null;
+export class ExtractError extends Error {
+  readonly code: string;
+  constructor(code: string, message: string);
 }
 
-export const fields: readonly Field[];
-export const schemaVersion: "1.0.0";
-
-export function extract(
-  html: string,
-  options: ExtractionOptions & { version: "1.0.0" },
-): Promise<VersionedExtractionResult>;
-export function extract(
-  html: string,
-  options: ExtractionOptions & { formats: readonly OutputFormat[] },
-): Promise<VersionedExtractionResult>;
-export function extract(
-  html: string,
-  options: ExtractionOptions & { fields: readonly Field[] },
-): Promise<VersionedExtractionResult>;
-export function extract(
-  html: string,
-  options: ExtractionOptions & { sourceUrl: string | null },
-): Promise<VersionedExtractionResult>;
-export function extract(html: string, options: { debug: true; version?: "legacy" }): Promise<DebugExtractionResult>;
-export function extract(html: string, options?: { debug?: false; version?: "legacy" }): Promise<ExtractionResult>;
-export function extract(html: string, options: ExtractionOptions): Promise<ExtractionResult | DebugExtractionResult | VersionedExtractionResult>;
-
-export function extractField(
-  html: string, field: "authors", options: ExtractionOptions & { version: "1.0.0" },
-): Promise<VersionedAuthorSelection | null>;
-export function extractField(
-  html: string, field: Field, options: ExtractionOptions & { version: "1.0.0" },
-): Promise<VersionedSelection | null>;
-export function extractField(html: string, field: Field, options?: ExtractionOptions): Promise<Selection | VersionedSelection | null>;
-
-export function extractRelativePublicationDate(text?: string | null): string | null;
-export function resolveRelativeDate(relativeDate: string, scrapedAt: string | Date): string;
+export const modelVersion: string;
+export function extract(html: string, options?: ExtractOptions): Promise<ExtractionResult>;
+export function extractMany(htmls: string[], options?: ExtractOptions): Promise<BatchResult>;

@@ -22,35 +22,33 @@ test("an installed package extracts HTML with no Python or Go on PATH", () => {
     const installed = join(directory, "node_modules", "@eng-universe", "dom-extractor");
     assert.ok(readdirSync(join(installed, "dist")).includes("model.weights.bin"));
     const schema = JSON.parse(readFileSync(join(installed, "schema.json"), "utf8"));
-    assert.deepEqual(schema.required, ["article", "title", "authors", "date"]);
-    const versionedSchema = JSON.parse(readFileSync(join(installed, "schema.v1.json"), "utf8"));
-    assert.equal(versionedSchema.properties.schemaVersion.const, "1.0.0");
+    assert.deepEqual(schema.required, ["modelVersion", "fields"]);
     const metadata = JSON.parse(readFileSync(join(installed, "package.json"), "utf8"));
     assert.equal(Object.keys(metadata.dependencies ?? {}).length, 0);
 
     const consumer = join(directory, "consumer.mjs");
-    writeFileSync(consumer, `import { extract } from "@eng-universe/dom-extractor";
+    writeFileSync(consumer, `import { extract, extractMany, modelVersion } from "@eng-universe/dom-extractor";
 const html = '<html><body><h1>Standalone test</h1><article><p>Real article text.</p></article></body></html>';
 console.log(JSON.stringify({
   result: await extract(html),
-  withDebug: await extract(html, { debug: true }),
-  versioned: await extract(html, { version: "1.0.0", fields: ["title", "authors"] }),
+  inspected: await extract(html, { include: ["html", "source", "debug"] }),
+  batch: await extractMany([html, " "]),
+  modelVersion,
 }));\n`);
     const output = execFileSync(process.execPath, [consumer], {
       cwd: directory,
       env: { ...process.env, PATH: "" },
       encoding: "utf8",
     });
-    const { result, withDebug, versioned } = JSON.parse(output);
-    assert.equal(result.title?.text, "Standalone test");
-    assert.equal(result.article?.text, "Real article text.");
-    assert.deepEqual(Object.keys(result), ["article", "title", "authors", "date"]);
-    assert.equal(withDebug.debug.domBackend, "javascript");
-    assert.equal(versioned.schemaVersion, "1.0.0");
-    assert.deepEqual(Object.keys(versioned.fields), ["title", "authors"]);
-    assert.equal(versioned.fields.title.value, "Standalone test");
-    assert.equal(versioned.fields.title.html, undefined);
-    assert.equal(versioned.fields.authors, null);
+    const { result, inspected, batch, modelVersion } = JSON.parse(output);
+    assert.equal(result.modelVersion, modelVersion);
+    assert.equal(result.fields.title.text, "Standalone test");
+    assert.equal(result.fields.body.text, "Real article text.");
+    assert.deepEqual(Object.keys(result.fields), ["title", "body", "date", "byline"]);
+    assert.equal(inspected.fields.title.html, "<h1>Standalone test</h1>");
+    assert.equal(typeof inspected.fields.title.source.selector, "string");
+    assert.ok("rejected" in inspected.debug);
+    assert.equal(batch.results[1].error.code, "emptyInput");
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

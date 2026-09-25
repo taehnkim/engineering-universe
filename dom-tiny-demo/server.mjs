@@ -96,10 +96,10 @@ async function readUploadedHtml(request) {
   return Buffer.concat(chunks, size).toString("utf8");
 }
 
-async function runInference(html, debug = false, sourceUrl) {
+async function runInference(html, debug = false) {
   const started = performance.now();
   const payload = await extract(html, {
-    version: "1.0.0", debug, formats: ["text", "html"], sourceUrl,
+    include: debug ? ["html", "source", "debug"] : ["html", "source"],
   });
   return { inferenceMs: Number((performance.now() - started).toFixed(1)), payload };
 }
@@ -147,7 +147,7 @@ async function createApp() {
         const page = byId.get(input.pageId);
         if (!page) return json(response, 404, { error: "unknown page" });
         const html = await readFile(join(dataDir, page.htmlPath), "utf8");
-        json(response, 200, { pageId: page.id, ...await runInference(html, input.debug === true, page.url) });
+        json(response, 200, { pageId: page.id, ...await runInference(html, input.debug === true) });
         return;
       }
       if (request.method === "POST" && url.pathname === "/api/run-upload") {

@@ -1,4 +1,4 @@
-const FIELDS = ["article", "title", "authors", "date"];
+const FIELDS = ["title", "body", "date", "byline"];
 const pagesElement = document.querySelector("#pages");
 const runAllButton = document.querySelector("#run-all");
 const uploadButton = document.querySelector("#upload-button");
@@ -134,19 +134,18 @@ function showFormat(format) {
     return;
   }
   renderedFrame.srcdoc = "";
-  const value = openSelection?.[isText ? "value" : format];
+  const value = openSelection?.[isText ? "text" : format];
   fieldDialogOutput.textContent = value ?? "No content selected.";
   fieldDialogOutput.classList.toggle("html-source", format === "html");
   fieldDialogNote.textContent = isText
     ? "Full extracted text. Article paragraphs retain their line breaks."
-    : "Selected-node markup, shown as text. npm and Python can serialize the same node differently.";
+    : "Selected-node markup copied exactly from the uploaded HTML.";
 }
 
 function showField(pageId, field, result) {
   openSelection = result.payload.fields[field];
   fieldDialogTitle.textContent = `${pageId} · ${field}`;
   fieldDialogMeta.replaceChildren(
-    `Selected node ${openSelection?.id ?? "missing"} · `,
     element("span", confidenceClass(openSelection?.confidence), confidenceLabel(openSelection?.confidence)),
   );
   showFormat("text");
@@ -196,15 +195,10 @@ function renderResult(pageId, result) {
   }
   latency.textContent = `${result.inferenceMs.toFixed(1)} ms`;
   latency.hidden = false;
-  if (result.payload.debug) {
-    const summary = element("div", "result-summary");
-    summary.append(infoTerm(`${result.payload.debug.candidateCount} candidates`,
-      "HTML elements the model considered for this page."));
-    summary.append(" · ");
-    summary.append(infoTerm(result.payload.debug.modelVersion,
-      "The trained model and author-refinement version used for this run."));
-    output.append(summary);
-  }
+  const summary = element("div", "result-summary");
+  summary.append(infoTerm(result.payload.modelVersion,
+    "Version of the model used for this run."));
+  output.append(summary);
   const grid = element("div", "fields");
   for (const field of FIELDS) {
     const selection = result.payload.fields[field];
@@ -213,8 +207,7 @@ function renderResult(pageId, result) {
     top.append(element("span", "", field));
     top.append(element("span", confidenceClass(selection?.confidence), confidenceLabel(selection?.confidence)));
     card.append(top);
-    card.append(element("div", "nodes", `node ${selection?.id ?? "missing"}`));
-    const preview = snippet(selection?.value);
+    const preview = snippet(selection?.text);
     card.append(element("p", `snippet${preview ? "" : " muted"}`,
       preview || "No content selected"));
     card.classList.add("openable");

@@ -32,27 +32,22 @@ file at the top and run it immediately. Uploads are limited to 10 MB and stay
 in the browser until the page is closed. Use a page's **Run** button or **Run all**
 to repeat inference.
 The progress panel reports median and average inference latency per page. Each
-field card shows the selected node, a snippet, and the model's confidence score.
+field card shows a snippet and the model's confidence score.
 Click a card to inspect its full extracted **Text**, selected-node **HTML**,
 or **Rendered HTML** in a sandboxed frame. The rendered preview blocks scripts
 and external resources, and does not load the source site's styles.
-Article text preserves paragraph breaks. Confidence is an uncalibrated model
-score, not a measured probability of correctness. The HTML tab shows escaped
-markup from the npm runtime; it may differ byte-for-byte from Python's
-serialization even if both select the same node. **Payload** opens the complete
+Body text preserves paragraph breaks. Confidence is an uncalibrated model
+score, not a measured probability of correctness. The HTML tab shows the exact
+selected substring of the input HTML. **Payload** opens the complete
 JSON object returned by the installed package, with JSON syntax highlighting.
 **Raw HTML** opens the input as plain text, and **Source** opens the original
-URL for a saved sample. When debug is enabled, hover or focus the candidate
-count and model version to see what they mean. The app never changes the
+URL for a saved sample. Hover or focus the model version to see what it means.
+The app never changes the
 annotation files.
 
-The demo requests the versioned response with selected-node HTML so the popup
-can show both text and markup. The package omits HTML by default; this app
-opts in with `formats: ["text", "html"]`. It also passes each saved sample's
-source URL to the package. An uploaded page can get its source URL from a
-canonical or Open Graph tag; otherwise that value is `null`. Select **Include
-debug** before a run to add the optional `debug` field and show candidate
-count and model version.
+The package omits HTML by default; this app opts in with
+`include: ["html", "source"]` so the popup can show markup. Select **Include
+debug** before a run to add rejected candidate text to the payload.
 
 `PORT` can override port 8770. The sample list in `server.mjs` is intentionally
 fixed to ten reviewed pages. This directory is a throwaway consumer test, not

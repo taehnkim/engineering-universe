@@ -1,156 +1,155 @@
+import { parseDocument } from "htmlparser2";
+import { selectAll } from "css-select";
 import model from "./model.generated.js";
-import { cssSelector, DOM_CLEANUP_VERSION, parsePage, readableText, selectedContent } from "./dom.js";
+import { cssSelector, parsePage, readableText } from "./dom.js";
 import { predict } from "./scoring.js";
 
-export const fields = Object.freeze([...model.fields]);
-export const schemaVersion = "1.0.0";
+export const modelVersion = "article-0.1.0";
+const THRESHOLD = 0.5;
+const MAX_INPUT_BYTES = 10 * 1024 * 1024;
+const BATCH_SIZE = 100;
+const FIELD_MAP = Object.freeze({ title: "title", body: "article", date: "date", byline: "authors" });
+const INCLUDES = new Set(["html", "source", "debug"]);
 
-function requestedVersion(options) {
-  const version = options.version ?? (
-    options.fields !== undefined || options.formats !== undefined || options.sourceUrl !== undefined
-      ? schemaVersion : "legacy"
-  );
-  if (version !== "legacy" && version !== schemaVersion) {
-    throw new TypeError(`unsupported output version: ${version}`);
+export class ExtractError extends Error {
+  constructor(code, message) {
+    super(message);
+    this.name = "ExtractError";
+    this.code = code;
   }
-  return version;
 }
 
-function requestedFields(options) {
-  if (options.fields === undefined) return fields;
-  if (!Array.isArray(options.fields) || options.fields.some((field) => !fields.includes(field))) {
-    throw new TypeError(`fields must be an array of: ${fields.join(", ")}`);
+function requestedIncludes(options) {
+  if (options === null || typeof options !== "object" || Array.isArray(options)) {
+    throw new TypeError("options must be an object");
   }
-  return [...new Set(options.fields)];
+  if (Object.keys(options).some((key) => key !== "include")) {
+    throw new TypeError("the only supported option is include");
+  }
+  const values = options.include ?? [];
+  if (!Array.isArray(values) || values.some((value) => !INCLUDES.has(value))) {
+    throw new TypeError('include must contain only "html", "source", and "debug"');
+  }
+  return new Set(values);
 }
 
-function requestedFormats(options) {
-  if (options.formats === undefined) return ["text"];
-  if (!Array.isArray(options.formats) || options.formats.some((format) =>
-    format !== "text" && format !== "html")) {
-    throw new TypeError('formats must contain only "text" and "html"');
+function validateHtml(html) {
+  if (typeof html !== "string") throw new ExtractError("invalidInput", "html must be a string");
+  if (!html.trim()) throw new ExtractError("emptyInput", "html is empty");
+  if (Buffer.byteLength(html, "utf8") > MAX_INPUT_BYTES) {
+    throw new ExtractError("inputTooLarge", "html exceeds the 10 MB limit");
   }
-  return [...new Set(options.formats)];
 }
 
-function roundedConfidence(value) {
-  return Math.round(value * 10_000) / 10_000;
+function rounded(value) {
+  return Number.isFinite(value) ? Math.round(Math.max(0, Math.min(1, value)) * 10_000) / 10_000 : 0;
 }
 
-const MONTHS = new Map([
-  "january", "february", "march", "april", "may", "june",
-  "july", "august", "september", "october", "november", "december",
-].map((name, index) => [name, index + 1]));
-
-function isoDate(year, month, day) {
-  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
-  if (date.getUTCFullYear() !== Number(year) ||
-      date.getUTCMonth() + 1 !== Number(month) ||
-      date.getUTCDate() !== Number(day)) return null;
-  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+function probability(scores, fieldIndex, candidateIndex) {
+  if (candidateIndex < 0) return 0;
+  // Presence is a binary choice between the best real node and "missing".
+  // A softmax over every DOM node would make the score depend on page length.
+  const difference = scores[candidateIndex][fieldIndex] - model.weights.missingScores[fieldIndex];
+  return 1 / (1 + Math.exp(-difference));
 }
 
-function normalizedDate(candidate, raw) {
-  const element = candidate.element;
-  const time = element.localName === "time" ? element : element.querySelector("time[datetime]");
-  const datetime = time?.getAttribute("datetime") ?? "";
-  const structured = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/.exec(datetime);
-  if (structured) {
-    const iso = isoDate(structured[1], structured[2], structured[3]);
-    if (iso) return iso;
-  }
-  const numeric = /\b(\d{4})-(\d{1,2})-(\d{1,2})\b/.exec(raw);
-  if (numeric) {
-    const iso = isoDate(numeric[1], numeric[2], numeric[3]);
-    if (iso) return iso;
-  }
-  const written = /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})(?:st|nd|rd|th)?[,]?[\s]+(\d{4})\b/i.exec(raw);
-  if (written) {
-    const iso = isoDate(written[3], MONTHS.get(written[1].toLowerCase()), written[2]);
-    if (iso) return iso;
-  }
-  return raw;
+function sourceNode(sourceDocument, selector) {
+  const matches = selectAll(selector, sourceDocument);
+  if (matches.length !== 1) throw new Error(`source selector did not uniquely match: ${selector}`);
+  return matches[0];
 }
 
-function resolvedSourceUrl(value, page) {
-  if (value === undefined) return page.sourceUrl;
-  if (value === null) return null;
-  if (typeof value !== "string") throw new TypeError("sourceUrl must be an absolute HTTP URL");
+function asExtractError(error, fallbackCode) {
+  if (error instanceof ExtractError) return error;
+  return new ExtractError(fallbackCode,
+    `${fallbackCode === "internalError" ? "Unexpected error" : "Model error"}: ${error?.message ?? String(error)}`);
+}
+
+function extractFields(html, includes) {
+  validateHtml(html);
+  let page;
   try {
-    const url = new URL(value);
-    if (url.protocol === "http:" || url.protocol === "https:") return url.href;
-  } catch {
-    // The caller must supply the URL's origin.
+    page = parsePage(html);
+  } catch (error) {
+    throw new ExtractError("parseError", `Could not parse HTML: ${error.message}`);
   }
-  throw new TypeError("sourceUrl must be an absolute HTTP URL");
-}
-
-function selectedConfidence(field, id, page, scores) {
-  const fieldIndex = fields.indexOf(field);
-  const logits = scores.map((row) => row[fieldIndex]);
-  logits.push(model.weights.missingScores[fieldIndex]);
-  const selectedIndex = id === null ? page.candidates.length
-    : page.candidates.findIndex((candidate) => candidate.nodeId === id);
-  const maximum = logits.reduce((best, value) => Math.max(best, value), -Infinity);
-  const weights = logits.map((value) => Math.exp(value - maximum));
-  return weights[selectedIndex] / weights.reduce((sum, value) => sum + value, 0);
-}
-
-/** Extract all fields with the bundled JavaScript DOM pipeline and checkpoint pair. */
-export async function extract(html, options = {}) {
-  if (typeof html !== "string") throw new TypeError("html must be a string");
-  const version = requestedVersion(options);
-  const includedFields = requestedFields(options);
-  const formats = version === "legacy" ? ["text", "html"] : requestedFormats(options);
-  const page = await parsePage(html);
-  const { predictions, scores } = predict(page, model);
-  const byId = new Map(page.candidates.map((candidate) => [candidate.nodeId, candidate]));
-  const selections = Object.fromEntries(includedFields.map((field) => {
-    const id = predictions[field];
-    if (id === null) return [field, null];
-    const confidence = selectedConfidence(field, id, page, scores);
-    if (version === "legacy") {
-      return [field, {
-        ...selectedContent(byId.get(id)), confidence,
-      }];
-    }
-    const candidate = byId.get(id);
-    const selection = { id: id + 1 };
-    if (formats.includes("text") || field === "authors") {
-      const raw = readableText(candidate.element);
-      selection.value = field === "date" ? normalizedDate(candidate, raw) : raw;
-      if (field === "date") selection.raw = raw;
-    }
-    if (formats.includes("html")) selection.html = candidate.element.outerHTML;
-    selection.selector = cssSelector(candidate.element, page);
-    selection.confidence = roundedConfidence(confidence);
-    return [field, selection];
-  }));
-  const result = version === "legacy" ? selections : {
-    type: "article",
-    schemaVersion,
-    modelVersion: model.modelVersion,
-    sourceUrl: resolvedSourceUrl(options.sourceUrl, page),
-    fields: selections,
-  };
-  if (options.debug === true) {
-    result.debug = {
-      candidateCount: page.candidates.length,
-      cleanupVersion: DOM_CLEANUP_VERSION,
-      featureVersion: model.featureVersion,
-      modelVersion: model.modelVersion,
-      checkpointSha256: model.checkpointSha256,
-      domBackend: "javascript",
-    };
+  if (!page.document.documentElement || page.candidates.length === 0) {
+    throw new ExtractError("parseError", "HTML has no usable DOM elements");
   }
+  let prediction;
+  try {
+    prediction = predict(page, model);
+  } catch (error) {
+    throw new ExtractError("inferenceError", `Model scoring failed: ${error.message}`);
+  }
+
+  const sourceDocument = includes.has("html") ? parseDocument(html, {
+    withStartIndices: true, withEndIndices: true,
+  }) : null;
+  const indexById = new Map(page.candidates.map((candidate, index) => [candidate.nodeId, index]));
+  const fields = {};
+  const rejected = {};
+  for (const [publicField, modelField] of Object.entries(FIELD_MAP)) {
+    const fieldIndex = model.fields.indexOf(modelField);
+    let bestIndex = -1;
+    for (let index = 0; index < page.candidates.length; index += 1) {
+      if (bestIndex < 0 || prediction.scores[index][fieldIndex] > prediction.scores[bestIndex][fieldIndex]) {
+        bestIndex = index;
+      }
+    }
+    const selectedIndex = indexById.get(prediction.predictions[modelField]) ?? -1;
+    const candidateIndex = selectedIndex >= 0 ? selectedIndex : bestIndex;
+    // The author refiner can move from the base model's coarse byline wrapper
+    // to a child. Its presence confidence comes from the best coarse candidate,
+    // not the child's (often tiny) base-model softmax share.
+    const confidence = rounded(probability(prediction.scores, fieldIndex, bestIndex));
+    const candidate = candidateIndex < 0 ? null : page.candidates[candidateIndex];
+    const rawText = candidate ? readableText(candidate.element) : "";
+    const accepted = selectedIndex >= 0 && confidence >= THRESHOLD && rawText !== "";
+    const field = { text: accepted ? rawText : null, confidence };
+    if (includes.has("source") && candidate) {
+      field.source = { selector: cssSelector(candidate.element, page) };
+    }
+    if (includes.has("html") && accepted) {
+      const selector = cssSelector(candidate.element, page);
+      const source = sourceNode(sourceDocument, selector);
+      if (source.startIndex == null || source.endIndex == null) {
+        throw new Error(`source span unavailable: ${selector}`);
+      }
+      field.html = html.slice(source.startIndex, source.endIndex + 1);
+    }
+    if (includes.has("debug") && !accepted && candidate) rejected[publicField] = { text: rawText };
+    fields[publicField] = field;
+  }
+  const result = { fields };
+  if (includes.has("debug")) result.debug = { rejected };
   return result;
 }
 
-export async function extractField(html, field, options = {}) {
-  if (!fields.includes(field)) throw new TypeError(`unknown field: ${field}`);
-  const version = requestedVersion(options);
-  const result = await extract(html, { ...options, version, fields: [field] });
-  return version === "legacy" ? result[field] : result.fields[field];
+/** Extract article fields from one full page of decoded HTML. */
+export async function extract(html, options = {}) {
+  const includes = requestedIncludes(options);
+  try {
+    return { modelVersion, ...extractFields(html, includes) };
+  } catch (error) {
+    throw asExtractError(error, "internalError");
+  }
 }
 
-export { extractRelativePublicationDate, resolveRelativeDate } from "./postprocess.js";
+/** Extract pages in input order; an invalid page does not stop the batch. */
+export async function extractMany(htmls, options = {}) {
+  const includes = requestedIncludes(options);
+  if (!Array.isArray(htmls)) throw new ExtractError("invalidInput", "htmls must be an array of strings");
+  const results = [];
+  for (let start = 0; start < htmls.length; start += BATCH_SIZE) {
+    for (const html of htmls.slice(start, start + BATCH_SIZE)) {
+      try {
+        results.push({ status: "ok", result: extractFields(html, includes) });
+      } catch (error) {
+        const typed = asExtractError(error, "internalError");
+        results.push({ status: "error", error: { code: typed.code, message: typed.message } });
+      }
+    }
+  }
+  return { modelVersion, results };
+}
