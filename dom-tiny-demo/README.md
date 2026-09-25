@@ -5,16 +5,21 @@ the package's source files. It uses a plain HTML/CSS/JavaScript page and a Node
 HTTP server. The browser requests inference from the server because the package
 is a Node runtime, not a browser bundle.
 
-From the repository root, create the tarball and install it into this isolated
-consumer project:
+From the demo directory, build and install the current optimized package into
+this isolated consumer project:
 
 ```bash
-cd packages/dom-extractor
-npm ci
-npm pack
-cd ../../dom-tiny-demo
-npm install --offline
+cd dom-tiny-demo
+npm run refresh-model
+npm start
 ```
+
+The refresh command builds the package, creates its local npm tarball, updates
+the demo lockfile's tarball checksum, installs it, and checks that the installed
+JavaScript matches the new build. Run it again after changing the extractor.
+Restart an already-running demo server afterward: Node keeps its imported
+package in memory until the process exits. The demo uses the faster JavaScript
+runtime from this branch; the neural model weights are unchanged.
 
 To include the ten sample pages, point the app at a
 `data/learned_extraction/raw` directory containing `manifest.json`, `html/`,

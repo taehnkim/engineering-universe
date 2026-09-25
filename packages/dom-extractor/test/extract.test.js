@@ -102,14 +102,14 @@ test("confidence just above or below the internal threshold accepts or rejects",
 });
 
 test("model failures use inferenceError and unexpected failures use internalError", async () => {
-  const saved = model.weights.linear0.weight;
+  const saved = model.weights.tagEmbedding;
   try {
-    model.weights.linear0.weight = null;
+    model.weights.tagEmbedding = null;
     await assert.rejects(extract(HTML), (error) => error.code === "inferenceError");
     const batch = await extractMany([HTML, HTML]);
     assert.deepEqual(batch.results.map((row) => row.error.code), ["inferenceError", "inferenceError"]);
   } finally {
-    model.weights.linear0.weight = saved;
+    model.weights.tagEmbedding = saved;
   }
   const originalExp = Math.exp;
   try {
