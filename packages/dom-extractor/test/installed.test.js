@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -8,14 +8,17 @@ import test from "node:test";
 test("an installed package extracts HTML with no Python or Go on PATH", () => {
   const directory = mkdtempSync(join(tmpdir(), "dom-extractor-install-"));
   try {
+    const npmEnv = { ...process.env, npm_config_cache: join(directory, "npm-cache") };
     const packageRoot = new URL("../", import.meta.url).pathname;
     const archive = execFileSync("npm", ["pack", "--ignore-scripts", "--pack-destination", directory], {
       cwd: packageRoot,
+      env: npmEnv,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
     }).trim().split("\n").at(-1);
     execFileSync("npm", ["install", "--offline", "--ignore-scripts", "--omit=dev",
       "--no-audit", "--no-fund", "--prefix", directory, join(directory, archive)], {
+      env: npmEnv,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -25,6 +28,25 @@ test("an installed package extracts HTML with no Python or Go on PATH", () => {
     assert.deepEqual(schema.required, ["modelVersion", "fields"]);
     const metadata = JSON.parse(readFileSync(join(installed, "package.json"), "utf8"));
     assert.equal(Object.keys(metadata.dependencies ?? {}).length, 0);
+
+    const weights = join(installed, "dist", "model.weights.bin");
+    const hiddenWeights = `${weights}.hidden`;
+    const importOnly = join(directory, "import-only.mjs");
+    writeFileSync(importOnly, `import { extract, modelVersion } from "@eng-universe/dom-extractor";
+try {
+  await extract(" ");
+} catch (error) {
+  if (error.code !== "emptyInput") throw error;
+}
+console.log(modelVersion);\n`);
+    renameSync(weights, hiddenWeights);
+    try {
+      assert.equal(execFileSync(process.execPath, [importOnly], {
+        cwd: directory, encoding: "utf8",
+      }).trim(), "article-0.1.0");
+    } finally {
+      renameSync(hiddenWeights, weights);
+    }
 
     const consumer = join(directory, "consumer.mjs");
     writeFileSync(consumer, `import { extract, extractMany, modelVersion } from "@eng-universe/dom-extractor";

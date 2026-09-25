@@ -1,4 +1,6 @@
 export type Include = "html" | "source" | "debug";
+export type ExtractErrorCode = "invalidInput" | "emptyInput" | "inputTooLarge" |
+  "parseError" | "inferenceError" | "internalError";
 
 export interface ExtractOptions {
   include?: readonly Include[];
@@ -35,7 +37,7 @@ export interface BatchItemResult {
 
 export interface BatchItemError {
   status: "error";
-  error: { code: string; message: string };
+  error: { code: ExtractErrorCode; message: string };
 }
 
 export interface BatchResult {
@@ -44,8 +46,8 @@ export interface BatchResult {
 }
 
 export class ExtractError extends Error {
-  readonly code: string;
-  constructor(code: string, message: string);
+  readonly code: ExtractErrorCode;
+  constructor(code: ExtractErrorCode, message: string);
 }
 
 export const modelVersion: string;

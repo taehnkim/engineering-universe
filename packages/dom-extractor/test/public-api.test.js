@@ -31,3 +31,11 @@ test("invalid input raises typed errors", async () => {
   await assert.rejects(extract(Buffer.from(HTML)), (error) =>
     error instanceof ExtractError && error.code === "invalidInput");
 });
+
+test("a valid non-article page is not a batch error", async () => {
+  const page = "<!doctype html><html><body><main><h1>Careers</h1><p>Open roles</p></main></body></html>";
+  const { results } = await extractMany([page, HTML]);
+  assert.equal(results[0].status, "ok");
+  assert.equal(results[1].status, "ok");
+  assert.deepEqual(Object.keys(results[0].result.fields), ["title", "body", "date", "byline"]);
+});

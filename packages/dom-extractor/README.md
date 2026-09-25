@@ -3,6 +3,8 @@
 A standalone Node.js package that selects article body, title, date, and byline
 nodes from a full web page. It bundles HTML processing and the trained model.
 Consumers do not need Python, Go, a service, or runtime npm dependencies.
+Importing the package does not load the model weights. The first valid
+extraction loads them once; later calls reuse the loaded model.
 
 ## Install
 

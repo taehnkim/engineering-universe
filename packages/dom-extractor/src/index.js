@@ -1,6 +1,5 @@
 import { parseDocument } from "htmlparser2";
 import { selectAll } from "css-select";
-import model from "./model.generated.js";
 import { cssSelector, parsePage, readableText } from "./dom.js";
 import { predict } from "./scoring.js";
 
@@ -10,6 +9,14 @@ const MAX_INPUT_BYTES = 10 * 1024 * 1024;
 const BATCH_SIZE = 100;
 const FIELD_MAP = Object.freeze({ title: "title", body: "article", date: "date", byline: "authors" });
 const INCLUDES = new Set(["html", "source", "debug"]);
+let modelPromise;
+
+function loadModel() {
+  // Importing the package only loads the API. The weights are read once, on
+  // the first valid extraction, and the same promise is reused by every call.
+  modelPromise ??= import("./model.generated.js").then(({ default: model }) => model);
+  return modelPromise;
+}
 
 export class ExtractError extends Error {
   constructor(code, message) {
@@ -45,7 +52,7 @@ function rounded(value) {
   return Number.isFinite(value) ? Math.round(Math.max(0, Math.min(1, value)) * 10_000) / 10_000 : 0;
 }
 
-function probability(scores, fieldIndex, candidateIndex) {
+function probability(scores, fieldIndex, candidateIndex, model) {
   if (candidateIndex < 0) return 0;
   // Presence is a binary choice between the best real node and "missing".
   // A softmax over every DOM node would make the score depend on page length.
@@ -65,7 +72,7 @@ function asExtractError(error, fallbackCode) {
     `${fallbackCode === "internalError" ? "Unexpected error" : "Model error"}: ${error?.message ?? String(error)}`);
 }
 
-function extractFields(html, includes) {
+async function extractFields(html, includes) {
   validateHtml(html);
   let page;
   try {
@@ -75,6 +82,12 @@ function extractFields(html, includes) {
   }
   if (!page.document.documentElement || page.candidates.length === 0) {
     throw new ExtractError("parseError", "HTML has no usable DOM elements");
+  }
+  let model;
+  try {
+    model = await loadModel();
+  } catch (error) {
+    throw new ExtractError("inferenceError", `Model loading failed: ${error.message}`);
   }
   let prediction;
   try {
@@ -102,7 +115,7 @@ function extractFields(html, includes) {
     // The author refiner can move from the base model's coarse byline wrapper
     // to a child. Its presence confidence comes from the best coarse candidate,
     // not the child's (often tiny) base-model softmax share.
-    const confidence = rounded(probability(prediction.scores, fieldIndex, bestIndex));
+    const confidence = rounded(probability(prediction.scores, fieldIndex, bestIndex, model));
     const candidate = candidateIndex < 0 ? null : page.candidates[candidateIndex];
     const rawText = candidate ? readableText(candidate.element) : "";
     const accepted = selectedIndex >= 0 && confidence >= THRESHOLD && rawText !== "";
@@ -130,7 +143,7 @@ function extractFields(html, includes) {
 export async function extract(html, options = {}) {
   const includes = requestedIncludes(options);
   try {
-    return { modelVersion, ...extractFields(html, includes) };
+    return { modelVersion, ...await extractFields(html, includes) };
   } catch (error) {
     throw asExtractError(error, "internalError");
   }
@@ -144,7 +157,7 @@ export async function extractMany(htmls, options = {}) {
   for (let start = 0; start < htmls.length; start += BATCH_SIZE) {
     for (const html of htmls.slice(start, start + BATCH_SIZE)) {
       try {
-        results.push({ status: "ok", result: extractFields(html, includes) });
+        results.push({ status: "ok", result: await extractFields(html, includes) });
       } catch (error) {
         const typed = asExtractError(error, "internalError");
         results.push({ status: "error", error: { code: typed.code, message: typed.message } });
