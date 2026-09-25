@@ -23,23 +23,34 @@ test("an installed package extracts HTML with no Python or Go on PATH", () => {
     assert.ok(readdirSync(join(installed, "dist")).includes("model.weights.bin"));
     const schema = JSON.parse(readFileSync(join(installed, "schema.json"), "utf8"));
     assert.deepEqual(schema.required, ["article", "title", "authors", "date"]);
+    const versionedSchema = JSON.parse(readFileSync(join(installed, "schema.v1.json"), "utf8"));
+    assert.equal(versionedSchema.properties.schemaVersion.const, "1.0.0");
     const metadata = JSON.parse(readFileSync(join(installed, "package.json"), "utf8"));
     assert.equal(Object.keys(metadata.dependencies ?? {}).length, 0);
 
     const consumer = join(directory, "consumer.mjs");
     writeFileSync(consumer, `import { extract } from "@eng-universe/dom-extractor";
 const html = '<html><body><h1>Standalone test</h1><article><p>Real article text.</p></article></body></html>';
-console.log(JSON.stringify({ result: await extract(html), withDebug: await extract(html, { debug: true }) }));\n`);
+console.log(JSON.stringify({
+  result: await extract(html),
+  withDebug: await extract(html, { debug: true }),
+  versioned: await extract(html, { version: "1.0.0", fields: ["title", "authors"] }),
+}));\n`);
     const output = execFileSync(process.execPath, [consumer], {
       cwd: directory,
       env: { ...process.env, PATH: "" },
       encoding: "utf8",
     });
-    const { result, withDebug } = JSON.parse(output);
+    const { result, withDebug, versioned } = JSON.parse(output);
     assert.equal(result.title?.text, "Standalone test");
     assert.equal(result.article?.text, "Real article text.");
     assert.deepEqual(Object.keys(result), ["article", "title", "authors", "date"]);
     assert.equal(withDebug.debug.domBackend, "javascript");
+    assert.equal(versioned.schemaVersion, "1.0.0");
+    assert.deepEqual(Object.keys(versioned.fields), ["title", "authors"]);
+    assert.equal(versioned.fields.title.value, "Standalone test");
+    assert.equal(versioned.fields.title.html, undefined);
+    assert.equal(versioned.fields.authors, null);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

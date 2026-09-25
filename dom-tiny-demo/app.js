@@ -58,7 +58,7 @@ function updateTotals() {
 }
 
 function confidenceLabel(value) {
-  return value == null ? "confidence unavailable" : `${(value * 100).toFixed(1)}% confidence`;
+  return value == null ? "confidence unavailable" : `${value.toFixed(4)} confidence`;
 }
 
 function confidenceClass(value) {
@@ -134,7 +134,7 @@ function showFormat(format) {
     return;
   }
   renderedFrame.srcdoc = "";
-  const value = openSelection?.[format];
+  const value = openSelection?.[isText ? "value" : format];
   fieldDialogOutput.textContent = value ?? "No content selected.";
   fieldDialogOutput.classList.toggle("html-source", format === "html");
   fieldDialogNote.textContent = isText
@@ -143,10 +143,10 @@ function showFormat(format) {
 }
 
 function showField(pageId, field, result) {
-  openSelection = result.payload[field];
+  openSelection = result.payload.fields[field];
   fieldDialogTitle.textContent = `${pageId} · ${field}`;
   fieldDialogMeta.replaceChildren(
-    `Selected node ${openSelection?.nodeId ?? "missing"} · `,
+    `Selected node ${openSelection?.id ?? "missing"} · `,
     element("span", confidenceClass(openSelection?.confidence), confidenceLabel(openSelection?.confidence)),
   );
   showFormat("text");
@@ -207,14 +207,14 @@ function renderResult(pageId, result) {
   }
   const grid = element("div", "fields");
   for (const field of FIELDS) {
-    const selection = result.payload[field];
+    const selection = result.payload.fields[field];
     const card = element("div", "field");
     const top = element("div", "field-top");
     top.append(element("span", "", field));
     top.append(element("span", confidenceClass(selection?.confidence), confidenceLabel(selection?.confidence)));
     card.append(top);
-    card.append(element("div", "nodes", `node ${selection?.nodeId ?? "missing"}`));
-    const preview = snippet(selection?.text);
+    card.append(element("div", "nodes", `node ${selection?.id ?? "missing"}`));
+    const preview = snippet(selection?.value);
     card.append(element("p", `snippet${preview ? "" : " muted"}`,
       preview || "No content selected"));
     card.classList.add("openable");

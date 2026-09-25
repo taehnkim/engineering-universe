@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DOM extractor response v1",
+  "type": "object",
+  "properties": {
+    "type": { "const": "article" },
+    "schemaVersion": { "const": "1.0.0" },
+    "modelVersion": { "type": "string" },
+    "sourceUrl": { "type": ["string", "null"], "format": "uri" },
+    "fields": {
+      "type": "object",
+      "properties": {
+        "article": { "$ref": "#/$defs/selectionOrNull" },
+        "title": { "$ref": "#/$defs/selectionOrNull" },
+        "authors": { "$ref": "#/$defs/authorSelection" },
+        "date": { "$ref": "#/$defs/selectionOrNull" }
+      },
+      "additionalProperties": false
+    },
+    "debug": {
+      "type": "object",
+      "properties": {
+        "candidateCount": { "type": "integer" },
+        "cleanupVersion": { "type": "string" },
+        "featureVersion": { "type": "string" },
+        "modelVersion": { "type": "string" },
+        "checkpointSha256": { "type": "string" },
+        "domBackend": { "type": "string" }
+      },
+      "required": ["candidateCount", "cleanupVersion", "featureVersion", "modelVersion", "checkpointSha256", "domBackend"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["type", "schemaVersion", "modelVersion", "sourceUrl", "fields"],
+  "additionalProperties": false,
+  "$defs": {
+    "selectionOrNull": {
+      "anyOf": [{ "$ref": "#/$defs/selection" }, { "type": "null" }]
+    },
+    "selection": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer", "minimum": 1 },
+        "value": { "type": "string" },
+        "raw": { "type": "string" },
+        "html": { "type": "string" },
+        "selector": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": ["id", "selector", "confidence"],
+      "additionalProperties": false
+    },
+    "authorSelection": {
+      "anyOf": [
+        { "$ref": "#/$defs/presentAuthor" },
+        { "type": "null" }
+      ]
+    },
+    "presentAuthor": {
+      "allOf": [
+        { "$ref": "#/$defs/selection" },
+        { "required": ["id", "value", "selector", "confidence"] }
+      ]
+    }
+  }
+}

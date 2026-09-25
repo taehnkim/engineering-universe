@@ -78,16 +78,19 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
     });
     assert.equal(response.status, 200);
     const result = await response.json();
-    assert.deepEqual(result.payload, await extract(html));
+    assert.deepEqual(result.payload, await extract(html, {
+      version: "1.0.0", formats: ["text", "html"], sourceUrl: "https://example.test/article",
+    }));
     assert.equal(result.comparisons, undefined);
-    assert.deepEqual(Object.keys(result.payload), ["article", "title", "authors", "date"]);
-    assert.equal(typeof result.payload.title.nodeId, "number");
-    assert.equal(result.payload.article.text, "Fixture article.\n\nSecond paragraph.");
-    assert.match(result.payload.article.html, /<p>Fixture article\.<\/p>/);
-    assert.equal(typeof result.payload.article.confidence, "number");
-    assert.ok(result.payload.article.confidence >= 0 && result.payload.article.confidence <= 1);
-    assert.equal(result.payload.title.text, "Fixture title");
-    assert.equal(result.payload.authors, null);
+    assert.deepEqual(Object.keys(result.payload), ["type", "schemaVersion", "modelVersion", "sourceUrl", "fields"]);
+    assert.equal(result.payload.sourceUrl, "https://example.test/article");
+    assert.equal(typeof result.payload.fields.title.id, "number");
+    assert.equal(result.payload.fields.article.value, "Fixture article.\n\nSecond paragraph.");
+    assert.match(result.payload.fields.article.html, /<p>Fixture article\.<\/p>/);
+    assert.equal(typeof result.payload.fields.article.confidence, "number");
+    assert.ok(result.payload.fields.article.confidence >= 0 && result.payload.fields.article.confidence <= 1);
+    assert.equal(result.payload.fields.title.value, "Fixture title");
+    assert.equal(result.payload.fields.authors, null);
     assert.equal(result.payload.debug, undefined);
     assert.ok(result.inferenceMs >= 0);
 
@@ -98,7 +101,9 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
     });
     assert.equal(debugResponse.status, 200);
     const debugResult = await debugResponse.json();
-    assert.deepEqual(debugResult.payload, await extract(html, { debug: true }));
+    assert.deepEqual(debugResult.payload, await extract(html, {
+      version: "1.0.0", formats: ["text", "html"], sourceUrl: "https://example.test/article", debug: true,
+    }));
     assert.ok(debugResult.payload.debug.candidateCount > 0);
 
     const uploadedResponse = await fetch(`${base}/api/run-upload`, {
@@ -108,8 +113,9 @@ test("the vanilla UI server lists a reviewed page and runs the installed model",
     });
     assert.equal(uploadedResponse.status, 200);
     const uploaded = await uploadedResponse.json();
-    assert.equal(uploaded.payload.article.text, "Fixture article.\n\nSecond paragraph.");
-    assert.equal(uploaded.payload.title.text, "Fixture title");
+    assert.equal(uploaded.payload.fields.article.value, "Fixture article.\n\nSecond paragraph.");
+    assert.equal(uploaded.payload.fields.title.value, "Fixture title");
+    assert.equal(uploaded.payload.sourceUrl, null);
     assert.equal(uploaded.payload.debug, undefined);
     assert.ok(uploaded.inferenceMs >= 0);
     const debugUpload = await fetch(`${base}/api/run-upload?debug=1`, {
@@ -169,7 +175,7 @@ test("upload works without a local annotation dataset", async () => {
     });
     assert.equal(response.status, 200);
     const result = await response.json();
-    assert.equal(result.payload.title.text, "Standalone title");
+    assert.equal(result.payload.fields.title.value, "Standalone title");
   } finally {
     server.kill();
     await rm(emptyDataDir, { recursive: true, force: true });

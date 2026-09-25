@@ -10,12 +10,14 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./schema.json": "./schema.json"
+    "./schema.json": "./schema.json",
+    "./schema.v1.json": "./schema.v1.json"
   },
   "files": [
     "dist",
     "README.md",
-    "schema.json"
+    "schema.json",
+    "schema.v1.json"
   ],
   "scripts": {
     "export:model": "uv run --project ../.. --group modeling python scripts/export_checkpoint.py",

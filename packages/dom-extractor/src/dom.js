@@ -46,6 +46,21 @@ function tagName(element) {
   return element.localName.toLowerCase();
 }
 
+function sourceUrl(document) {
+  const canonical = document.querySelector('link[rel~="canonical"][href]')?.getAttribute("href");
+  const openGraph = document.querySelector('meta[property="og:url"][content]')?.getAttribute("content");
+  for (const value of [canonical, openGraph]) {
+    if (!value) continue;
+    try {
+      const url = new URL(value);
+      if (url.protocol === "http:" || url.protocol === "https:") return url.href;
+    } catch {
+      // A relative URL has no origin in a raw HTML string.
+    }
+  }
+  return null;
+}
+
 function allElements(document) {
   if (!document.documentElement) return [];
   return [document.documentElement, ...document.documentElement.querySelectorAll("*")];
@@ -232,17 +247,37 @@ function stripPageChrome(document) {
 
 export function parsePage(html) {
   const { document } = parseHTML(html);
+  const pageSourceUrl = sourceUrl(document);
   const originalCandidates = allElements(document).filter(
     (element) => !hasExcludedAncestor(element),
   );
   const originalIds = new WeakMap(
     originalCandidates.map((element, nodeId) => [element, nodeId]),
   );
+  const originalPositions = new WeakMap();
+  if (document.documentElement) originalPositions.set(document.documentElement, 1);
+  for (const element of originalCandidates) {
+    const siblingCounts = new Map();
+    for (const child of element.children) {
+      const name = tagName(child);
+      const position = (siblingCounts.get(name) ?? 0) + 1;
+      siblingCounts.set(name, position);
+      originalPositions.set(child, position);
+    }
+  }
   stripPageChrome(document);
   const candidates = allElements(document)
     .filter((element) => originalIds.has(element) && !hasExcludedAncestor(element))
     .map((element) => ({ nodeId: originalIds.get(element), element }));
-  return { document, candidates };
+  return { document, candidates, sourceUrl: pageSourceUrl, originalPositions };
+}
+
+export function cssSelector(element, page) {
+  const segments = [];
+  for (let node = element; node?.nodeType === 1; node = node.parentElement) {
+    segments.push(`${tagName(node)}:nth-of-type(${page.originalPositions.get(node)})`);
+  }
+  return segments.reverse().join(" > ");
 }
 
 export function selectedContent(candidate) {

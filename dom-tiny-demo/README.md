@@ -46,9 +46,13 @@ URL for a saved sample. When debug is enabled, hover or focus the candidate
 count and model version to see what they mean. The app never changes the
 annotation files.
 
-The demo uses the package's default response: `article`, `title`, `authors`, and
-`date` (each `null` when missing). Select **Include debug** before a run to add
-the optional `debug` field and show candidate count and model version.
+The demo requests the versioned response with selected-node HTML so the popup
+can show both text and markup. The package omits HTML by default; this app
+opts in with `formats: ["text", "html"]`. It also passes each saved sample's
+source URL to the package. An uploaded page can get its source URL from a
+canonical or Open Graph tag; otherwise that value is `null`. Select **Include
+debug** before a run to add the optional `debug` field and show candidate
+count and model version.
 
 `PORT` can override port 8770. The sample list in `server.mjs` is intentionally
 fixed to ten reviewed pages. This directory is a throwaway consumer test, not
