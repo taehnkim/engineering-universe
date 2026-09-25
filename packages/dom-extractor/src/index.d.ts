@@ -1,50 +1,55 @@
-export type Field =
-  | "article"
-  | "title"
-  | "authors"
-  | "date";
+export type Include = "html" | "source" | "debug";
+export type ExtractErrorCode = "invalidInput" | "emptyInput" | "inputTooLarge" |
+  "parseError" | "inferenceError" | "internalError";
 
-export interface Selection {
-  nodeId: number;
-  html: string;
-  text: string;
-  /** Uncalibrated softmax share for the final node. */
+export interface ExtractOptions {
+  include?: readonly Include[];
+}
+
+export interface ExtractedField {
+  /** Plain text from the selected node, or null below the internal threshold. */
+  text: string | null;
+  /** Uncalibrated candidate score, rounded to four decimal places. */
   confidence: number;
+  /** Exact substring from input HTML. Present only with include: ["html"] and non-null text. */
+  html?: string;
+  /** Unique selector into the input document. Present only with include: ["source"]. */
+  source?: { selector: string };
 }
 
-export interface ExtractionOptions {
-  /** Include preprocessing and model metadata in the result. Defaults to false. */
-  debug?: boolean;
+export interface ExtractedFields {
+  title: ExtractedField;
+  body: ExtractedField;
+  date: ExtractedField;
+  byline: ExtractedField;
 }
 
-export interface DebugInfo {
-  candidateCount: number;
-  cleanupVersion: string;
-  featureVersion: string;
+export interface ExtractionResult {
   modelVersion: string;
-  checkpointSha256: string;
-  domBackend: string;
+  fields: ExtractedFields;
+  debug?: { rejected: Partial<Record<keyof ExtractedFields, { text: string }>> };
 }
 
-export type ExtractionResult = Record<Field, Selection | null>;
-export type DebugExtractionResult = ExtractionResult & { debug: DebugInfo };
+export interface BatchItemResult {
+  status: "ok";
+  result: Omit<ExtractionResult, "modelVersion">;
+}
 
-export const fields: readonly Field[];
-export function extract(
-  html: string,
-  options: ExtractionOptions & { debug: true },
-): Promise<DebugExtractionResult>;
-export function extract(
-  html: string,
-  options?: { debug?: false },
-): Promise<ExtractionResult>;
-export function extract(
-  html: string,
-  options: ExtractionOptions,
-): Promise<ExtractionResult | DebugExtractionResult>;
-export function extractField(html: string, field: Field, options?: ExtractionOptions): Promise<Selection | null>;
-export function extractRelativePublicationDate(text?: string | null): string | null;
-export function resolveRelativeDate(
-  relativeDate: string,
-  scrapedAt: string | Date,
-): string;
+export interface BatchItemError {
+  status: "error";
+  error: { code: ExtractErrorCode; message: string };
+}
+
+export interface BatchResult {
+  modelVersion: string;
+  results: (BatchItemResult | BatchItemError)[];
+}
+
+export class ExtractError extends Error {
+  readonly code: ExtractErrorCode;
+  constructor(code: ExtractErrorCode, message: string);
+}
+
+export const modelVersion: string;
+export function extract(html: string, options?: ExtractOptions): Promise<ExtractionResult>;
+export function extractMany(htmls: string[], options?: ExtractOptions): Promise<BatchResult>;

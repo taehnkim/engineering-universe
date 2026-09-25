@@ -1,21 +1,12 @@
 {
-  "article": {
-    "nodeId": 8,
-    "html": "<article>\n        <p>A small learned model can select the right article wrapper.</p>\n        <p>It uses DOM structure instead of article words.</p>\n      </article>",
-    "text": "A small learned model can select the right article wrapper.\n\nIt uses DOM structure instead of article words.",
-    "confidence": 0.9800373591222913
-  },
-  "title": {
-    "nodeId": 5,
-    "html": "<h1>Making extraction models smaller</h1>",
-    "text": "Making extraction models smaller",
-    "confidence": 0.9976704255610097
-  },
-  "authors": {
-    "nodeId": 6,
-    "html": "<p class=\"byline\">By Ada Lovelace</p>",
-    "text": "By Ada Lovelace",
-    "confidence": 0.9444251988604105
-  },
-  "date": null
+  "modelVersion": "article-0.1.0",
+  "fields": {
+    "title": { "text": "Making extraction models smaller", "confidence": 1 },
+    "body": {
+      "text": "A small learned model can select the right article wrapper.\n\nIt uses DOM structure instead of article words.",
+      "confidence": 0.9919
+    },
+    "date": { "text": null, "confidence": 0.1008 },
+    "byline": { "text": "By Ada Lovelace", "confidence": 0.9454 }
+  }
 }

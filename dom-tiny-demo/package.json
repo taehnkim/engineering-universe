@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
+    "refresh-model": "node scripts/refresh-package.mjs",
     "test": "node --test"
   },
   "dependencies": {
-    "@eng-universe/dom-extractor": "file:../packages/dom-extractor/eng-universe-dom-extractor-0.3.0.tgz"
+    "@eng-universe/dom-extractor": "file:../packages/dom-extractor/eng-universe-dom-extractor-0.4.0.tgz"
   },
   "engines": {
     "node": ">=20"

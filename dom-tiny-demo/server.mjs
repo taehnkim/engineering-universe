@@ -98,7 +98,9 @@ async function readUploadedHtml(request) {
 
 async function runInference(html, debug = false) {
   const started = performance.now();
-  const payload = await extract(html, { debug });
+  const payload = await extract(html, {
+    include: debug ? ["html", "source", "debug"] : ["html", "source"],
+  });
   return { inferenceMs: Number((performance.now() - started).toFixed(1)), payload };
 }
 
