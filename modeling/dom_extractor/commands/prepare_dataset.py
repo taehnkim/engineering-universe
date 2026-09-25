@@ -11,8 +11,17 @@ from modeling.dom_extractor.dataset import prepare_dataset
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dataset-dir", type=Path, default=Path("data/learned_extraction/raw"))
-    parser.add_argument("--output-dir", type=Path, default=Path("data/learned_extraction/prepared"))
+    parser.add_argument(
+        "--dataset-dir", type=Path, default=Path("data/learned_extraction/raw")
+    )
+    parser.add_argument(
+        "--output-dir", type=Path, default=Path("data/learned_extraction/prepared")
+    )
+    parser.add_argument(
+        "--preprocessing-checkpoint",
+        type=Path,
+        help="Reuse a compatible checkpoint's vocabulary and normalizer for fine-tuning.",
+    )
     parser.add_argument(
         "--include-jev-drafts",
         action="store_true",
@@ -25,6 +34,7 @@ def main() -> None:
                 args.dataset_dir,
                 args.output_dir,
                 include_jev_drafts=args.include_jev_drafts,
+                preprocessing_checkpoint=args.preprocessing_checkpoint,
             ),
             sort_keys=True,
         )
