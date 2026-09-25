@@ -1,0 +1,5 @@
+[project]
+name = "article-benchmark-newspaper"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["newspaper4k==0.9.6"]

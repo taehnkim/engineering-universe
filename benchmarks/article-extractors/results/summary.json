@@ -1,0 +1,1093 @@
+{
+  "protocol": {
+    "description": "Warm, offline extraction from the same saved full-page HTML files; file I/O and imports excluded from timing.",
+    "metric": "Present-label pages: token F1, and fraction with F1 >= 0.90. Dates with the same parsed calendar day score 1. Byline prefixes are ignored.",
+    "missing": "Missing-label pages are excluded from present-only field accuracy; missing specificity is reported separately.",
+    "datasetPages": 659,
+    "goldSha256": "966d863a5593f4641902d72defd537a936c9b22fa3f66f64e2f11b5540b48802",
+    "checkpointSha256": "df0b2855f23dc75b6956ae47c0577661e8c22d4f72538e82dc2187296e88f788",
+    "cleanupVersion": "chrome-v2",
+    "featureVersion": "semantic-v3",
+    "splits": {
+      "validation": 200,
+      "train": 429,
+      "test": 30
+    },
+    "websites": 27,
+    "node": "v26.4.0",
+    "os": "darwin arm64",
+    "cpu": "Apple M4 Pro"
+  },
+  "libraries": {
+    "dom-extractor": {
+      "version": "0.4.0 / article-0.1.0",
+      "attempted": 659,
+      "failures": 0,
+      "fieldsReported": {
+        "title": 659,
+        "body": 659,
+        "date": 550,
+        "byline": 587
+      },
+      "latencyMs": {
+        "median": 8.124374999999986,
+        "p95": 26.884374999999636,
+        "mean": 11.453151221547795
+      },
+      "scopes": {
+        "all": {
+          "pages": 659,
+          "fields": {
+            "title": {
+              "presentPages": 659,
+              "meanTokenF1": 0.9969650986342944,
+              "matchedAt90": 657,
+              "accuracyAt90": 0.9969650986342944,
+              "exactTextMatches": 657,
+              "exactTextAccuracy": 0.9969650986342944,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 659,
+              "meanTokenF1": 0.9223101401900858,
+              "matchedAt90": 605,
+              "accuracyAt90": 0.9180576631259484,
+              "exactTextMatches": 601,
+              "exactTextAccuracy": 0.9119878603945372,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 554,
+              "meanTokenF1": 0.9843561973525871,
+              "matchedAt90": 545,
+              "accuracyAt90": 0.983754512635379,
+              "exactTextMatches": 545,
+              "exactTextAccuracy": 0.983754512635379,
+              "missingPages": 105,
+              "correctlyMissing": 101,
+              "missingSpecificity": 0.9619047619047619
+            },
+            "byline": {
+              "presentPages": 601,
+              "meanTokenF1": 0.8568050496670422,
+              "matchedAt90": 471,
+              "accuracyAt90": 0.78369384359401,
+              "exactTextMatches": 471,
+              "exactTextAccuracy": 0.78369384359401,
+              "missingPages": 58,
+              "correctlyMissing": 35,
+              "missingSpecificity": 0.603448275862069
+            }
+          }
+        },
+        "nontraining": {
+          "pages": 230,
+          "fields": {
+            "title": {
+              "presentPages": 230,
+              "meanTokenF1": 0.991304347826087,
+              "matchedAt90": 228,
+              "accuracyAt90": 0.991304347826087,
+              "exactTextMatches": 228,
+              "exactTextAccuracy": 0.991304347826087,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 230,
+              "meanTokenF1": 0.7782846210906835,
+              "matchedAt90": 177,
+              "accuracyAt90": 0.7695652173913043,
+              "exactTextMatches": 175,
+              "exactTextAccuracy": 0.7608695652173914,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 216,
+              "meanTokenF1": 0.9783950617283951,
+              "matchedAt90": 211,
+              "accuracyAt90": 0.9768518518518519,
+              "exactTextMatches": 211,
+              "exactTextAccuracy": 0.9768518518518519,
+              "missingPages": 14,
+              "correctlyMissing": 12,
+              "missingSpecificity": 0.8571428571428571
+            },
+            "byline": {
+              "presentPages": 224,
+              "meanTokenF1": 0.9116287131499081,
+              "matchedAt90": 190,
+              "accuracyAt90": 0.8482142857142857,
+              "exactTextMatches": 190,
+              "exactTextAccuracy": 0.8482142857142857,
+              "missingPages": 6,
+              "correctlyMissing": 1,
+              "missingSpecificity": 0.16666666666666666
+            }
+          }
+        },
+        "test": {
+          "pages": 30,
+          "fields": {
+            "title": {
+              "presentPages": 30,
+              "meanTokenF1": 1,
+              "matchedAt90": 30,
+              "accuracyAt90": 1,
+              "exactTextMatches": 30,
+              "exactTextAccuracy": 1,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 30,
+              "meanTokenF1": 1,
+              "matchedAt90": 30,
+              "accuracyAt90": 1,
+              "exactTextMatches": 30,
+              "exactTextAccuracy": 1,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 30,
+              "meanTokenF1": 1,
+              "matchedAt90": 30,
+              "accuracyAt90": 1,
+              "exactTextMatches": 30,
+              "exactTextAccuracy": 1,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "byline": {
+              "presentPages": 28,
+              "meanTokenF1": 1,
+              "matchedAt90": 28,
+              "accuracyAt90": 1,
+              "exactTextMatches": 28,
+              "exactTextAccuracy": 1,
+              "missingPages": 2,
+              "correctlyMissing": 0,
+              "missingSpecificity": 0
+            }
+          }
+        },
+        "validation": {
+          "pages": 200,
+          "fields": {
+            "title": {
+              "presentPages": 200,
+              "meanTokenF1": 0.99,
+              "matchedAt90": 198,
+              "accuracyAt90": 0.99,
+              "exactTextMatches": 198,
+              "exactTextAccuracy": 0.99,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 200,
+              "meanTokenF1": 0.745027314254286,
+              "matchedAt90": 147,
+              "accuracyAt90": 0.735,
+              "exactTextMatches": 145,
+              "exactTextAccuracy": 0.725,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 186,
+              "meanTokenF1": 0.9749103942652331,
+              "matchedAt90": 181,
+              "accuracyAt90": 0.9731182795698925,
+              "exactTextMatches": 181,
+              "exactTextAccuracy": 0.9731182795698925,
+              "missingPages": 14,
+              "correctlyMissing": 12,
+              "missingSpecificity": 0.8571428571428571
+            },
+            "byline": {
+              "presentPages": 196,
+              "meanTokenF1": 0.899004243599895,
+              "matchedAt90": 162,
+              "accuracyAt90": 0.826530612244898,
+              "exactTextMatches": 162,
+              "exactTextAccuracy": 0.826530612244898,
+              "missingPages": 4,
+              "correctlyMissing": 1,
+              "missingSpecificity": 0.25
+            }
+          }
+        }
+      }
+    },
+    "readability": {
+      "version": "0.6.0 + jsdom 26.1.0",
+      "attempted": 659,
+      "failures": 0,
+      "fieldsReported": {
+        "title": 659,
+        "body": 659,
+        "date": 311,
+        "byline": 450
+      },
+      "latencyMs": {
+        "median": 34.819000000001324,
+        "p95": 104.84804199999962,
+        "mean": 45.52783746889224
+      },
+      "scopes": {
+        "all": {
+          "pages": 659,
+          "fields": {
+            "title": {
+              "presentPages": 659,
+              "meanTokenF1": 0.9633105063887069,
+              "matchedAt90": 571,
+              "accuracyAt90": 0.866464339908953,
+              "exactTextMatches": 499,
+              "exactTextAccuracy": 0.7572078907435509,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 659,
+              "meanTokenF1": 0.9010810935797844,
+              "matchedAt90": 597,
+              "accuracyAt90": 0.9059180576631259,
+              "exactTextMatches": 24,
+              "exactTextAccuracy": 0.036418816388467376,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 554,
+              "meanTokenF1": 0.4929001203369434,
+              "matchedAt90": 263,
+              "accuracyAt90": 0.4747292418772563,
+              "exactTextMatches": 263,
+              "exactTextAccuracy": 0.4747292418772563,
+              "missingPages": 105,
+              "correctlyMissing": 86,
+              "missingSpecificity": 0.819047619047619
+            },
+            "byline": {
+              "presentPages": 601,
+              "meanTokenF1": 0.3937394501964997,
+              "matchedAt90": 131,
+              "accuracyAt90": 0.21797004991680533,
+              "exactTextMatches": 129,
+              "exactTextAccuracy": 0.2146422628951747,
+              "missingPages": 58,
+              "correctlyMissing": 31,
+              "missingSpecificity": 0.5344827586206896
+            }
+          }
+        },
+        "nontraining": {
+          "pages": 230,
+          "fields": {
+            "title": {
+              "presentPages": 230,
+              "meanTokenF1": 0.9665709048674399,
+              "matchedAt90": 203,
+              "accuracyAt90": 0.8826086956521739,
+              "exactTextMatches": 177,
+              "exactTextAccuracy": 0.7695652173913043,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 230,
+              "meanTokenF1": 0.7605712144137247,
+              "matchedAt90": 174,
+              "accuracyAt90": 0.7565217391304347,
+              "exactTextMatches": 15,
+              "exactTextAccuracy": 0.06521739130434782,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 216,
+              "meanTokenF1": 0.5820987654320988,
+              "matchedAt90": 118,
+              "accuracyAt90": 0.5462962962962963,
+              "exactTextMatches": 118,
+              "exactTextAccuracy": 0.5462962962962963,
+              "missingPages": 14,
+              "correctlyMissing": 12,
+              "missingSpecificity": 0.8571428571428571
+            },
+            "byline": {
+              "presentPages": 224,
+              "meanTokenF1": 0.35654767737569026,
+              "matchedAt90": 48,
+              "accuracyAt90": 0.21428571428571427,
+              "exactTextMatches": 48,
+              "exactTextAccuracy": 0.21428571428571427,
+              "missingPages": 6,
+              "correctlyMissing": 2,
+              "missingSpecificity": 0.3333333333333333
+            }
+          }
+        },
+        "test": {
+          "pages": 30,
+          "fields": {
+            "title": {
+              "presentPages": 30,
+              "meanTokenF1": 1,
+              "matchedAt90": 30,
+              "accuracyAt90": 1,
+              "exactTextMatches": 30,
+              "exactTextAccuracy": 1,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 30,
+              "meanTokenF1": 0.9894780629702975,
+              "matchedAt90": 30,
+              "accuracyAt90": 1,
+              "exactTextMatches": 0,
+              "exactTextAccuracy": 0,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 30,
+              "meanTokenF1": 0.9733333333333333,
+              "matchedAt90": 29,
+              "accuracyAt90": 0.9666666666666667,
+              "exactTextMatches": 29,
+              "exactTextAccuracy": 0.9666666666666667,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "byline": {
+              "presentPages": 28,
+              "meanTokenF1": 0.9285714285714286,
+              "matchedAt90": 26,
+              "accuracyAt90": 0.9285714285714286,
+              "exactTextMatches": 26,
+              "exactTextAccuracy": 0.9285714285714286,
+              "missingPages": 2,
+              "correctlyMissing": 2,
+              "missingSpecificity": 1
+            }
+          }
+        },
+        "validation": {
+          "pages": 200,
+          "fields": {
+            "title": {
+              "presentPages": 200,
+              "meanTokenF1": 0.9615565405975556,
+              "matchedAt90": 173,
+              "accuracyAt90": 0.865,
+              "exactTextMatches": 147,
+              "exactTextAccuracy": 0.735,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 200,
+              "meanTokenF1": 0.7262351871302389,
+              "matchedAt90": 144,
+              "accuracyAt90": 0.72,
+              "exactTextMatches": 15,
+              "exactTextAccuracy": 0.075,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 186,
+              "meanTokenF1": 0.5189964157706094,
+              "matchedAt90": 89,
+              "accuracyAt90": 0.478494623655914,
+              "exactTextMatches": 89,
+              "exactTextAccuracy": 0.478494623655914,
+              "missingPages": 14,
+              "correctlyMissing": 12,
+              "missingSpecificity": 0.8571428571428571
+            },
+            "byline": {
+              "presentPages": 196,
+              "meanTokenF1": 0.2748299986334419,
+              "matchedAt90": 22,
+              "accuracyAt90": 0.11224489795918367,
+              "exactTextMatches": 22,
+              "exactTextAccuracy": 0.11224489795918367,
+              "missingPages": 4,
+              "correctlyMissing": 0,
+              "missingSpecificity": 0
+            }
+          }
+        }
+      }
+    },
+    "trafilatura": {
+      "version": "2.2.0",
+      "attempted": 659,
+      "failures": 0,
+      "fieldsReported": {
+        "title": 659,
+        "body": 659,
+        "date": 659,
+        "byline": 452
+      },
+      "latencyMs": {
+        "median": 22.920875111594796,
+        "p95": 115.60995795298368,
+        "mean": 49.91811433452293
+      },
+      "scopes": {
+        "all": {
+          "pages": 659,
+          "fields": {
+            "title": {
+              "presentPages": 659,
+              "meanTokenF1": 0.9483651779979255,
+              "matchedAt90": 517,
+              "accuracyAt90": 0.7845220030349014,
+              "exactTextMatches": 395,
+              "exactTextAccuracy": 0.5993930197268589,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 659,
+              "meanTokenF1": 0.8885572026651921,
+              "matchedAt90": 543,
+              "accuracyAt90": 0.8239757207890743,
+              "exactTextMatches": 12,
+              "exactTextAccuracy": 0.018209408194233688,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 554,
+              "meanTokenF1": 0.8674288006417965,
+              "matchedAt90": 462,
+              "accuracyAt90": 0.8339350180505415,
+              "exactTextMatches": 462,
+              "exactTextAccuracy": 0.8339350180505415,
+              "missingPages": 105,
+              "correctlyMissing": 0,
+              "missingSpecificity": 0
+            },
+            "byline": {
+              "presentPages": 601,
+              "meanTokenF1": 0.43616996291737103,
+              "matchedAt90": 161,
+              "accuracyAt90": 0.26788685524126454,
+              "exactTextMatches": 118,
+              "exactTextAccuracy": 0.19633943427620631,
+              "missingPages": 58,
+              "correctlyMissing": 30,
+              "missingSpecificity": 0.5172413793103449
+            }
+          }
+        },
+        "nontraining": {
+          "pages": 230,
+          "fields": {
+            "title": {
+              "presentPages": 230,
+              "meanTokenF1": 0.9402254565002358,
+              "matchedAt90": 162,
+              "accuracyAt90": 0.7043478260869566,
+              "exactTextMatches": 128,
+              "exactTextAccuracy": 0.5565217391304348,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 230,
+              "meanTokenF1": 0.7428256001265298,
+              "matchedAt90": 150,
+              "accuracyAt90": 0.6521739130434783,
+              "exactTextMatches": 5,
+              "exactTextAccuracy": 0.021739130434782608,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 216,
+              "meanTokenF1": 0.9567901234567904,
+              "matchedAt90": 198,
+              "accuracyAt90": 0.9166666666666666,
+              "exactTextMatches": 198,
+              "exactTextAccuracy": 0.9166666666666666,
+              "missingPages": 14,
+              "correctlyMissing": 0,
+              "missingSpecificity": 0
+            },
+            "byline": {
+              "presentPages": 224,
+              "meanTokenF1": 0.3374627975803705,
+              "matchedAt90": 30,
+              "accuracyAt90": 0.13392857142857142,
+              "exactTextMatches": 9,
+              "exactTextAccuracy": 0.04017857142857143,
+              "missingPages": 6,
+              "correctlyMissing": 1,
+              "missingSpecificity": 0.16666666666666666
+            }
+          }
+        },
+        "test": {
+          "pages": 30,
+          "fields": {
+            "title": {
+              "presentPages": 30,
+              "meanTokenF1": 1,
+              "matchedAt90": 30,
+              "accuracyAt90": 1,
+              "exactTextMatches": 30,
+              "exactTextAccuracy": 1,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 30,
+              "meanTokenF1": 0.985113337365502,
+              "matchedAt90": 30,
+              "accuracyAt90": 1,
+              "exactTextMatches": 0,
+              "exactTextAccuracy": 0,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 30,
+              "meanTokenF1": 1,
+              "matchedAt90": 30,
+              "accuracyAt90": 1,
+              "exactTextMatches": 30,
+              "exactTextAccuracy": 1,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "byline": {
+              "presentPages": 28,
+              "meanTokenF1": 0.9594603808889525,
+              "matchedAt90": 24,
+              "accuracyAt90": 0.8571428571428571,
+              "exactTextMatches": 3,
+              "exactTextAccuracy": 0.10714285714285714,
+              "missingPages": 2,
+              "correctlyMissing": 0,
+              "missingSpecificity": 0
+            }
+          }
+        },
+        "validation": {
+          "pages": 200,
+          "fields": {
+            "title": {
+              "presentPages": 200,
+              "meanTokenF1": 0.9312592749752708,
+              "matchedAt90": 132,
+              "accuracyAt90": 0.66,
+              "exactTextMatches": 98,
+              "exactTextAccuracy": 0.49,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 200,
+              "meanTokenF1": 0.7064824395406839,
+              "matchedAt90": 120,
+              "accuracyAt90": 0.6,
+              "exactTextMatches": 5,
+              "exactTextAccuracy": 0.025,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 186,
+              "meanTokenF1": 0.949820788530466,
+              "matchedAt90": 168,
+              "accuracyAt90": 0.9032258064516129,
+              "exactTextMatches": 168,
+              "exactTextAccuracy": 0.9032258064516129,
+              "missingPages": 14,
+              "correctlyMissing": 0,
+              "missingSpecificity": 0
+            },
+            "byline": {
+              "presentPages": 196,
+              "meanTokenF1": 0.24860599996485885,
+              "matchedAt90": 6,
+              "accuracyAt90": 0.030612244897959183,
+              "exactTextMatches": 6,
+              "exactTextAccuracy": 0.030612244897959183,
+              "missingPages": 4,
+              "correctlyMissing": 1,
+              "missingSpecificity": 0.25
+            }
+          }
+        }
+      }
+    },
+    "extractus": {
+      "version": "9.0.1",
+      "attempted": 659,
+      "failures": 0,
+      "fieldsReported": {
+        "title": 659,
+        "body": 659,
+        "date": 494,
+        "byline": 529
+      },
+      "latencyMs": {
+        "median": 19.737874999999804,
+        "p95": 104.8060000000005,
+        "mean": 34.10393058270105
+      },
+      "scopes": {
+        "all": {
+          "pages": 659,
+          "fields": {
+            "title": {
+              "presentPages": 659,
+              "meanTokenF1": 0.9461312484451295,
+              "matchedAt90": 508,
+              "accuracyAt90": 0.7708649468892261,
+              "exactTextMatches": 386,
+              "exactTextAccuracy": 0.5857359635811836,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 659,
+              "meanTokenF1": 0.9057893518405218,
+              "matchedAt90": 598,
+              "accuracyAt90": 0.9074355083459787,
+              "exactTextMatches": 42,
+              "exactTextAccuracy": 0.0637329286798179,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 554,
+              "meanTokenF1": 0.7238267148014443,
+              "matchedAt90": 392,
+              "accuracyAt90": 0.7075812274368231,
+              "exactTextMatches": 392,
+              "exactTextAccuracy": 0.7075812274368231,
+              "missingPages": 105,
+              "correctlyMissing": 53,
+              "missingSpecificity": 0.5047619047619047
+            },
+            "byline": {
+              "presentPages": 601,
+              "meanTokenF1": 0.3253243759911617,
+              "matchedAt90": 100,
+              "accuracyAt90": 0.16638935108153077,
+              "exactTextMatches": 97,
+              "exactTextAccuracy": 0.16139767054908485,
+              "missingPages": 58,
+              "correctlyMissing": 25,
+              "missingSpecificity": 0.43103448275862066
+            }
+          }
+        },
+        "nontraining": {
+          "pages": 230,
+          "fields": {
+            "title": {
+              "presentPages": 230,
+              "meanTokenF1": 0.9347699422787369,
+              "matchedAt90": 154,
+              "accuracyAt90": 0.6695652173913044,
+              "exactTextMatches": 120,
+              "exactTextAccuracy": 0.5217391304347826,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 230,
+              "meanTokenF1": 0.7637848631003978,
+              "matchedAt90": 174,
+              "accuracyAt90": 0.7565217391304347,
+              "exactTextMatches": 19,
+              "exactTextAccuracy": 0.08260869565217391,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 216,
+              "meanTokenF1": 0.7808641975308643,
+              "matchedAt90": 164,
+              "accuracyAt90": 0.7592592592592593,
+              "exactTextMatches": 164,
+              "exactTextAccuracy": 0.7592592592592593,
+              "missingPages": 14,
+              "correctlyMissing": 12,
+              "missingSpecificity": 0.8571428571428571
+            },
+            "byline": {
+              "presentPages": 224,
+              "meanTokenF1": 0.3543155345185474,
+              "matchedAt90": 48,
+              "accuracyAt90": 0.21428571428571427,
+              "exactTextMatches": 48,
+              "exactTextAccuracy": 0.21428571428571427,
+              "missingPages": 6,
+              "correctlyMissing": 2,
+              "missingSpecificity": 0.3333333333333333
+            }
+          }
+        },
+        "test": {
+          "pages": 30,
+          "fields": {
+            "title": {
+              "presentPages": 30,
+              "meanTokenF1": 1,
+              "matchedAt90": 30,
+              "accuracyAt90": 1,
+              "exactTextMatches": 30,
+              "exactTextAccuracy": 1,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 30,
+              "meanTokenF1": 0.9894780629702975,
+              "matchedAt90": 30,
+              "accuracyAt90": 1,
+              "exactTextMatches": 0,
+              "exactTextAccuracy": 0,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 30,
+              "meanTokenF1": 0.9740740740740741,
+              "matchedAt90": 29,
+              "accuracyAt90": 0.9666666666666667,
+              "exactTextMatches": 29,
+              "exactTextAccuracy": 0.9666666666666667,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "byline": {
+              "presentPages": 28,
+              "meanTokenF1": 0.9285714285714286,
+              "matchedAt90": 26,
+              "accuracyAt90": 0.9285714285714286,
+              "exactTextMatches": 26,
+              "exactTextAccuracy": 0.9285714285714286,
+              "missingPages": 2,
+              "correctlyMissing": 2,
+              "missingSpecificity": 1
+            }
+          }
+        },
+        "validation": {
+          "pages": 200,
+          "fields": {
+            "title": {
+              "presentPages": 200,
+              "meanTokenF1": 0.9249854336205472,
+              "matchedAt90": 124,
+              "accuracyAt90": 0.62,
+              "exactTextMatches": 90,
+              "exactTextAccuracy": 0.45,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 200,
+              "meanTokenF1": 0.7299308831199132,
+              "matchedAt90": 144,
+              "accuracyAt90": 0.72,
+              "exactTextMatches": 19,
+              "exactTextAccuracy": 0.095,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 186,
+              "meanTokenF1": 0.7497013142174435,
+              "matchedAt90": 135,
+              "accuracyAt90": 0.7258064516129032,
+              "exactTextMatches": 135,
+              "exactTextAccuracy": 0.7258064516129032,
+              "missingPages": 14,
+              "correctlyMissing": 12,
+              "missingSpecificity": 0.8571428571428571
+            },
+            "byline": {
+              "presentPages": 196,
+              "meanTokenF1": 0.27227897822527863,
+              "matchedAt90": 22,
+              "accuracyAt90": 0.11224489795918367,
+              "exactTextMatches": 22,
+              "exactTextAccuracy": 0.11224489795918367,
+              "missingPages": 4,
+              "correctlyMissing": 0,
+              "missingSpecificity": 0
+            }
+          }
+        }
+      }
+    },
+    "newspaper": {
+      "version": "0.9.6",
+      "attempted": 659,
+      "failures": 0,
+      "fieldsReported": {
+        "title": 659,
+        "body": 651,
+        "date": 484,
+        "byline": 393
+      },
+      "latencyMs": {
+        "median": 63.05008404888213,
+        "p95": 181.73125002067536,
+        "mean": 73.73935304057808
+      },
+      "scopes": {
+        "all": {
+          "pages": 659,
+          "fields": {
+            "title": {
+              "presentPages": 659,
+              "meanTokenF1": 0.9714776707306481,
+              "matchedAt90": 612,
+              "accuracyAt90": 0.928679817905918,
+              "exactTextMatches": 547,
+              "exactTextAccuracy": 0.8300455235204856,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 659,
+              "meanTokenF1": 0.855226187029587,
+              "matchedAt90": 509,
+              "accuracyAt90": 0.7723823975720789,
+              "exactTextMatches": 8,
+              "exactTextAccuracy": 0.012139605462822459,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 554,
+              "meanTokenF1": 0.7344765342960289,
+              "matchedAt90": 400,
+              "accuracyAt90": 0.7220216606498195,
+              "exactTextMatches": 400,
+              "exactTextAccuracy": 0.7220216606498195,
+              "missingPages": 105,
+              "correctlyMissing": 55,
+              "missingSpecificity": 0.5238095238095238
+            },
+            "byline": {
+              "presentPages": 601,
+              "meanTokenF1": 0.34025317070485883,
+              "matchedAt90": 106,
+              "accuracyAt90": 0.17637271214642264,
+              "exactTextMatches": 98,
+              "exactTextAccuracy": 0.16306156405990016,
+              "missingPages": 58,
+              "correctlyMissing": 30,
+              "missingSpecificity": 0.5172413793103449
+            }
+          }
+        },
+        "nontraining": {
+          "pages": 230,
+          "fields": {
+            "title": {
+              "presentPages": 230,
+              "meanTokenF1": 0.9654975734311126,
+              "matchedAt90": 211,
+              "accuracyAt90": 0.9173913043478261,
+              "exactTextMatches": 192,
+              "exactTextAccuracy": 0.8347826086956521,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 230,
+              "meanTokenF1": 0.7306396516130352,
+              "matchedAt90": 149,
+              "accuracyAt90": 0.6478260869565218,
+              "exactTextMatches": 6,
+              "exactTextAccuracy": 0.02608695652173913,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 216,
+              "meanTokenF1": 0.8134259259259259,
+              "matchedAt90": 172,
+              "accuracyAt90": 0.7962962962962963,
+              "exactTextMatches": 172,
+              "exactTextAccuracy": 0.7962962962962963,
+              "missingPages": 14,
+              "correctlyMissing": 12,
+              "missingSpecificity": 0.8571428571428571
+            },
+            "byline": {
+              "presentPages": 224,
+              "meanTokenF1": 0.32605074099225423,
+              "matchedAt90": 28,
+              "accuracyAt90": 0.125,
+              "exactTextMatches": 22,
+              "exactTextAccuracy": 0.09821428571428571,
+              "missingPages": 6,
+              "correctlyMissing": 1,
+              "missingSpecificity": 0.16666666666666666
+            }
+          }
+        },
+        "test": {
+          "pages": 30,
+          "fields": {
+            "title": {
+              "presentPages": 30,
+              "meanTokenF1": 1,
+              "matchedAt90": 30,
+              "accuracyAt90": 1,
+              "exactTextMatches": 30,
+              "exactTextAccuracy": 1,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 30,
+              "meanTokenF1": 0.976772901889483,
+              "matchedAt90": 30,
+              "accuracyAt90": 1,
+              "exactTextMatches": 0,
+              "exactTextAccuracy": 0,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 30,
+              "meanTokenF1": 1,
+              "matchedAt90": 30,
+              "accuracyAt90": 1,
+              "exactTextMatches": 30,
+              "exactTextAccuracy": 1,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "byline": {
+              "presentPages": 28,
+              "meanTokenF1": 0.9540182040182043,
+              "matchedAt90": 23,
+              "accuracyAt90": 0.8214285714285714,
+              "exactTextMatches": 17,
+              "exactTextAccuracy": 0.6071428571428571,
+              "missingPages": 2,
+              "correctlyMissing": 0,
+              "missingSpecificity": 0
+            }
+          }
+        },
+        "validation": {
+          "pages": 200,
+          "fields": {
+            "title": {
+              "presentPages": 200,
+              "meanTokenF1": 0.9603222094457796,
+              "matchedAt90": 181,
+              "accuracyAt90": 0.905,
+              "exactTextMatches": 162,
+              "exactTextAccuracy": 0.81,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "body": {
+              "presentPages": 200,
+              "meanTokenF1": 0.693719664071568,
+              "matchedAt90": 119,
+              "accuracyAt90": 0.595,
+              "exactTextMatches": 6,
+              "exactTextAccuracy": 0.03,
+              "missingPages": 0,
+              "correctlyMissing": 0,
+              "missingSpecificity": null
+            },
+            "date": {
+              "presentPages": 186,
+              "meanTokenF1": 0.7833333333333333,
+              "matchedAt90": 142,
+              "accuracyAt90": 0.7634408602150538,
+              "exactTextMatches": 142,
+              "exactTextAccuracy": 0.7634408602150538,
+              "missingPages": 14,
+              "correctlyMissing": 12,
+              "missingSpecificity": 0.8571428571428571
+            },
+            "byline": {
+              "presentPages": 196,
+              "meanTokenF1": 0.23634110341711873,
+              "matchedAt90": 5,
+              "accuracyAt90": 0.025510204081632654,
+              "exactTextMatches": 5,
+              "exactTextAccuracy": 0.025510204081632654,
+              "missingPages": 4,
+              "correctlyMissing": 1,
+              "missingSpecificity": 0.25
+            }
+          }
+        }
+      }
+    }
+  }
+}
