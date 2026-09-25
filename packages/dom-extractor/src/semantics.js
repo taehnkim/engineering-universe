@@ -75,15 +75,16 @@ export function attributeSemanticTokens(element) {
   return [...new Set(tokens)];
 }
 
-export function personNameShape(text, words) {
-  const capitalized = words.filter((word) => word && /\p{L}/u.test(word[0]) && word[0] === word[0].toUpperCase()).length;
+export function personNameShape(text, words, knownCapitalized) {
+  const capitalized = knownCapitalized ?? words.filter((word) =>
+    word && /\p{L}/u.test(word[0]) && word[0] === word[0].toUpperCase()).length;
   return /^@[\w.-]+$/u.test(text.trim()) ||
     (words.length >= 1 && words.length <= 8 && capitalized / words.length >= 0.5 && !DATE_LIKE_RE.test(text));
 }
 
-export function textShapeTokens(element, text, linkCount) {
+export function textShapeTokens(element, text, linkCount, knownWords, knownLength, knownCapitalized) {
   const candidateText = text ?? elementText(element);
-  const words = candidateText ? candidateText.split(/\s+/) : [];
+  const words = knownWords ?? (candidateText ? candidateText.split(/\s+/) : []);
   const tokens = [];
   if (words.length > 0 && words.length <= 20) tokens.push("shape:short_text");
   else if (words.length <= 40) tokens.push("shape:medium_text");
@@ -92,7 +93,7 @@ export function textShapeTokens(element, text, linkCount) {
   const links = linkCount ?? element.querySelectorAll("a").length;
   if (links === 1) tokens.push("shape:one_link");
   else if (links > 1) tokens.push("shape:multiple_links");
-  if ([...candidateText].length > 500 || words.length > 80) return [...new Set(tokens)];
+  if ((knownLength ?? [...candidateText].length) > 500 || words.length > 80) return [...new Set(tokens)];
   if (BY_PREFIX_RE.test(candidateText)) tokens.push("phrase:by_prefix");
   if (BY_COLON_RE.test(candidateText)) tokens.push("phrase:by_colon");
   if (WRITTEN_BY_ANY_RE.test(candidateText)) tokens.push("phrase:written_by");
@@ -103,7 +104,8 @@ export function textShapeTokens(element, text, linkCount) {
   if (THANKS_TO_RE.test(candidateText)) tokens.push("phrase:thanks_to");
   if (PUBLISHED_MARKER_RE.test(candidateText)) tokens.push("phrase:published");
   if (UPDATED_MARKER_RE.test(candidateText)) tokens.push("phrase:updated");
-  if (!/^h[1-6]$|^title$/i.test(element.localName) && personNameShape(candidateText, words)) {
+  if (!/^h[1-6]$|^title$/i.test(element.localName) &&
+      personNameShape(candidateText, words, knownCapitalized)) {
     tokens.push("shape:single_name");
   }
   if (MULTIPLE_NAME_RE.test(candidateText)) tokens.push("shape:multiple_names");

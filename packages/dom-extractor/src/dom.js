@@ -46,11 +46,6 @@ function tagName(element) {
   return element.localName.toLowerCase();
 }
 
-function allElements(document) {
-  if (!document.documentElement) return [];
-  return [document.documentElement, ...document.documentElement.querySelectorAll("*")];
-}
-
 function normalizeSemanticName(value) {
   return value
     .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
@@ -89,15 +84,6 @@ function looksLikePageChrome(element) {
   const semantics = semanticValue(element);
   if (EXTRACTION_TOKENS.test(semantics)) return false;
   return CHROME_TOKENS.test(semantics);
-}
-
-function hasExcludedAncestor(element) {
-  let current = element;
-  while (current?.nodeType === 1) {
-    if (EXCLUDED_SUBTREES.has(tagName(current))) return true;
-    current = current.parentNode;
-  }
-  return false;
 }
 
 function directTextParts(node, parts) {
@@ -153,48 +139,63 @@ export function readableText(element) {
 }
 
 function stripPageChrome(document) {
-  for (const element of allElements(document)) {
-    if (CHROME_DROP_TAGS.has(tagName(element))) element.remove();
-  }
-  for (const element of allElements(document)) {
-    if (element.parentNode && looksLikePageChrome(element)) element.remove();
-  }
-  for (const element of allElements(document).reverse()) {
-    if (
-      element.parentNode &&
-      EMPTY_PRUNABLE_TAGS.has(tagName(element)) &&
-      element.children.length === 0 &&
-      elementText(element) === "" &&
-      !EXTRACTION_TOKENS.test(semanticValue(element))
-    ) {
-      element.remove();
+  const root = document.documentElement;
+  if (!root) return;
+  function removeChildrenWhere(parent, predicate) {
+    for (let child = parent.firstChild; child;) {
+      const next = child.nextSibling;
+      if (child.nodeType === 1) {
+        if (predicate(child)) child.remove();
+        else removeChildrenWhere(child, predicate);
+      }
+      child = next;
     }
   }
+  removeChildrenWhere(root, (element) => CHROME_DROP_TAGS.has(tagName(element)));
+  removeChildrenWhere(root, looksLikePageChrome);
+  function pruneChildren(parent) {
+    for (let child = parent.firstChild; child;) {
+      const next = child.nextSibling;
+      if (child.nodeType === 1) {
+        pruneChildren(child);
+        if (EMPTY_PRUNABLE_TAGS.has(tagName(child)) &&
+            child.children.length === 0 && elementText(child) === "" &&
+            !EXTRACTION_TOKENS.test(semanticValue(child))) child.remove();
+      }
+      child = next;
+    }
+  }
+  pruneChildren(root);
 }
 
 export function parsePage(html) {
   const { document } = parseHTML(html);
-  const originalCandidates = allElements(document).filter(
-    (element) => !hasExcludedAncestor(element),
-  );
-  const originalIds = new WeakMap(
-    originalCandidates.map((element, nodeId) => [element, nodeId]),
-  );
+  const originalIds = new WeakMap();
   const originalPositions = new WeakMap();
-  if (document.documentElement) originalPositions.set(document.documentElement, 1);
-  for (const element of originalCandidates) {
+  let nextId = 0;
+  function assignOriginalIds(element) {
+    if (EXCLUDED_SUBTREES.has(tagName(element))) return;
+    originalIds.set(element, nextId++);
     const siblingCounts = new Map();
     for (const child of element.children) {
       const name = tagName(child);
       const position = (siblingCounts.get(name) ?? 0) + 1;
       siblingCounts.set(name, position);
       originalPositions.set(child, position);
+      assignOriginalIds(child);
     }
   }
+  if (document.documentElement) {
+    originalPositions.set(document.documentElement, 1);
+    assignOriginalIds(document.documentElement);
+  }
   stripPageChrome(document);
-  const candidates = allElements(document)
-    .filter((element) => originalIds.has(element) && !hasExcludedAncestor(element))
-    .map((element) => ({ nodeId: originalIds.get(element), element }));
+  const candidates = [];
+  function collectKept(element) {
+    if (originalIds.has(element)) candidates.push({ nodeId: originalIds.get(element), element });
+    for (const child of element.children) collectKept(child);
+  }
+  if (document.documentElement) collectKept(document.documentElement);
   return { document, candidates, originalPositions };
 }
 

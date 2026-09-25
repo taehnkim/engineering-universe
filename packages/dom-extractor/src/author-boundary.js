@@ -11,6 +11,7 @@ const tag = (element) => element.localName.toLowerCase();
 const length = (value) => [...value].length;
 const bool = (value) => value ? 1 : 0;
 const rawAttr = (element, name) => element.getAttribute(name) ?? "";
+const textFor = (page, element) => page.subtreeStats?.get(element)?.text ?? elementText(element);
 
 function wordCounts(text) {
   const counts = new Map();
@@ -56,7 +57,7 @@ function localCandidates(page, seedId, authorScores) {
     for (const child of element.children) {
       frontier.push([child, depth + 1]);
       const id = idByElement.get(child);
-      if (id !== undefined && elementText(child).trim()) descendants.push([id, depth + 1]);
+      if (id !== undefined && textFor(page, child).trim()) descendants.push([id, depth + 1]);
     }
   }
   if (ancestors.length + descendants.length > MAX_LOCAL_CANDIDATES) {
@@ -73,11 +74,11 @@ function localCandidates(page, seedId, authorScores) {
   return [...new Set([...ancestors, ...descendants.map(([id]) => id)])];
 }
 
-function boundaryRow(page, nodeId, seedId, seed, seedWords, seedLinks,
+function boundaryRow(page, nodeId, seedId, seed, seedWords, seedLength, seedLinks,
                      seedScore, authorScores, numeric, indexById) {
   const index = indexById.get(nodeId);
   const element = page.candidates[index].element;
-  const text = elementText(element);
+  const text = textFor(page, element);
   const words = wordCounts(text);
   const links = profileLinks(element);
   const ownAttrs = ["class", "id", "itemprop", "aria-label", "rel"]
@@ -87,7 +88,7 @@ function boundaryRow(page, nodeId, seedId, seed, seedWords, seedLinks,
     bool(nodeId !== seedId && isDescendant(seed, element)),
     bool(nodeId !== seedId && isDescendant(element, seed)),
     Math.max(-20, Math.min(20, authorScores[index] - seedScore)),
-    Math.log1p(length(text)) - Math.log1p(length(elementText(seed))),
+    Math.log1p(length(text)) - Math.log1p(seedLength),
     wordCoverage(seedWords, words),
     wordCoverage(words, seedWords),
     bool(DATE_LIKE_RE.test(text)),
@@ -99,7 +100,7 @@ function boundaryRow(page, nodeId, seedId, seed, seedWords, seedLinks,
     (text.match(/(?<!\w)@[\w.-]+/gu) ?? []).length,
     links,
     links - seedLinks,
-    element.querySelectorAll("a").length,
+    page.subtreeStats?.get(element)?.links ?? element.querySelectorAll("a").length,
     element.children.length,
     ...TAGS.map((name) => bool(tag(element) === name)),
   ];
@@ -125,11 +126,13 @@ export function refineAuthor(page, seedId, authorScores, numeric, boundary) {
   const ids = localCandidates(page, seedId, authorScores);
   const indexById = new Map(page.candidates.map(({ nodeId }, index) => [nodeId, index]));
   const seed = page.candidates[indexById.get(seedId)].element;
-  const seedWords = wordCounts(elementText(seed));
+  const seedText = textFor(page, seed);
+  const seedWords = wordCounts(seedText);
+  const seedLength = length(seedText);
   const seedLinks = profileLinks(seed);
   const seedScore = authorScores[indexById.get(seedId)];
   const scores = ids.map((nodeId) => score(boundaryRow(
-    page, nodeId, seedId, seed, seedWords, seedLinks, seedScore,
+    page, nodeId, seedId, seed, seedWords, seedLength, seedLinks, seedScore,
     authorScores, numeric, indexById), boundary));
   const seedIndex = ids.indexOf(seedId);
   let bestIndex = 0;
