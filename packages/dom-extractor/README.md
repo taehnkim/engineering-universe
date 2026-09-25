@@ -101,7 +101,7 @@ bundles the JavaScript runtime and includes `src/model.weights.bin`; no
 external model file is fetched. Run `npm pack --dry-run` to measure the
 current installed and compressed sizes. The HTML parser is the main size cost.
 
-The current npm tarball is about 136 KB compressed, with no runtime npm
+The current npm tarball is about 137 KB compressed, with no runtime npm
 dependencies. Local HTML pages and labels are not part of the package.
 
 ## Runtime measurement
@@ -111,5 +111,6 @@ For a repeatable runtime measurement, first run `npm run build`, then use
 It warms ten pages and times three sequential passes over the dataset, from
 raw HTML strings to extracted fields. `scripts/audit_features.mjs` hashes the
 feature arrays for the same pages. The earlier API measured 14.70 ms before
-and 8.63–8.97 ms after optimization on 659 pages. Re-run this benchmark for
-the new public API before quoting its latency. The model weights are unchanged.
+and 8.63–8.97 ms after optimization on 659 pages. With the new public API,
+the optimized runtime measured 8.79 ms median on the same 659 pages (Node 20,
+three sequential passes). The model weights are unchanged.

@@ -15,14 +15,14 @@ const pages = [];
 for (const page of manifest.pages) {
   pages.push({ id: page.page_id, html: await readFile(join(datasetDir, page.html_path), "utf8") });
 }
-for (const page of pages.slice(0, 10)) await extract(page.html, { version: "1.0.0" });
+for (const page of pages.slice(0, 10)) await extract(page.html);
 
 const times = [];
 const digests = {};
 for (let round = 0; round < 3; round += 1) {
   for (const page of pages) {
     const started = performance.now();
-    const result = await extract(page.html, { version: "1.0.0" });
+    const result = await extract(page.html);
     times.push(performance.now() - started);
     if (round === 0) {
       digests[page.id] = createHash("sha256").update(JSON.stringify(result)).digest("hex");
