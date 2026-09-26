@@ -25,6 +25,7 @@ from eng_universe.extraction.inference import (
     DEFAULT_CHECKPOINT,
     DOMExtractor,
 )
+from modeling.dom_extractor.apps.npm_package import NpmPackageExtractor
 from modeling.dom_extractor.manifest import DatasetManifest, PageRecord
 
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
@@ -117,6 +118,7 @@ def _evaluation_cache_token(
     checkpoint: Path,
     author_boundary_checkpoint: Path | None = None,
     dom_backend: str = "python",
+    model_identity: str = "",
 ) -> str:
     checkpoint_stat = checkpoint.stat() if checkpoint.exists() else None
     boundary_stat = (
@@ -132,6 +134,7 @@ def _evaluation_cache_token(
         (
             "eval-cache-v3-title-guard",
             dom_backend,
+            model_identity,
             str(checkpoint.resolve()),
             str(checkpoint_stat.st_size if checkpoint_stat else 0),
             str(checkpoint_stat.st_mtime_ns if checkpoint_stat else 0),
@@ -280,7 +283,7 @@ def _evaluate_records(
         for website, counts in sorted(site_field_counts.items())
     ]
     return {
-        "checkpoint": str(checkpoint)
+        "checkpoint": getattr(model, "checkpoint_display", str(checkpoint))
         + (
             f" + {model.author_boundary_checkpoint}"
             if getattr(model, "author_boundary_checkpoint", None) is not None
@@ -403,11 +406,13 @@ def create_app(
         author_boundary_checkpoint=author_boundary_checkpoint,
         dom_backend=dom_backend,
     )
-    checkpoint_display = str(checkpoint) + (
+    checkpoint_display = getattr(model, "checkpoint_display", str(checkpoint)) + (
         f" + {author_boundary_checkpoint}" if author_boundary_checkpoint else ""
     )
     if getattr(model, "dom_backend", "python") == "go":
         checkpoint_display += " · Go DOM (experimental)"
+    if callable(close_model := getattr(model, "close", None)):
+        app.add_event_handler("shutdown", close_model)
     evaluation_lock = asyncio.Lock()
     evaluation_jobs: dict[str, dict[str, object]] = {}
     evaluation_jobs_lock = threading.Lock()
@@ -494,6 +499,7 @@ def create_app(
                 checkpoint,
                 author_boundary_checkpoint,
                 getattr(model, "dom_backend", "python"),
+                getattr(model, "cache_identity", ""),
             ),
             "sites": [
                 {"website": website, "pages": pages}
@@ -670,6 +676,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=10,
         help="Parallel workers for whole-corpus evaluation. Default: 10.",
     )
+    parser.add_argument(
+        "--npm-package",
+        action="store_true",
+        help="Evaluate the installed dom-tiny-demo npm package instead of the Python model.",
+    )
     return parser
 
 
@@ -677,10 +688,12 @@ def main(argv: Sequence[str] | None = None) -> None:
     import uvicorn
 
     args = build_parser().parse_args(argv)
+    extractor = NpmPackageExtractor() if args.npm_package else None
     uvicorn.run(
         create_app(
             args.dataset_dir,
             args.checkpoint,
+            extractor=extractor,
             evaluation_workers=args.eval_workers,
             author_boundary_checkpoint=args.author_boundary_checkpoint,
             dom_backend=args.dom_backend,

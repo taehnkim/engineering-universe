@@ -283,6 +283,14 @@ accuracies and page counts are recalculated for the filtered subset.
 Because this view includes training and validation pages, treat it as a fit and
 data quality report rather than an unbiased generalization score.
 
+To evaluate the installed npm package instead of the Python checkpoint, first
+run `npm run refresh-model` in `dom-tiny-demo/`, then start the same app with
+`--npm-package --port 8768` and open `http://127.0.0.1:8768/evals`.
+The adapter sends raw HTML to the package, resolves its source selectors in
+that same raw DOM, and compares the surviving nodes' stable IDs with human
+labels. Replacing the installed package requires a server restart; changes to
+the package version or selector mapping invalidate the browser eval cache.
+
 Click **PLAYGROUND** on `/evals` to test an HTML file that is not in the corpus.
 Choose a raw `.html` or `.htm` file up to 20 MB, then click **RUN**. The server
 applies the same DOM cleanup used by training and inference, runs the selected
