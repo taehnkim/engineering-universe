@@ -1,4 +1,5 @@
 import { parseHTML } from "linkedom";
+import { Parser } from "htmlparser2";
 
 export const DOM_CLEANUP_VERSION = "chrome-v2";
 
@@ -145,6 +146,26 @@ function metadataAuthorNames(document, html) {
     normalizedAuthorText(name).split(" ").length >= 2 && !ORGANIZATION_NAME.test(name)))];
 }
 
+function metadataTitles(document, html) {
+  if (!/<\/head\s*>/i.test(html.slice(0, 128_000)) || !document.head) return [];
+  const titles = [];
+  for (const tag of document.head.querySelectorAll("meta")) {
+    const key = (tag.getAttribute("property") ?? tag.getAttribute("name") ?? "").toLowerCase();
+    if (["og:title", "twitter:title"].includes(key)) {
+      const value = tag.getAttribute("content")?.trim();
+      if (value) titles.push(value);
+    }
+  }
+  if (!titles.length && document.title?.trim()) titles.push(document.title.trim());
+  const variants = [];
+  for (const title of titles) {
+    variants.push(title);
+    const prefix = title.split(/\s+(?:\||—|–|-)\s+/u)[0];
+    if (prefix.length >= 20 && prefix !== title) variants.push(prefix);
+  }
+  return [...new Set(variants)];
+}
+
 export function rescueAuthorNode(page, selectedId) {
   if (!page.metadataAuthors.length) return selectedId;
   const names = page.metadataAuthors.map(normalizedAuthorText);
@@ -205,6 +226,16 @@ export function readableText(element) {
 function stripPageChrome(document) {
   const root = document.documentElement;
   if (!root) return;
+  // A home-linked image heading is site branding, not the article title.
+  for (const heading of root.querySelectorAll("h1")) {
+    for (const link of heading.children) {
+      if (link.localName !== "a" || link.getAttribute("href") !== "/" ||
+          ![...link.children].some((child) => child.localName === "img")) continue;
+      for (const child of [...link.childNodes]) {
+        if (child.nodeType === 3) child.remove();
+      }
+    }
+  }
   function removeChildrenWhere(parent, predicate) {
     for (let child = parent.firstChild; child;) {
       const next = child.nextSibling;
@@ -233,8 +264,20 @@ function stripPageChrome(document) {
 }
 
 export function parsePage(html) {
-  const { document } = parseHTML(html);
+  // LinkeDOM can treat a leading script as the document root. Find the real
+  // <html> tag with a tokenizer so tags inside comments do not count.
+  let htmlStart = -1;
+  const scanner = new Parser({ onopentagname(name) {
+    if (name === "html") {
+      htmlStart = scanner.startIndex;
+      scanner.pause();
+    }
+  } });
+  scanner.write(html);
+  const normalized = htmlStart > 0 ? html.slice(htmlStart) : html;
+  const { document } = parseHTML(normalized);
   const metadataAuthors = metadataAuthorNames(document, html);
+  const titleHints = metadataTitles(document, html);
   const originalIds = new WeakMap();
   const originalPositions = new WeakMap();
   let nextId = 0;
@@ -261,7 +304,7 @@ export function parsePage(html) {
     for (const child of element.children) collectKept(child);
   }
   if (document.documentElement) collectKept(document.documentElement);
-  return { document, candidates, originalPositions, metadataAuthors };
+  return { document, candidates, originalPositions, metadataAuthors, titleHints };
 }
 
 export function cssSelector(element, page) {
