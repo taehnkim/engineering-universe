@@ -17,10 +17,15 @@ export interface ExtractedField {
   source?: { selector: string };
 }
 
+export interface ExtractedDateField extends ExtractedField {
+  /** Calendar date in YYYY-MM-DD form when unambiguous; otherwise null. */
+  iso: string | null;
+}
+
 export interface ExtractedFields {
   title: ExtractedField;
   body: ExtractedField;
-  date: ExtractedField;
+  date: ExtractedDateField;
   byline: ExtractedField;
 }
 

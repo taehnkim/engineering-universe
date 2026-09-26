@@ -19,7 +19,7 @@ cd packages/dom-extractor
 npm ci
 npm test
 npm pack
-# Then install eng-universe-dom-extractor-0.4.0.tgz in your application.
+# Then install eng-universe-dom-extractor-0.5.0.tgz in your application.
 ```
 
 ## Extract one page
@@ -42,13 +42,17 @@ try {
 Pass full-page HTML as a decoded string, for example `response.text()` or
 `readFile(path, "utf8")`. The response always has `modelVersion` and four
 fields: `title`, `body`, `date`, and `byline`. Each field has
-`{ text, confidence }`. Text is `null` if missing, empty, or below the
-internal confidence threshold of **0.5**. Confidence is an uncalibrated score,
-rounded to four decimal places. You can apply a stricter filter yourself.
+`{ text, confidence }`; `date` also has `iso`, a `YYYY-MM-DD` string or `null`.
+Text is usually `null` if missing, empty, or below the internal confidence
+threshold of **0.5**. A guarded date rescue can return text below that
+threshold. Confidence is an uncalibrated score, rounded to four decimal places.
+You can apply a stricter filter yourself.
 
-The package does **not** parse dates or author names. It returns their selected
-node text as displayed, including punctuation and relative dates such as
-`3 days ago`. Normal body whitespace is collapsed while `<pre>` and inline
+The package keeps selected date text as displayed and parses an unambiguous
+calendar date into `date.iso`. It reads `datetime` from textless `<time>`
+elements. Ambiguous numeric dates and relative dates such as `3 days ago` have
+`iso: null`. It does not parse author names. Normal body whitespace is
+collapsed while `<pre>` and inline
 preformatted whitespace is preserved.
 
 ## Extract many pages

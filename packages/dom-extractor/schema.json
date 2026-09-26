@@ -9,7 +9,7 @@
       "properties": {
         "title": { "$ref": "#/$defs/field" },
         "body": { "$ref": "#/$defs/field" },
-        "date": { "$ref": "#/$defs/field" },
+        "date": { "$ref": "#/$defs/dateField" },
         "byline": { "$ref": "#/$defs/field" }
       },
       "required": ["title", "body", "date", "byline"],
@@ -36,6 +36,23 @@
   "required": ["modelVersion", "fields"],
   "additionalProperties": false,
   "$defs": {
+    "dateField": {
+      "type": "object",
+      "properties": {
+        "text": { "type": ["string", "null"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "iso": { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "html": { "type": "string" },
+        "source": {
+          "type": "object",
+          "properties": { "selector": { "type": "string" } },
+          "required": ["selector"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["text", "confidence", "iso"],
+      "additionalProperties": false
+    },
     "field": {
       "type": "object",
       "properties": {

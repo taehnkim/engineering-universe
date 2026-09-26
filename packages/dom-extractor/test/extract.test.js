@@ -56,7 +56,15 @@ test("date stays as displayed, without ISO normalization", async () => {
   const result = await extract(html);
   if (result.fields.date.text !== null) {
     assert.equal(result.fields.date.text, "Published May 25, 2026");
+    assert.equal(result.fields.date.iso, "2026-05-25");
   }
+});
+
+test("a textless time element yields its datetime", async () => {
+  const html = '<html><body><h1>New release</h1><time datetime="2026-09-24"></time><article><p>Details of the release.</p></article></body></html>';
+  const result = await extract(html);
+  assert.equal(result.fields.date.text, "2026-09-24");
+  assert.equal(result.fields.date.iso, "2026-09-24");
 });
 
 test("typed input and parse errors affect only their batch items", async () => {
