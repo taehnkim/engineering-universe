@@ -1,4 +1,4 @@
-import { elementText } from "./dom.js";
+import { elementText, rescueAuthorNode } from "./dom.js";
 import { featurizePage } from "./features.js";
 import { refineAuthor } from "./author-boundary.js";
 
@@ -119,5 +119,6 @@ export function predict(page, model) {
       model.authorBoundary,
     );
   }
+  predictions.authors = rescueAuthorNode(page, predictions.authors);
   return { predictions, basePredictions, features, scores };
 }
