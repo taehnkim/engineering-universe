@@ -23,6 +23,7 @@ from eng_universe.extraction.features import (
     TagVocabulary,
     featurize_page,
 )
+from eng_universe.extraction.metadata_rescue import rescue_author_node
 from eng_universe.extraction.model import DOMNodeSelector
 from eng_universe.extraction.postprocess import (
     derive_published_at,
@@ -244,6 +245,17 @@ class DOMExtractor:
                         "ms": (time.perf_counter() - started) * 1_000,
                     }
                 )
+        started = time.perf_counter() if timings is not None else 0.0
+        predictions[Field.AUTHORS] = rescue_author_node(
+            page, predictions[Field.AUTHORS]
+        )
+        if timings is not None:
+            timings.append(
+                {
+                    "step": "Metadata author rescue",
+                    "ms": (time.perf_counter() - started) * 1_000,
+                }
+            )
         if confidence is not None:
             index_by_id = {candidate.node_id: index for index, candidate in enumerate(page.candidates)}
             for field_index, field in enumerate(FIELDS):
