@@ -40,6 +40,8 @@ const CHROME_DROP_TAGS = new Set([
 
 const EMPTY_PRUNABLE_TAGS = new Set(["div", "figure", "p", "section", "span"]);
 const CHROME_TOKENS = /\b(?:backdrop|breadcrumb|comments?|consent|cookie|drawer|footer|lightbox|menu|modal|newsletter|overlay|pagination|popup|promo|recommend(?:ation|ations|ed)?|related|share|sidebar|social|subscribe|toast)\b/i;
+const HERO_OVERLAY = /\b(?:image|hero)\s+overlay\b/i;
+const OVERLAY_TOKEN = /\boverlay\b/gi;
 const EXTRACTION_TOKENS = /author|byline|date|publish|time|headline|title|subtitle|sub-title|subhead|standfirst|dek|excerpt|description|lead/i;
 const HIDDEN_STYLE = /(?:^|;)\s*(?:display\s*:\s*none|visibility\s*:\s*hidden)\s*(?:!important)?\s*(?:;|$)/i;
 
@@ -84,7 +86,15 @@ function looksLikePageChrome(element) {
   if (isHidden(element)) return true;
   const semantics = semanticValue(element);
   if (EXTRACTION_TOKENS.test(semantics)) return false;
-  return CHROME_TOKENS.test(semantics);
+  if (!CHROME_TOKENS.test(semantics)) return false;
+  // A hero overlay can contain the only visible article headline. Keep it
+  // under <main> only when no other chrome marker applies.
+  if (HERO_OVERLAY.test(semantics) &&
+      !CHROME_TOKENS.test(semantics.replace(OVERLAY_TOKEN, " ")) &&
+      element.closest("main") &&
+      [...element.querySelectorAll("h1")].some((heading) =>
+        !isHidden(heading) && elementText(heading).trim())) return false;
+  return true;
 }
 
 function directTextParts(node, parts) {

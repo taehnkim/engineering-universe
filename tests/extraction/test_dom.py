@@ -82,6 +82,30 @@ def test_chrome_v2_removes_media_semantic_chrome_and_hidden_nodes() -> None:
     )
 
 
+def test_hero_overlay_keeps_visible_heading_but_not_dialog_headings() -> None:
+    html = """<html><body><main>
+      <div class="image-overlay"><h1>Real article title</h1></div>
+      <div class="popup-overlay"><h1>Subscribe now</h1></div>
+      <div class="image-overlay" role="dialog"><h1>Sign in</h1></div>
+      <div class="image-overlay" aria-hidden="true"><h1>Hidden title</h1></div>
+      <article><p>Article body</p></article>
+    </main></body></html>"""
+    raw = parse_html(html)
+    cleaned = parse_html(html, strip_chrome=True)
+    raw_heading = next(
+        candidate for candidate in raw.candidates
+        if candidate.element.name == "h1"
+        and candidate.element.get_text(strip=True) == "Real article title"
+    )
+    headings = [
+        candidate for candidate in cleaned.candidates
+        if candidate.element.name == "h1"
+    ]
+    assert [(candidate.node_id, candidate.element.get_text(strip=True)) for candidate in headings] == [
+        (raw_heading.node_id, "Real article title")
+    ]
+
+
 def test_annotation_html_uses_cleaned_dom_with_original_node_ids() -> None:
     html = """
     <html><body><nav>Menu</nav><main><h1>Title</h1><img alt="hero"></main></body></html>

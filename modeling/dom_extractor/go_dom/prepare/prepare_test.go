@@ -38,3 +38,19 @@ func TestPrepareRemovesHiddenAndMedia(t *testing.T) {
 		t.Fatalf("article body removed: %s", got.CleanHTML)
 	}
 }
+
+func TestPrepareKeepsHeroOverlayHeadingButNotPopupHeading(t *testing.T) {
+	raw := `<html><body><main><div class="image-overlay"><h1>Real article title</h1></div><div class="popup-overlay"><h1>Subscribe now</h1></div><div class="image-overlay" role="dialog"><h1>Sign in</h1></div><article><p>Article body</p></article></main></body></html>`
+	got, err := Prepare(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got.CleanHTML, "Real article title") {
+		t.Fatalf("hero heading removed: %s", got.CleanHTML)
+	}
+	for _, unwanted := range []string{"Subscribe now", "Sign in"} {
+		if strings.Contains(got.CleanHTML, unwanted) {
+			t.Fatalf("popup heading survived: %s", got.CleanHTML)
+		}
+	}
+}
