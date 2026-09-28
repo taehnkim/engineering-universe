@@ -47,6 +47,8 @@ CHROME_TOKENS = re.compile(
     r"related|share|sidebar|social|subscribe|toast)\b",
     re.IGNORECASE,
 )
+HERO_OVERLAY = re.compile(r"\b(?:image|hero)\s+overlay\b", re.IGNORECASE)
+OVERLAY_TOKEN = re.compile(r"\boverlay\b", re.IGNORECASE)
 EXTRACTION_TOKENS = re.compile(
     r"author|byline|date|publish|time|headline|title|subtitle|sub-title|subhead|"
     r"standfirst|dek|excerpt|description|lead",
@@ -297,7 +299,19 @@ def looks_like_page_chrome(element: Tag) -> bool:
     semantics = _semantic_value(element)
     if EXTRACTION_TOKENS.search(semantics):
         return False
-    return bool(CHROME_TOKENS.search(semantics))
+    if not CHROME_TOKENS.search(semantics):
+        return False
+    # A hero image overlay can hold the only visible article headline. Do not
+    # treat it like a modal; other chrome markers still take precedence.
+    return not (
+        HERO_OVERLAY.search(semantics)
+        and not CHROME_TOKENS.search(OVERLAY_TOKEN.sub("", semantics))
+        and element.find_parent("main") is not None
+        and any(
+            heading.get_text(" ", strip=True) and not _is_hidden(heading)
+            for heading in element.find_all("h1")
+        )
+    )
 
 
 def _strip_page_chrome(dom: BeautifulSoup) -> None:
