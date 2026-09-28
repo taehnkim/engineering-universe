@@ -74,6 +74,51 @@ function scoreCandidate(features, index, weights, packed, scratch) {
   return Array.from(output);
 }
 
+function titleTokenF1(left, right) {
+  const tokens = (value) => value.normalize("NFKC").toLocaleLowerCase("en")
+    .match(/[\p{L}\p{N}]+/gu) ?? [];
+  const first = tokens(left);
+  const second = tokens(right);
+  if (!first.length || !second.length) return 0;
+  const remaining = new Map();
+  for (const token of first) remaining.set(token, (remaining.get(token) ?? 0) + 1);
+  let overlap = 0;
+  for (const token of second) {
+    const count = remaining.get(token) ?? 0;
+    if (count > 0) { overlap += 1; remaining.set(token, count - 1); }
+  }
+  return 2 * overlap / (first.length + second.length);
+}
+
+export function rerankTitleWithMetadata(page, predictions, scores, model) {
+  const hints = page.titleHints ?? [];
+  if (!hints.length) return;
+  const current = page.candidates.find((candidate) => candidate.nodeId === predictions.title);
+  const currentText = current ? elementText(current.element) : "";
+  const similarity = (text) => Math.max(...hints.map((hint) => titleTokenF1(hint, text)));
+  const currentSimilarity = similarity(currentText);
+  const fieldIndex = model.fields.indexOf("title");
+  let best = null;
+  for (const [index, candidate] of page.candidates.entries()) {
+    const element = candidate.element;
+    const tag = element.localName.toLowerCase();
+    if (!["h1", "h2", "h3"].includes(tag) &&
+        !(element.getAttribute("itemprop") ?? "").toLowerCase().includes("headline")) continue;
+    const text = elementText(element);
+    if (!text || text.length > 300) continue;
+    const match = similarity(text);
+    if (match < 0.9) continue;
+    const score = scores[index][fieldIndex];
+    if (!best || match > best.match + 0.01 ||
+        (Math.abs(match - best.match) <= 0.01 && score > best.score)) {
+      best = { candidate, match, score };
+    }
+  }
+  if (best && best.match >= currentSimilarity + 0.18) {
+    predictions.title = best.candidate.nodeId;
+  }
+}
+
 export function predict(page, model) {
   const features = featurizePage(page, model);
   const predictions = Object.fromEntries(model.fields.map((field) => [field, null]));
@@ -111,6 +156,7 @@ export function predict(page, model) {
     }
     if (best >= 0) predictions.title = page.candidates[best].nodeId;
   }
+  rerankTitleWithMetadata(page, predictions, scores, model);
   const basePredictions = { ...predictions };
   if (predictions.authors !== null) {
     const authorIndex = model.fields.indexOf("authors");
