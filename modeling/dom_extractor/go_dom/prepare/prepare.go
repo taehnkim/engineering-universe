@@ -20,6 +20,8 @@ var dropTags = set("aside", "audio", "button", "canvas", "dialog", "embed", "foo
 var emptyPrunable = set("div", "figure", "p", "section", "span")
 var chromeRoles = set("alertdialog", "contentinfo", "dialog", "navigation", "search")
 var chrome = regexp.MustCompile(`\b(?:backdrop|breadcrumb|comments?|consent|cookie|drawer|footer|lightbox|menu|modal|newsletter|overlay|pagination|popup|promo|recommend(?:ation|ations|ed)?|related|share|sidebar|social|subscribe|toast)\b`)
+var heroOverlay = regexp.MustCompile(`\b(?:image|hero)\s+overlay\b`)
+var overlayToken = regexp.MustCompile(`\boverlay\b`)
 var extraction = regexp.MustCompile(`author|byline|date|publish|time|headline|title|subtitle|sub-title|subhead|standfirst|dek|excerpt|description|lead`)
 var hiddenStyle = regexp.MustCompile(`(?i)(?:^|;)\s*(?:display\s*:\s*none|visibility\s*:\s*hidden)\s*(?:!important)?\s*(?:;|$)`)
 
@@ -109,7 +111,47 @@ func isChrome(n *html.Node) bool {
 		return true
 	}
 	semantics := semanticValue(n)
-	return !extraction.MatchString(semantics) && chrome.MatchString(semantics)
+	if extraction.MatchString(semantics) || !chrome.MatchString(semantics) {
+		return false
+	}
+	if heroOverlay.MatchString(semantics) && !chrome.MatchString(overlayToken.ReplaceAllString(semantics, " ")) &&
+		withinMain(n) && hasVisibleH1(n) {
+		return false
+	}
+	return true
+}
+
+func withinMain(n *html.Node) bool {
+	for parent := n.Parent; parent != nil; parent = parent.Parent {
+		if parent.Type == html.ElementNode && parent.Data == "main" {
+			return true
+		}
+	}
+	return false
+}
+
+func hasVisibleText(n *html.Node) bool {
+	for child := n.FirstChild; child != nil; child = child.NextSibling {
+		if child.Type == html.TextNode && strings.TrimSpace(child.Data) != "" {
+			return true
+		}
+		if child.Type == html.ElementNode && !isHidden(child) && hasVisibleText(child) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasVisibleH1(n *html.Node) bool {
+	for child := n.FirstChild; child != nil; child = child.NextSibling {
+		if child.Type != html.ElementNode || isHidden(child) {
+			continue
+		}
+		if child.Data == "h1" && hasVisibleText(child) || hasVisibleH1(child) {
+			return true
+		}
+	}
+	return false
 }
 
 func removeChrome(n *html.Node) {
