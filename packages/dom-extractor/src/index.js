@@ -117,9 +117,13 @@ async function extractFields(html, includes) {
     // not the child's (often tiny) base-model softmax share.
     const confidence = rounded(probability(prediction.scores, fieldIndex, bestIndex, model));
     const candidate = candidateIndex < 0 ? null : page.candidates[candidateIndex];
-    const rawText = candidate ? readableText(candidate.element) : "";
-    const accepted = selectedIndex >= 0 && confidence >= THRESHOLD && rawText !== "";
+    const displayedText = candidate ? readableText(candidate.element) : "";
+    const rawText = modelField === "date" && !displayedText && candidate
+      ? candidate.element.getAttribute("datetime") ?? "" : displayedText;
+    const dateRescued = modelField === "date" && prediction.dateSelection?.rescued === true;
+    const accepted = selectedIndex >= 0 && (confidence >= THRESHOLD || dateRescued) && rawText !== "";
     const field = { text: accepted ? rawText : null, confidence };
+    if (modelField === "date") field.iso = accepted ? prediction.dateSelection?.parsed?.iso ?? null : null;
     if (includes.has("source") && candidate) {
       field.source = { selector: cssSelector(candidate.element, page) };
     }

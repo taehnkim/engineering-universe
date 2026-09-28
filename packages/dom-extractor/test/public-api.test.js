@@ -9,11 +9,13 @@ test("extract returns the minimal four-field response", async () => {
   assert.deepEqual(Object.keys(result), ["modelVersion", "fields"]);
   assert.equal(result.modelVersion, modelVersion);
   assert.deepEqual(Object.keys(result.fields), ["title", "body", "date", "byline"]);
-  for (const field of Object.values(result.fields)) {
-    assert.deepEqual(Object.keys(field), ["text", "confidence"]);
+  for (const [name, field] of Object.entries(result.fields)) {
+    assert.deepEqual(Object.keys(field), name === "date"
+      ? ["text", "confidence", "iso"] : ["text", "confidence"]);
     assert.ok(field.text === null || typeof field.text === "string");
     assert.equal(field.confidence, Number(field.confidence.toFixed(4)));
   }
+  assert.ok(result.fields.date.iso === null || /^\d{4}-\d{2}-\d{2}$/u.test(result.fields.date.iso));
   assert.equal(result.fields.title.text, "Don’t Vibe — Prove");
 });
 

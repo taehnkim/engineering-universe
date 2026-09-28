@@ -1,6 +1,7 @@
 import { elementText, rescueAuthorNode } from "./dom.js";
 import { featurizePage } from "./features.js";
 import { refineAuthor } from "./author-boundary.js";
+import { selectDateNode } from "./date-selection.js";
 
 const compiledWeights = new WeakMap();
 
@@ -158,6 +159,8 @@ export function predict(page, model) {
   }
   rerankTitleWithMetadata(page, predictions, scores, model);
   const basePredictions = { ...predictions };
+  const dateSelection = selectDateNode(page, predictions, scores, model);
+  if (dateSelection) predictions.date = dateSelection.nodeId;
   if (predictions.authors !== null) {
     const authorIndex = model.fields.indexOf("authors");
     predictions.authors = refineAuthor(
@@ -166,5 +169,5 @@ export function predict(page, model) {
     );
   }
   predictions.authors = rescueAuthorNode(page, predictions.authors);
-  return { predictions, basePredictions, features, scores };
+  return { predictions, basePredictions, dateSelection, features, scores };
 }

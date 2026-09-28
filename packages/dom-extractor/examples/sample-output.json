@@ -6,7 +6,7 @@
       "text": "A small learned model can select the right article wrapper.\n\nIt uses DOM structure instead of article words.",
       "confidence": 0.9919
     },
-    "date": { "text": null, "confidence": 0.1008 },
+    "date": { "text": "September 19, 2026", "confidence": 0.1008, "iso": "2026-09-19" },
     "byline": { "text": "By Ada Lovelace", "confidence": 0.9454 }
   }
 }

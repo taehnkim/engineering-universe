@@ -24,8 +24,9 @@ test("malformed and noisy HTML keeps the four-field API well formed", async () =
     const html = `<html><body><nav>Chrome</nav><article>${chunks.join("")}</article></body></html>`;
     const result = await extract(html);
     assert.deepEqual(Object.keys(result), ["modelVersion", "fields"]);
-    for (const selection of Object.values(result.fields)) {
-      assert.deepEqual(Object.keys(selection), ["text", "confidence"]);
+    for (const [name, selection] of Object.entries(result.fields)) {
+      assert.deepEqual(Object.keys(selection), name === "date"
+        ? ["text", "confidence", "iso"] : ["text", "confidence"]);
       assert.ok(selection.confidence >= 0 && selection.confidence <= 1);
       assert.ok(Number.isFinite(selection.confidence));
     }
