@@ -100,6 +100,27 @@ The model can be wrong, so verify fields where accuracy matters.
 
 See `schema.json` and `examples/sample.html` for the result contract.
 
+## Accuracy and speed
+
+The latest recorded benchmark used 150 human-reviewed test pages. It compared
+the extracted field text with the human reference; it did not require the
+extractor to select the exact same DOM node.
+
+| Field | Text matches |
+| --- | ---: |
+| Title | 144/150 (96.0%) |
+| Article body | 146/150 (97.3%) |
+| Date | 150/150 (100%) |
+| Byline, all pages | 109/150 (72.7%) |
+
+For bylines, the model matched 101/135 pages with a labeled author (74.8%) and
+correctly returned no byline on 8/15 pages labeled as having no author (53.3%).
+On the 15 pages with no labeled author, it returned an author on 7 pages.
+
+On the same test run, warm sequential extraction had a 5.01 ms median and a
+16.19 ms p95 per page. These are local benchmark measurements, not a latency
+guarantee. HTML size and page structure can change runtime.
+
 ## Model build and package size
 
 Python is used only to train and export model weights. `npm run build`
@@ -108,7 +129,8 @@ external model file is fetched. Run `npm pack --dry-run` to measure the
 current installed and compressed sizes. The HTML parser is the main size cost.
 
 The current npm tarball is about 137 KB compressed, with no runtime npm
-dependencies. Local HTML pages and labels are not part of the package.
+dependencies. Local HTML pages and labels are not part of the package. This
+size is the compressed npm archive, not the unpacked installed size.
 
 ## Runtime measurement
 
